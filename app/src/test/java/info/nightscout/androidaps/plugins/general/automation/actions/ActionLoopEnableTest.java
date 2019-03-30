@@ -47,7 +47,7 @@ public class ActionLoopEnableTest {
             }
         });
         Assert.assertEquals(true, LoopPlugin.getPlugin().isEnabled(PluginType.LOOP));
-        // another call should keep it disabled
+        // another call should keep it enabled
         actionLoopEnable.doAction(new Callback() {
             @Override
             public void run() {
