@@ -96,16 +96,24 @@ public class TriggerBg extends Trigger {
     public synchronized boolean shouldRun() {
         GlucoseStatus glucoseStatus = GlucoseStatus.getGlucoseStatusData();
 
-        if (glucoseStatus == null && comparator.equals(Comparator.IS_NOT_AVAILABLE))
-            if (lastRun < DateUtil.now() - T.mins(5).msecs()) {
-                if (L.isEnabled(L.AUTOMATION))
-                    log.debug("Ready for execution: " + friendlyDescription());
-                return true;
-            }
+        if (lastRun > DateUtil.now() - T.mins(5).msecs())
+            return false;
+
+        if (glucoseStatus == null && comparator.equals(Comparator.IS_NOT_AVAILABLE)) {
+            if (L.isEnabled(L.AUTOMATION))
+                log.debug("Ready for execution: " + friendlyDescription());
+            return true;
+        }
         if (glucoseStatus == null)
             return false;
 
-        return comparator.check(glucoseStatus.glucose, Profile.toMgdl(threshold, units));
+        boolean doRun = comparator.check(glucoseStatus.glucose, Profile.toMgdl(threshold, units));
+        if (doRun) {
+            if (L.isEnabled(L.AUTOMATION))
+                log.debug("Ready for execution: " + friendlyDescription());
+            return true;
+        }
+        return false;
     }
 
     @Override
