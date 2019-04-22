@@ -17,8 +17,9 @@ import info.nightscout.androidaps.data.Profile;
 import info.nightscout.androidaps.logging.L;
 import info.nightscout.androidaps.plugins.general.automation.elements.Comparator;
 import info.nightscout.androidaps.plugins.general.automation.elements.InputBg;
-import info.nightscout.androidaps.plugins.general.automation.elements.Label;
+import info.nightscout.androidaps.plugins.general.automation.elements.LabelWithElement;
 import info.nightscout.androidaps.plugins.general.automation.elements.LayoutBuilder;
+import info.nightscout.androidaps.plugins.general.automation.elements.StaticLabel;
 import info.nightscout.androidaps.plugins.iob.iobCobCalculator.GlucoseStatus;
 import info.nightscout.androidaps.utils.DateUtil;
 import info.nightscout.androidaps.utils.JsonHelper;
@@ -159,8 +160,9 @@ public class TriggerBg extends Trigger {
     @Override
     public void generateDialog(LinearLayout root, FragmentManager fragmentManager) {
         new LayoutBuilder()
+                .add(new StaticLabel(R.string.glucose))
                 .add(comparator)
-                .add(new Label(MainApp.gs(R.string.glucose_u, bg.getUnits()), "", bg))
+                .add(new LabelWithElement(MainApp.gs(R.string.glucose_u, bg.getUnits()), "", bg))
                 .build(root);
     }
 }
