@@ -14,8 +14,8 @@ import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.ble.RFSpy;
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.ble.data.RLMessage;
 import info.nightscout.androidaps.plugins.pump.common.hw.rileylink.ble.defs.RLMessageType;
 import info.nightscout.androidaps.plugins.pump.omnipod.OmnipodManager;
-import info.nightscout.androidaps.plugins.pump.omnipod.comm.action.PairAction;
 import info.nightscout.androidaps.plugins.pump.omnipod.comm.data.PodCommResponse;
+import info.nightscout.androidaps.plugins.pump.omnipod.defs.OmnipodCommunicationManagerInterface;
 import info.nightscout.androidaps.plugins.pump.omnipod.defs.state.PodSessionState;
 import info.nightscout.androidaps.plugins.pump.omnipod.util.OmnipodUtil;
 import info.nightscout.androidaps.utils.SP;
@@ -45,12 +45,9 @@ public class OmnipodCommunicationManager extends RileyLinkCommunicationManager i
 
     private PodSessionState getPodSessionState() {
 
-        
-
 
         return null;
     }
-
 
 
     public static OmnipodCommunicationManager getInstance() {
@@ -102,7 +99,6 @@ public class OmnipodCommunicationManager extends RileyLinkCommunicationManager i
         omnipodManager.pairAndPrime();
 
 
-
         return null;
     }
 
@@ -137,6 +133,11 @@ public class OmnipodCommunicationManager extends RileyLinkCommunicationManager i
     }
 
     public PodCommResponse cancelTemporaryBasal() {
+        return null;
+    }
+
+    @Override
+    public PodCommResponse acknowledgeAlerts() {
         return null;
     }
 
