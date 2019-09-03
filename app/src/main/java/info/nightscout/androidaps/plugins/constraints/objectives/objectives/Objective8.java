@@ -9,7 +9,7 @@ import info.nightscout.androidaps.utils.T;
 public class Objective8 extends Objective {
 
     public Objective8() {
-        super("smb", R.string.objectives_smb_objective, R.string.objectives_smb_gate);
+        super("ama", R.string.objectives_ama_objective, 0);
     }
 
     @Override
