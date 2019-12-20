@@ -50,7 +50,7 @@
                 android:layout_gravity="center_horizontal"
                 android:width="120dp"
                 android:padding="10dp"
-                android:text="@string/treatments_newtreatment_insulinamount_label"
+                android:text="@string/overview_insulin_label"
                 android:textAppearance="@android:style/TextAppearance.Material.Small"
                 android:textStyle="bold" />
 
