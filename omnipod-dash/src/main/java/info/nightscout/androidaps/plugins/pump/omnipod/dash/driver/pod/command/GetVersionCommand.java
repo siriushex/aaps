@@ -7,21 +7,16 @@ public class GetVersionCommand extends CommandBase {
     private static final short LENGTH = 6;
     private static final byte BODY_LENGTH = 4;
 
-    private final int address;
-    private final boolean unknown;
-
     public GetVersionCommand(short sequenceNumber, boolean unknown) {
-        this(sequenceNumber, DEFAULT_ADDRESS, unknown);
+        this(DEFAULT_ADDRESS, sequenceNumber, unknown);
     }
 
-    public GetVersionCommand(short sequenceNumber, int address, boolean unknown) {
-        super(CommandType.GET_VERSION, sequenceNumber);
-        this.address = address;
-        this.unknown = unknown;
+    public GetVersionCommand(int address, short sequenceNumber, boolean unknown) {
+        super(CommandType.GET_VERSION, address, sequenceNumber, unknown);
     }
 
     @Override public byte[] getEncoded() {
-        return appendCrc(ByteBuffer.allocate(12) //
+        return appendCrc(ByteBuffer.allocate(LENGTH + HEADER_LENGTH) //
                 .put(encodeHeader(address, sequenceNumber, LENGTH, unknown)) //
                 .put(commandType.getValue()) //
                 .put(BODY_LENGTH) //
