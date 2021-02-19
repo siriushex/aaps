@@ -3,33 +3,35 @@ package info.nightscout.androidaps
 import dagger.android.AndroidInjector
 import dagger.android.HasAndroidInjector
 import info.nightscout.androidaps.data.Profile
-import info.nightscout.androidaps.interfaces.ProfileStore
 import info.nightscout.androidaps.db.ProfileSwitch
-import info.nightscout.androidaps.interfaces.ActivePluginProvider
-import info.nightscout.androidaps.plugins.bus.RxBusWrapper
-import info.nightscout.androidaps.interfaces.ProfileFunction
 import info.nightscout.androidaps.db.Treatment
-import info.nightscout.androidaps.plugins.treatments.TreatmentsPlugin
+import info.nightscout.androidaps.interfaces.ActivePluginProvider
+import info.nightscout.androidaps.interfaces.ConfigInterface
+import info.nightscout.androidaps.interfaces.ProfileFunction
+import info.nightscout.androidaps.interfaces.ProfileStore
+import info.nightscout.androidaps.interfaces.TreatmentsInterface
+import info.nightscout.androidaps.plugins.bus.RxBusWrapper
 import info.nightscout.androidaps.utils.DateUtil
 import info.nightscout.androidaps.utils.DefaultValueHelper
 import info.nightscout.androidaps.utils.FabricPrivacy
 import info.nightscout.androidaps.utils.resources.ResourceHelper
-import info.nightscout.androidaps.utils.rx.AapsSchedulers
-import info.nightscout.androidaps.utils.rx.TestAapsSchedulers
 import org.json.JSONObject
 import org.junit.Before
 import org.mockito.Mock
 import org.powermock.core.classloader.annotations.PrepareForTest
 
+@Suppress("SpellCheckingInspection")
 @PrepareForTest(FabricPrivacy::class)
 open class TestBaseWithProfile : TestBase() {
+
     @Mock lateinit var activePluginProvider: ActivePluginProvider
     @Mock lateinit var resourceHelper: ResourceHelper
-    @Mock lateinit var treatmentsPlugin: TreatmentsPlugin
+    @Mock lateinit var treatmentsInterface: TreatmentsInterface
     @Mock lateinit var fabricPrivacy: FabricPrivacy
     @Mock lateinit var profileFunction: ProfileFunction
     @Mock lateinit var defaultValueHelper: DefaultValueHelper
     @Mock lateinit var dateUtil: DateUtil
+    @Mock lateinit var configInterface: ConfigInterface
 
     val rxBus = RxBusWrapper(aapsSchedulers)
 
@@ -41,10 +43,10 @@ open class TestBaseWithProfile : TestBase() {
                 it.resourceHelper = resourceHelper
                 it.rxBus = rxBus
                 it.fabricPrivacy = fabricPrivacy
-                it.configInterface = Config()
+                it.configInterface = configInterface
             }
             if (it is ProfileSwitch) {
-                it.treatmentsPlugin = treatmentsPlugin
+                it.treatmentsPlugin = treatmentsInterface
                 it.aapsLogger = aapsLogger
                 it.rxBus = rxBus
                 it.resourceHelper = resourceHelper
@@ -61,7 +63,7 @@ open class TestBaseWithProfile : TestBase() {
 
     private lateinit var validProfileJSON: String
     lateinit var validProfile: Profile
-    val TESTPROFILENAME = "someProfile"
+    @Suppress("PropertyName") val TESTPROFILENAME = "someProfile"
 
     @Before
     fun prepareMock() {
