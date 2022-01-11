@@ -80,8 +80,8 @@ public class TreatmentActivity extends ViewSelectorActivity {
                         // (you have to swipe past them anyways - but still)
                         String actionstring = "bolus " + SafeParse.stringToDouble(editInsulin.editText.getText().toString())
                                 + " " + SafeParse.stringToInt(editCarbs.editText.getText().toString());
-                        ListenerService.initiateAction(BolusActivity.this, actionstring);
-                        confirmAction(BolusActivity.this, R.string.action_bolus_confirmation);
+                        ListenerService.initiateAction(TreatmentActivity.this, actionstring);
+                        confirmAction(TreatmentActivity.this, R.string.action_treatment_confirmation);
                         finishAffinity();
                 });
                 container.addView(view);
