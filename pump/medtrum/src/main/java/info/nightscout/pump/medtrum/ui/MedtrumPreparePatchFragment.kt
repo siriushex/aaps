@@ -3,7 +3,9 @@ package info.nightscout.androidaps.plugins.pump.eopatch.ui
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.ViewModelProvider
+import info.nightscout.core.ui.toast.ToastUtils
 import info.nightscout.pump.medtrum.R
+import info.nightscout.pump.medtrum.code.PatchStep
 import info.nightscout.pump.medtrum.databinding.FragmentMedtrumPreparePatchBinding
 import info.nightscout.pump.medtrum.ui.MedtrumBaseFragment
 import info.nightscout.pump.medtrum.ui.viewmodel.MedtrumViewModel
@@ -30,9 +32,19 @@ class MedtrumPreparePatchFragment : MedtrumBaseFragment<FragmentMedtrumPreparePa
             viewModel?.apply {
                 setupStep.observe(viewLifecycleOwner) {
                     when (it) {
+                        MedtrumViewModel.SetupStep.INITIAL -> btnPositive.visibility = View.GONE
                         // TODO: Confirmation dialog
-                        MedtrumViewModel.SetupStep.CONNECTED -> btnPositive.visibility = View.VISIBLE
-                        else                                 -> Unit
+                        MedtrumViewModel.SetupStep.FILLED  -> btnPositive.visibility = View.VISIBLE
+
+                        MedtrumViewModel.SetupStep.ERROR   -> {
+                            ToastUtils.errorToast(requireContext(), "Error preparing patch") // TODO: String resource and show error message
+                            moveStep(PatchStep.CANCEL)
+                        }
+
+                        else                               -> {
+                            ToastUtils.errorToast(requireContext(), "Unexpected state: $it") // TODO: String resource and show error message
+                            moveStep(PatchStep.CANCEL)
+                        }
                     }
                 }
                 preparePatch()

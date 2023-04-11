@@ -25,7 +25,40 @@
             android:layout_height="wrap_content"
             tools:context=".ui.MedtrumActivity">
 
-            <!-- TODO some stuff here that we are waiting :) -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/layout_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <Button
+                    android:id="@+id/btn_negative"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/cancel"
+                    android:text="@string/cancel"
+                    app:layout_constraintEnd_toStartOf="@id/btn_positive"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:onSafeClick="@{() -> viewModel.moveStep(PatchStep.CANCEL)}" />
+
+                <Button
+                    android:id="@+id/btn_positive"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:contentDescription="@string/string_next"
+                    android:text="@string/string_next"
+                    android:visibility="gone"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/btn_negative"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:onSafeClick="@{() -> viewModel.moveStep(PatchStep.ATTACH_PATCH)}"
+                    tools:visibility="visible" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+            
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </ScrollView>
