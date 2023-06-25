@@ -1,4 +1,4 @@
-package info.nightscout.androidaps.plugins.pump.eopatch.ui
+package info.nightscout.pump.medtrum.ui
 
 import android.os.Bundle
 import android.view.View
@@ -11,11 +11,13 @@ import info.nightscout.pump.medtrum.ui.MedtrumBaseFragment
 import info.nightscout.pump.medtrum.ui.viewmodel.MedtrumViewModel
 import info.nightscout.rx.logging.AAPSLogger
 import info.nightscout.rx.logging.LTag
+import info.nightscout.shared.interfaces.ResourceHelper
 import javax.inject.Inject
 
 class MedtrumActivateFragment : MedtrumBaseFragment<FragmentMedtrumActivateBinding>() {
 
     @Inject lateinit var aapsLogger: AAPSLogger
+    @Inject lateinit var rh: ResourceHelper
 
     companion object {
 
@@ -31,16 +33,20 @@ class MedtrumActivateFragment : MedtrumBaseFragment<FragmentMedtrumActivateBindi
             viewModel?.apply {
                 setupStep.observe(viewLifecycleOwner) {
                     when (it) {
-                        MedtrumViewModel.SetupStep.PRIMED -> Unit // Nothing to do here, previous state
-                        MedtrumViewModel.SetupStep.ACTIVATED -> btnPositive.visibility = View.VISIBLE
-                        MedtrumViewModel.SetupStep.ERROR   -> {
-                            ToastUtils.errorToast(requireContext(), "Error Activating") // TODO: String resource and show error message
-                            moveStep(PatchStep.CANCEL)
+                        MedtrumViewModel.SetupStep.INITIAL,
+                        MedtrumViewModel.SetupStep.PRIMED    -> Unit // Nothing to do here, previous state
+                        MedtrumViewModel.SetupStep.ACTIVATED -> moveStep(PatchStep.ACTIVATE_COMPLETE)
+
+                        MedtrumViewModel.SetupStep.ERROR     -> {
+                            moveStep(PatchStep.ERROR)
+                            updateSetupStep(MedtrumViewModel.SetupStep.PRIMED) // Reset setup step
+                            binding.textActivatingPump.text = rh.gs(R.string.activating_error)
+                            binding.btnPositive.visibility = View.VISIBLE
                         }
 
-                        else                               -> {
-                            ToastUtils.errorToast(requireContext(), "Unexpected state: $it") // TODO: String resource and show error message
-                            moveStep(PatchStep.CANCEL)
+                        else                                 -> {
+                            ToastUtils.errorToast(requireContext(), "Unexpected state: $it")
+                            aapsLogger.error(LTag.PUMP, "Unexpected state: $it")
                         }
                     }
                 }

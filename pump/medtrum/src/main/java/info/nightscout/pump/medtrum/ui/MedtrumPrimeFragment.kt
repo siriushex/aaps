@@ -1,4 +1,4 @@
-package info.nightscout.androidaps.plugins.pump.eopatch.ui
+package info.nightscout.pump.medtrum.ui
 
 import android.os.Bundle
 import android.view.View
@@ -31,20 +31,19 @@ class MedtrumPrimeFragment : MedtrumBaseFragment<FragmentMedtrumPrimeBinding>() 
             viewModel?.apply {
                 setupStep.observe(viewLifecycleOwner) {
                     when (it) {
+                        MedtrumViewModel.SetupStep.INITIAL,
                         MedtrumViewModel.SetupStep.FILLED -> Unit // Nothing to do here, previous state
-                        MedtrumViewModel.SetupStep.PRIMED -> btnPositive.visibility = View.VISIBLE
-                        MedtrumViewModel.SetupStep.ERROR   -> {
+                        MedtrumViewModel.SetupStep.ERROR  -> {
                             ToastUtils.errorToast(requireContext(), "Error priming") // TODO: String resource and show error message
                             moveStep(PatchStep.CANCEL)
                         }
 
-                        else                               -> {
+                        else                              -> {
                             ToastUtils.errorToast(requireContext(), "Unexpected state: $it") // TODO: String resource and show error message
-                            moveStep(PatchStep.CANCEL)
+                            aapsLogger.error(LTag.PUMP, "Unexpected state: $it")
                         }
                     }
                 }
-                startPrime()
             }
         }
     }
