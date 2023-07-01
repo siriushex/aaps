@@ -63,12 +63,11 @@
 
                 <Button
                     android:id="@+id/btn_positive"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/ok"
                     android:text="@string/ok"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:onSafeClick="@{() -> viewModel.moveStep(PatchStep.COMPLETE)}" />
             </androidx.constraintlayout.widget.ConstraintLayout>
