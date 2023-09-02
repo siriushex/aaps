@@ -36,9 +36,15 @@ class BolusExtensionKtTest : TestBaseWithProfile() {
         val bolus = Bolus(timestamp = now - 1, amount = 1.0, type = Bolus.Type.NORMAL)
         // there should be almost full IOB after now
         Assertions.assertEquals(1.0, bolus.iobCalc(activePlugin, now, dia).iobContrib, 0.01)
-        // there should be less that 5% after DIA -1
+        // there should be less than 5% after DIA -1
         Assertions.assertTrue(0.05 > bolus.iobCalc(activePlugin, now + T.hours(dia.toLong() - 1).msecs(), dia).iobContrib)
         // there should be zero after DIA
         Assertions.assertEquals(0.0, bolus.iobCalc(activePlugin, now + T.hours(dia.toLong() + 1).msecs(), dia).iobContrib)
+        // no IOB for invalid record
+        bolus.isValid = false
+        Assertions.assertEquals(0.0, bolus.iobCalc(activePlugin, now + T.hours(1).msecs(), dia).iobContrib)
+        bolus.isValid = true
+        bolus.type = Bolus.Type.PRIMING
+        Assertions.assertEquals(0.0, bolus.iobCalc(activePlugin, now + T.hours(1).msecs(), dia).iobContrib)
     }
 }
