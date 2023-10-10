@@ -43,4 +43,6 @@ data class BS(
             fun fromString(name: String?) = entries.firstOrNull { it.name == name } ?: NORMAL
         }
     }
+
+    companion object
 }
