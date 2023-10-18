@@ -34,7 +34,7 @@ dependencies {
     api(Libs.Dagger.androidSupport)
 
     //WorkManager
-    api(Libs.AndroidX.workRuntimeKtx)  // DataWorkerStorage
+    api(Libs.AndroidX.Work.runtimeKtx)  // DataWorkerStorage
 
     kapt(Libs.Dagger.compiler)
     kapt(Libs.Dagger.androidProcessor)
