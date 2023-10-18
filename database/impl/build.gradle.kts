@@ -47,4 +47,6 @@ dependencies {
     api(Libs.Dagger.androidSupport)
 
     androidTestImplementation(Libs.AndroidX.Room.testing)
+
+    kapt(Libs.Dagger.compiler)
 }
