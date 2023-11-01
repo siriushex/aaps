@@ -12,20 +12,17 @@ import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.db.PersistenceLayer
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.L
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginBase
 import app.aaps.core.interfaces.profile.ProfileFunction
-import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.events.EventAPSCalculationFinished
 import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
 import app.aaps.core.interfaces.rx.events.EventEffectiveProfileSwitchChanged
 import app.aaps.core.interfaces.rx.events.EventNewBG
 import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.helpers.RxHelper
 import app.aaps.plugins.aps.events.EventOpenAPSUpdateGui
 import app.aaps.plugins.aps.events.EventResetOpenAPSGui
@@ -33,7 +30,6 @@ import app.aaps.plugins.aps.loop.events.EventLoopSetLastRunGui
 import app.aaps.plugins.constraints.objectives.ObjectivesPlugin
 import app.aaps.plugins.sync.nsShared.NsIncomingDataProcessor
 import com.google.common.truth.Truth.assertThat
-import dagger.android.HasAndroidInjector
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Before
@@ -43,8 +39,6 @@ import javax.inject.Inject
 
 class LoopTest @Inject constructor() {
 
-    @Inject lateinit var aapsLogger: AAPSLogger
-    @Inject lateinit var injector: HasAndroidInjector
     @Inject lateinit var loop: Loop
     @Inject lateinit var profileFunction: ProfileFunction
     @Inject lateinit var nsIncomingDataProcessor: NsIncomingDataProcessor
@@ -52,8 +46,6 @@ class LoopTest @Inject constructor() {
     @Inject lateinit var dateUtil: DateUtil
     @Inject lateinit var rxHelper: RxHelper
     @Inject lateinit var l: L
-    @Inject lateinit var aapsSchedulers: AapsSchedulers
-    @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var config: Config
     @Inject lateinit var sp: SP
     @Inject lateinit var objectivesPlugin: ObjectivesPlugin
@@ -141,7 +133,7 @@ class LoopTest @Inject constructor() {
         loopStatusEvent = rxHelper.waitFor(EventLoopSetLastRunGui::class.java, comment = "step4")
         assertThat(loopStatusEvent.first).isTrue()
         assertThat((loopStatusEvent.second as EventLoopSetLastRunGui).text).contains("NO APS SELECTED OR PROVIDED RESULT")
-        var apsStatusEvent = rxHelper.waitFor(EventResetOpenAPSGui::class.java, comment = "step5")
+        val apsStatusEvent = rxHelper.waitFor(EventResetOpenAPSGui::class.java, comment = "step5")
         assertThat(apsStatusEvent.first).isTrue()
         assertThat((apsStatusEvent.second as EventResetOpenAPSGui).text).contains("No glucose data available")
         assertThat(loop.lastRun).isNull()
