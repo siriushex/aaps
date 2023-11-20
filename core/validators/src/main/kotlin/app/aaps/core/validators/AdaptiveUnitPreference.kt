@@ -1,6 +1,7 @@
 package app.aaps.core.validators
 
 import android.content.Context
+import android.text.InputType
 import android.util.AttributeSet
 import androidx.preference.EditTextPreference
 import androidx.preference.PreferenceViewHolder
@@ -34,7 +35,10 @@ class AdaptiveUnitPreference(ctx: Context, attrs: AttributeSet?) : EditTextPrefe
             isVisible = false; isEnabled = false
         }
         validatorParameters = obtainValidatorParameters(attrs)
-        setOnBindEditTextListener { editText -> validator = DefaultEditTextValidator(editText, validatorParameters, context) }
+        setOnBindEditTextListener { editText ->
+            validator = DefaultEditTextValidator(editText, validatorParameters, context)
+            editText.inputType = InputType.TYPE_NUMBER_FLAG_DECIMAL
+        }
         setOnPreferenceChangeListener { _, _ -> validator?.testValidity(false) ?: true }
         setDefaultValue(preferenceKey.defaultValue)
     }
