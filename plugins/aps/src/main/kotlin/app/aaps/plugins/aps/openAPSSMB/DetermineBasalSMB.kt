@@ -270,9 +270,6 @@ class DetermineBasalSMB @Inject constructor(
         val minDelta = Math.min(glucose_status.delta, glucose_status.short_avgdelta)
         val minAvgDelta = Math.min(glucose_status.short_avgdelta, glucose_status.long_avgdelta)
         val maxDelta = max(glucose_status.delta, max(glucose_status.short_avgdelta, glucose_status.long_avgdelta))
-aapsLogger.debug(LTag.APS, "XXX 5 minDelta: $minDelta")
-aapsLogger.debug(LTag.APS, "XXX 5 minAvgDelta: $minAvgDelta")
-aapsLogger.debug(LTag.APS, "XXX 5 maxDelta: $maxDelta")
 
         val profile_sens = round(profile.sens, 1)
         var sens = profile.sens / sensitivityRatio
@@ -798,13 +795,14 @@ aapsLogger.debug(LTag.APS, "XXX 5 maxDelta: $maxDelta")
         // always include at least 30m worth of zero temp (carbs to 80, low temp up to target)
         val zeroTempDuration = minutesAboveThreshold
         // BG undershoot, minus effect of zero temps until hitting min_bg, converted to grams, minus COB
-        val zeroTempEffect = profile.current_basal * sens * zeroTempDuration / 60
+        val zeroTempEffectDouble = profile.current_basal * sens * zeroTempDuration / 60
         // don't count the last 25% of COB against carbsReq
         val COBforCarbsReq = max(0.0, meal_data.mealCOB - 0.25 * meal_data.carbs)
-        val carbsReq = (bgUndershoot - zeroTempEffect) / csf - COBforCarbsReq
+        val carbsReq = round(((bgUndershoot - zeroTempEffectDouble) / csf - COBforCarbsReq))
+        val zeroTempEffect = round(zeroTempEffectDouble)
         consoleError.add("naive_eventualBG: $naive_eventualBG bgUndershoot: $bgUndershoot zeroTempDuration $zeroTempDuration zeroTempEffect: $zeroTempEffect carbsReq: $carbsReq")
         if (carbsReq >= profile.carbsReqThreshold && minutesAboveThreshold <= 45) {
-            rT.carbsReq = round(carbsReq)
+            rT.carbsReq = carbsReq
             rT.carbsReqWithin = minutesAboveThreshold
             rT.reason.append("$carbsReq add\'l carbs req w/in ${minutesAboveThreshold}m; ")
         }
@@ -836,7 +834,7 @@ aapsLogger.debug(LTag.APS, "XXX 5 maxDelta: $maxDelta")
         if (eventualBG < min_bg) { // if eventual BG is below target:
             rT.reason.append("Eventual BG ${convert_bg(eventualBG.toDouble())} < ${convert_bg(min_bg.toDouble())}")
             // if 5m or 30m avg BG is rising faster than expected delta
-            if (minDelta > expectedDelta && minDelta > 0 && carbsReq.isNaN()) {
+            if (minDelta > expectedDelta && minDelta > 0 && carbsReq != 0) {
                 // if naive_eventualBG < 40, set a 30m zero temp (oref0-pump-loop will let any longer SMB zero temp run)
                 if (naive_eventualBG < 40) {
                     rT.reason.append(", naive_eventualBG < 40. ")
@@ -866,19 +864,12 @@ aapsLogger.debug(LTag.APS, "XXX 5 maxDelta: $maxDelta")
             if (minDelta < 0 && minDelta > expectedDelta) {
                 // if we're barely falling, newinsulinReq should be barely negative
                 val newinsulinReq = round((insulinReq * (minDelta / expectedDelta)), 2)
-aapsLogger.debug(LTag.APS, "XXX 3 insulinReq: $insulinReq")
-aapsLogger.debug(LTag.APS, "XXX 3 minDelta: $minDelta")
-aapsLogger.debug(LTag.APS, "XXX 3 expectedDelta: $expectedDelta")
                 //console.error("Increasing insulinReq from " + insulinReq + " to " + newinsulinReq);
                 insulinReq = newinsulinReq
-aapsLogger.debug(LTag.APS, "XXX 2 insulinReq: $insulinReq")
             }
             // rate required to deliver insulinReq less insulin over 30m:
             var rate = basal + (2 * insulinReq)
             rate = round_basal(rate)
-aapsLogger.debug(LTag.APS, "XXX 1 basal: $basal")
-aapsLogger.debug(LTag.APS, "XXX 1 insulinReq: $insulinReq")
-aapsLogger.debug(LTag.APS, "XXX 1 rate: $rate")
 
             // if required temp < existing temp basal
             val insulinScheduled = currenttemp.duration * (currenttemp.rate - basal) / 60
