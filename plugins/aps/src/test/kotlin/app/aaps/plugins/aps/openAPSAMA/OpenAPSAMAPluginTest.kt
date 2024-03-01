@@ -5,9 +5,9 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.keys.AdaptiveIntentPreference
-import app.aaps.core.keys.AdaptiveSwitchPreference
 import app.aaps.core.validators.AdaptiveDoublePreference
 import app.aaps.core.validators.AdaptiveIntPreference
+import app.aaps.core.validators.AdaptiveSwitchPreference
 import app.aaps.core.validators.AdaptiveUnitPreference
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
@@ -35,6 +35,7 @@ class OpenAPSAMAPluginTest : TestBaseWithProfile() {
                 it.profileUtil = profileUtil
                 it.preferences = preferences
                 it.sharedPrefs = sharedPrefs
+                it.config = config
             }
             if (it is AdaptiveIntentPreference) {
                 it.preferences = preferences
@@ -48,6 +49,7 @@ class OpenAPSAMAPluginTest : TestBaseWithProfile() {
             if (it is AdaptiveSwitchPreference) {
                 it.preferences = preferences
                 it.sharedPrefs = sharedPrefs
+                it.config = config
             }
         }
     }
