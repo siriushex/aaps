@@ -13,6 +13,7 @@ open class AdaptiveListPreference(
     attrs: AttributeSet? = null,
     stringKey: StringPreferenceKey?,
     @StringRes title: Int?,
+    @StringRes dialogMessage: Int? = null,
     @StringRes summary: Int? = null,
     entries: Array<CharSequence>? = null,
     entryValues: Array<CharSequence>? = null
@@ -29,6 +30,7 @@ open class AdaptiveListPreference(
 
         stringKey?.let { key = context.getString(it.key) }
         title?.let { this.title = context.getString(it) }
+        dialogMessage?.let { this.dialogMessage = context.getString(it) }
         summary?.let { this.summary = context.getString(it) }
         entries?.let { setEntries(it)}
         entryValues?.let { setEntryValues(it)}
