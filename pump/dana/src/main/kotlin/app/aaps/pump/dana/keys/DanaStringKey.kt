@@ -15,5 +15,9 @@ enum class DanaStringKey(
     override val hideParentScreenIfHidden: Boolean = false
 ) : StringPreferenceKey {
 
-    DanaBtName("danar_bt_name", ""),
+    DanaRName("danar_bt_name", ""),
+
+    DanaRsName("danars_name", ""),
+    DanaMacAddress("danars_address", ""),
+    DanaRsPassword("danars_password", ""),
 }
