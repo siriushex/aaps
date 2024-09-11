@@ -6,8 +6,8 @@ import app.aaps.core.keys.IntPreferenceKey
 enum class DanaIntKey(
     override val key: String,
     override val defaultValue: Int,
-    override val min: Int = 0,
-    override val max: Int = 9999,
+    override val min: Int = Int.MIN_VALUE,
+    override val max: Int = Int.MAX_VALUE,
     override val calculatedDefaultValue: Boolean = false,
     override val engineeringModeOnly: Boolean = false,
     override val defaultedBySM: Boolean = false,
