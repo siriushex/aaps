@@ -9,11 +9,10 @@ enum class IntentKey(
     override val dependency: BooleanPreferenceKey? = null,
     override val negativeDependency: BooleanPreferenceKey? = null,
     override val hideParentScreenIfHidden: Boolean = false
-) : PreferenceKey {
+) : IntentPreferenceKey {
 
     ApsLinkToDocs(key = "link_to_docs"),
     SmsOtpSetup(key = "smscommunicator_otp_setup", dependency = BooleanKey.SmsAllowRemoteCommands),
     OverviewQuickWizardSettings(key = "overview_quickwizard_settings"),
-    TidepoolTestLogin(key = "tidepool_test_login"),
     XdripInfo(key = "xdrip_info"),
 }
