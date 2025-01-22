@@ -1,6 +1,6 @@
 package app.aaps.plugins.constraints.objectives.keys
 
-import app.aaps.core.keys.BooleanComposedNonPreferenceKey
+import app.aaps.core.keys.interfaces.BooleanComposedNonPreferenceKey
 
 enum class ObjectivesBooleanComposedKey(
     override val key: String,
