@@ -16,9 +16,6 @@ enum class DashBooleanPreferenceKey(
     override val hideParentScreenIfHidden: Boolean = false
 ) : BooleanPreferenceKey {
 
-    SoundUncertainTbrNotification("AAPS.Omnipod.notification_uncertain_tbr_sound_enabled", true),
-    SoundUncertainSmbNotification("AAPS.Omnipod.notification_uncertain_smb_sound_enabled", true),
-    SoundUncertainBolusNotification("AAPS.Omnipod.notification_uncertain_bolus_sound_enabled", true),
     SoundDeliverySuspendedNotification("AAPS.Omnipod.notification_delivery_suspended_sound_enabled", true),
     UseBonding("AAPS.Omnipod.Dash.use_bonding", false),
 }
