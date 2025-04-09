@@ -680,7 +680,7 @@ class OmnipodDashOverviewFragment : DaggerFragment() {
     }
 
     private fun isAutomaticallySilenceAlertsEnabled(): Boolean {
-        return preferences.get(OmnipodBooleanPreferenceKey.AutomaticallyAcknowledgeAlerts)
+        return false // Automatic alert silencing is not supported for DASH (see also Omnipod EROS)
     }
 
     private fun displayErrorDialog(title: String, message: String, withSound: Boolean) {
