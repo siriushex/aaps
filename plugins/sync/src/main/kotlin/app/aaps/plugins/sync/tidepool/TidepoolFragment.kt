@@ -18,11 +18,12 @@ import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.plugins.sync.R
 import app.aaps.plugins.sync.databinding.TidepoolFragmentBinding
+import app.aaps.plugins.sync.tidepool.auth.AuthFlowOut
 import app.aaps.plugins.sync.tidepool.comm.TidepoolUploader
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolDoUpload
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolResetData
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolUpdateGUI
-import app.aaps.plugins.sync.tidepool.keys.TidepoolLongKey
+import app.aaps.plugins.sync.tidepool.keys.TidepoolLongNonKey
 import dagger.android.support.DaggerFragment
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
@@ -37,13 +38,15 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var aapsSchedulers: AapsSchedulers
     @Inject lateinit var rh: ResourceHelper
+    @Inject lateinit var authFlowOut: AuthFlowOut
 
     companion object {
 
         const val ID_MENU_LOGIN = 530
-        const val ID_MENU_SEND_NOW = 531
-        const val ID_MENU_REMOVE_ALL = 532
-        const val ID_MENU_FULL_SYNC = 533
+        const val ID_MENU_LOGOUT = 531
+        const val ID_MENU_SEND_NOW = 532
+        const val ID_MENU_REMOVE_ALL = 533
+        const val ID_MENU_FULL_SYNC = 534
     }
 
     private var disposable: CompositeDisposable = CompositeDisposable()
@@ -62,6 +65,7 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         menu.add(Menu.FIRST, ID_MENU_LOGIN, 0, rh.gs(app.aaps.core.ui.R.string.login)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
+        menu.add(Menu.FIRST, ID_MENU_LOGOUT, 0, rh.gs(app.aaps.core.ui.R.string.logout)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(Menu.FIRST, ID_MENU_SEND_NOW, 0, rh.gs(R.string.upload_now)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(Menu.FIRST, ID_MENU_REMOVE_ALL, 0, rh.gs(R.string.remove_all)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(Menu.FIRST, ID_MENU_FULL_SYNC, 0, rh.gs(R.string.full_sync)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
@@ -71,7 +75,12 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
     override fun onMenuItemSelected(item: MenuItem): Boolean =
         when (item.itemId) {
             ID_MENU_LOGIN      -> {
-                tidepoolUploader.doLogin(false)
+                authFlowOut.doTidePoolInitialLogin()
+                true
+            }
+
+            ID_MENU_LOGOUT      -> {
+                authFlowOut.clearAllSavedData()
                 true
             }
 
@@ -86,7 +95,7 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
             }
 
             ID_MENU_FULL_SYNC  -> {
-                preferences.put(TidepoolLongKey.LastEnd, 0)
+                preferences.put(TidepoolLongNonKey.LastEnd, 0)
                 true
             }
 

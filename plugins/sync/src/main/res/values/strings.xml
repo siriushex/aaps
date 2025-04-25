@@ -77,12 +77,7 @@
     <string name="ns_use_ws_summary">Enabling means: faster updates, receiving alarms and announcements and higher battery consumption similar to v1. All other uploaders to NS must use v3 protocol.</string>
 
     <!-- Tidepool -->
-    <string name="summary_tidepool_username">Your Tidepool login user name, normally your email address</string>
-    <string name="title_tidepool_username">Login User Name</string>
-    <string name="summary_tidepool_password">Your Tidepool login password</string>
-    <string name="title_tidepool_password">Login Password</string>
-    <string name="title_tidepool_test_login">Test Tidepool Login</string>
-    <string name="summary_tidepool_dev_servers">If enabled, uploads will go to https://int-app.tidepool.org instead of the regular https://app.tidepool.org/</string>
+    <string name="summary_tidepool_dev_servers">If enabled, uploads will go to test servers instead of the regular</string>
     <string name="title_tidepool_dev_servers">Use Integration (test) servers</string>
     <string name="tidepool">Tidepool</string>
     <string name="tidepool_shortname">TDP</string>

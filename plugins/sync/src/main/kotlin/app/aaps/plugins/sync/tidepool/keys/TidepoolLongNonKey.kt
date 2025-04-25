@@ -2,7 +2,7 @@ package app.aaps.plugins.sync.tidepool.keys
 
 import app.aaps.core.keys.interfaces.LongNonPreferenceKey
 
-enum class TidepoolLongKey(
+enum class TidepoolLongNonKey(
     override val key: String,
     override val defaultValue: Long,
     override val exportable: Boolean = true

@@ -27,21 +27,22 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.utils.HtmlHelper
-import app.aaps.core.validators.DefaultEditTextValidator
-import app.aaps.core.validators.EditTextValidator
-import app.aaps.core.validators.preferences.AdaptiveClickPreference
 import app.aaps.core.validators.preferences.AdaptiveStringPreference
 import app.aaps.core.validators.preferences.AdaptiveSwitchPreference
 import app.aaps.plugins.sync.R
 import app.aaps.plugins.sync.nsShared.events.EventConnectivityOptionChanged
 import app.aaps.plugins.sync.nsclient.ReceiverDelegate
+import app.aaps.plugins.sync.tidepool.auth.AuthFlowOut
 import app.aaps.plugins.sync.tidepool.comm.TidepoolUploader
 import app.aaps.plugins.sync.tidepool.comm.UploadChunk
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolDoUpload
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolResetData
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolStatus
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolUpdateGUI
-import app.aaps.plugins.sync.tidepool.keys.TidepoolLongKey
+import app.aaps.plugins.sync.tidepool.keys.TidepoolBooleanKey
+import app.aaps.plugins.sync.tidepool.keys.TidepoolLongNonKey
+import app.aaps.plugins.sync.tidepool.keys.TidepoolStringKey
+import app.aaps.plugins.sync.tidepool.keys.TidepoolStringNonKey
 import app.aaps.plugins.sync.tidepool.utils.RateLimit
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
@@ -61,7 +62,8 @@ class TidepoolPlugin @Inject constructor(
     private val uploadChunk: UploadChunk,
     private val rateLimit: RateLimit,
     private val receiverDelegate: ReceiverDelegate,
-    private val uiInteraction: UiInteraction
+    private val uiInteraction: UiInteraction,
+    private val authFlowOut: AuthFlowOut
 ) : Sync, Tidepool, PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.SYNC)
@@ -70,7 +72,10 @@ class TidepoolPlugin @Inject constructor(
         .fragmentClass(TidepoolFragment::class.qualifiedName)
         .preferencesId(PluginDescription.PREFERENCE_SCREEN)
         .description(R.string.description_tidepool),
-    ownPreferences = listOf(TidepoolLongKey::class.java),
+    ownPreferences = listOf(
+        TidepoolBooleanKey::class.java, TidepoolLongNonKey::class.java,
+        TidepoolStringKey::class.java, TidepoolStringNonKey::class.java
+    ),
     aapsLogger, rh, preferences
 ) {
 
@@ -102,7 +107,7 @@ class TidepoolPlugin @Inject constructor(
                                aapsLogger.debug(LTag.TIDEPOOL, "Not connected for delete Dataset")
                            } else {
                                tidepoolUploader.deleteDataSet()
-                               preferences.put(TidepoolLongKey.LastEnd, 0)
+                               preferences.put(TidepoolLongNonKey.LastEnd, 0)
                                tidepoolUploader.doLogin()
                            }
                        }, fabricPrivacy::logException)
@@ -129,11 +134,10 @@ class TidepoolPlugin @Inject constructor(
             .toObservable(EventPreferenceChange::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({ event ->
-                           if (event.isChanged(BooleanKey.TidepoolUseTestServers.key)
-                               || event.isChanged(StringKey.TidepoolUsername.key)
-                               || event.isChanged(StringKey.TidepoolPassword.key)
-                           )
+                           if (event.isChanged(TidepoolBooleanKey.UseTestServers.key)) {
+                               authFlowOut.clearAllSavedData()
                                tidepoolUploader.resetInstance()
+                           }
                        }, fabricPrivacy::logException)
     }
 
@@ -192,25 +196,6 @@ class TidepoolPlugin @Inject constructor(
             key = "tidepool_settings"
             title = rh.gs(R.string.tidepool)
             initialExpandedChildrenCount = 0
-            addPreference(
-                AdaptiveStringPreference(
-                    ctx = context, stringKey = StringKey.TidepoolUsername, summary = R.string.summary_tidepool_username, title = R.string.title_tidepool_username,
-                    validatorParams = DefaultEditTextValidator.Parameters(testType = EditTextValidator.TEST_EMAIL)
-                )
-            )
-            addPreference(
-                AdaptiveStringPreference(
-                    ctx = context, stringKey = StringKey.TidepoolPassword, dialogMessage = R.string.summary_tidepool_password, title = R.string.title_tidepool_password,
-                    validatorParams = DefaultEditTextValidator.Parameters(testType = EditTextValidator.TEST_MIN_LENGTH, minLength = 1)
-                )
-            )
-            addPreference(
-                AdaptiveClickPreference(ctx = context, stringKey = StringKey.TidepoolTestLogin, title = R.string.title_tidepool_test_login,
-                                        onPreferenceClickListener = {
-                                            tidepoolUploader.testLogin(preferenceManager.context)
-                                            true
-                                        })
-            )
             addPreference(preferenceManager.createPreferenceScreen(context).apply {
                 key = "tidepool_connection_options"
                 title = rh.gs(R.string.connection_settings_title)
@@ -224,7 +209,7 @@ class TidepoolPlugin @Inject constructor(
             addPreference(preferenceManager.createPreferenceScreen(context).apply {
                 key = "tidepool_advanced"
                 title = rh.gs(app.aaps.core.ui.R.string.advanced_settings_title)
-                addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = BooleanKey.TidepoolUseTestServers, summary = R.string.summary_tidepool_dev_servers, title = R.string.title_tidepool_dev_servers))
+                addPreference(AdaptiveSwitchPreference(ctx = context, booleanKey = TidepoolBooleanKey.UseTestServers, summary = R.string.summary_tidepool_dev_servers, title = R.string.title_tidepool_dev_servers))
             })
         }
     }

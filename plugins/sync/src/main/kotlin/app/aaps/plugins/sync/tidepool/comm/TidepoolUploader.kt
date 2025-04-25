@@ -11,12 +11,14 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.plugins.sync.R
 import app.aaps.plugins.sync.nsclient.ReceiverDelegate
+import app.aaps.plugins.sync.tidepool.auth.AuthFlowOut
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolStatus
+import app.aaps.plugins.sync.tidepool.keys.TidepoolBooleanKey
+import app.aaps.plugins.sync.tidepool.keys.TidepoolStringKey
 import app.aaps.plugins.sync.tidepool.messages.AuthReplyMessage
 import app.aaps.plugins.sync.tidepool.messages.AuthRequestMessage
 import app.aaps.plugins.sync.tidepool.messages.DatasetReplyMessage
@@ -42,7 +44,8 @@ class TidepoolUploader @Inject constructor(
     private val dateUtil: DateUtil,
     private val receiverDelegate: ReceiverDelegate,
     private val config: Config,
-    private val l: L
+    private val l: L,
+    private val authFlowOut: AuthFlowOut
 ) {
 
     private val isAllowed get() = receiverDelegate.allowed
@@ -80,7 +83,7 @@ class TidepoolUploader @Inject constructor(
                 }.build()
 
             retrofit = Retrofit.Builder()
-                .baseUrl(if (preferences.get(BooleanKey.TidepoolUseTestServers)) INTEGRATION_BASE_URL else PRODUCTION_BASE_URL)
+                .baseUrl(if (preferences.get(TidepoolBooleanKey.UseTestServers)) INTEGRATION_BASE_URL else PRODUCTION_BASE_URL)
                 .client(client)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
@@ -88,13 +91,14 @@ class TidepoolUploader @Inject constructor(
         return retrofit
     }
 
-    private fun createSession(): Session {
+    fun createSession(authHeader: String?): Session {
         val service = getRetrofitInstance()?.create(TidepoolApiService::class.java)
-        return Session(AuthRequestMessage.getAuthRequestHeader(preferences), SESSION_TOKEN_HEADER, service)
+        return Session(authHeader, SESSION_TOKEN_HEADER, service)
     }
 
     fun resetInstance() {
         retrofit = null
+        authFlowOut.clearAllSavedData()
         aapsLogger.debug(LTag.TIDEPOOL, "Instance reset")
         connectionStatus = ConnectionStatus.DISCONNECTED
     }
@@ -112,49 +116,67 @@ class TidepoolUploader @Inject constructor(
         }
         // TODO failure backoff
         extendWakeLock(30000)
-        session = createSession()
-        val authHeader = session?.authHeader
-        if (authHeader != null) {
-            connectionStatus = ConnectionStatus.CONNECTING
-            rxBus.send(EventTidepoolStatus(("Connecting")))
-            val call = session?.service?.getLogin(authHeader)
+        if (false) {
+            session = createSession(AuthRequestMessage.getAuthRequestHeader(preferences))
+            val authHeader = session?.authHeader
+            if (authHeader != null) {
+                connectionStatus = ConnectionStatus.CONNECTING
+                rxBus.send(EventTidepoolStatus(("Connecting")))
+                val call = session?.service?.getLogin(authHeader)
 
-            call?.enqueue(TidepoolCallback<AuthReplyMessage>(
-                aapsLogger, rxBus, session!!, "Login",
-                {
-                    startSession(session!!, doUpload)
-                }, {
-                    connectionStatus = ConnectionStatus.FAILED
-                    releaseWakeLock()
-                })
-            )
+                call?.enqueue(
+                    TidepoolCallback<AuthReplyMessage>(
+                        aapsLogger, rxBus, session!!, "Login",
+                        {
+                            startSession(session!!, doUpload)
+                        }, {
+                            connectionStatus = ConnectionStatus.FAILED
+                            releaseWakeLock()
+                        })
+                )
+            } else {
+                aapsLogger.debug(LTag.TIDEPOOL, "Cannot do login as user credentials have not been set correctly")
+                connectionStatus = ConnectionStatus.FAILED
+                rxBus.send(EventTidepoolStatus(("Invalid credentials")))
+                releaseWakeLock()
+            }
         } else {
-            aapsLogger.debug(LTag.TIDEPOOL, "Cannot do login as user credentials have not been set correctly")
-            connectionStatus = ConnectionStatus.FAILED
-            rxBus.send(EventTidepoolStatus(("Invalid credentials")))
-            releaseWakeLock()
+            handleTokenLoginAndStartSession()
         }
     }
 
-    fun testLogin(rootContext: Context) {
-        val session = createSession()
-        session.authHeader?.let {
-            val call = session.service?.getLogin(it)
+    fun handleTokenLoginAndStartSession() {
+        val state = authFlowOut.authState
+        val service = authFlowOut.authService
+        if (state != null && service != null) {
+            state.performActionWithFreshTokens(service) { accessToken, idToken, tokenException ->
+                tokenException ?: aapsLogger.error(LTag.TIDEPOOL, "Got exception token: $tokenException")
 
-            call?.enqueue(TidepoolCallback<AuthReplyMessage>(
-                aapsLogger, rxBus, session, "Login",
-                {
-                    OKDialog.show(rootContext, rh.gs(R.string.tidepool), "Successfully logged into Tidepool.")
-                }, {
-                    OKDialog.show(rootContext, rh.gs(R.string.tidepool), "Failed to log into Tidepool.\nCheck that your user name and password are correct.")
-                })
-            )
+                if (accessToken != null) {
+                    val lastResponse = state.lastTokenResponse
+                    if (lastResponse != null) {
+                        val session = createSession(lastResponse.tokenType)
+                        session.authReply = AuthReplyMessage().apply { userid = idToken }
+                        session.token = accessToken
+                        session.authReply?.userid = preferences.get(TidepoolStringKey.SubName)
+                        startSession(session, false)
+                        authFlowOut.saveAuthState()
+                    } else {
+                        aapsLogger.error(LTag.TIDEPOOL, "Failing to get response / token type - trying initial login again")
+                        authFlowOut.doTidePoolInitialLogin()
+                    }
+                } else {
+                    aapsLogger.error(LTag.TIDEPOOL, "Failing to use access token - trying initial login again")
+                    authFlowOut.doTidePoolInitialLogin()
+                }
+            }
+        } else {
+            aapsLogger.error(LTag.TIDEPOOL, "Failing to get state - trying initial login")
+            authFlowOut.doTidePoolInitialLogin()
         }
-            ?: OKDialog.show(rootContext, rh.gs(R.string.tidepool), "Cannot do login as user credentials have not been set correctly")
-
     }
 
-    private fun startSession(session: Session, doUpload: Boolean = false) {
+    fun startSession(session: Session, doUpload: Boolean = false) {
         extendWakeLock(30000)
         if (session.authReply?.userid != null) {
             // See if we already have an open data set to write to
@@ -170,18 +192,19 @@ class TidepoolUploader @Inject constructor(
                         if (session.datasetReply == null) {
                             rxBus.send(EventTidepoolStatus(("Creating new dataset")))
                             val call = session.service.openDataSet(session.token!!, session.authReply!!.userid!!, OpenDatasetRequestMessage(config, dateUtil).getBody())
-                            call.enqueue(TidepoolCallback<DatasetReplyMessage>(
-                                aapsLogger, rxBus, session, "Open New Dataset",
-                                {
-                                    connectionStatus = ConnectionStatus.CONNECTED
-                                    rxBus.send(EventTidepoolStatus(("New dataset OK")))
-                                    if (doUpload) doUpload()
-                                    else releaseWakeLock()
-                                }, {
-                                    rxBus.send(EventTidepoolStatus(("New dataset FAILED")))
-                                    connectionStatus = ConnectionStatus.FAILED
-                                    releaseWakeLock()
-                                })
+                            call.enqueue(
+                                TidepoolCallback<DatasetReplyMessage>(
+                                    aapsLogger, rxBus, session, "Open New Dataset",
+                                    {
+                                        connectionStatus = ConnectionStatus.CONNECTED
+                                        rxBus.send(EventTidepoolStatus(("New dataset OK")))
+                                        if (doUpload) doUpload()
+                                        else releaseWakeLock()
+                                    }, {
+                                        rxBus.send(EventTidepoolStatus(("New dataset FAILED")))
+                                        connectionStatus = ConnectionStatus.FAILED
+                                        releaseWakeLock()
+                                    })
                             )
                         } else {
                             aapsLogger.debug(LTag.TIDEPOOL, "Existing Dataset: " + session.datasetReply!!.getUploadId())
@@ -241,19 +264,20 @@ class TidepoolUploader @Inject constructor(
                     rxBus.send(EventTidepoolStatus(("Uploading")))
                     if (session.service != null && session.token != null && session.datasetReply != null) {
                         val call = session.service.doUpload(session.token!!, session.datasetReply!!.getUploadId()!!, body)
-                        call.enqueue(TidepoolCallback<UploadReplyMessage>(
-                            aapsLogger, rxBus, session, "Data Upload",
-                            {
-                                uploadChunk.setLastEnd(session.end)
-                                connectionStatus = ConnectionStatus.CONNECTED
-                                rxBus.send(EventTidepoolStatus(("Upload completed OK")))
-                                releaseWakeLock()
-                                uploadNext()
-                            }, {
-                                connectionStatus = ConnectionStatus.DISCONNECTED
-                                rxBus.send(EventTidepoolStatus(("Upload FAILED")))
-                                releaseWakeLock()
-                            })
+                        call.enqueue(
+                            TidepoolCallback<UploadReplyMessage>(
+                                aapsLogger, rxBus, session, "Data Upload",
+                                {
+                                    uploadChunk.setLastEnd(session.end)
+                                    connectionStatus = ConnectionStatus.CONNECTED
+                                    rxBus.send(EventTidepoolStatus(("Upload completed OK")))
+                                    releaseWakeLock()
+                                    uploadNext()
+                                }, {
+                                    connectionStatus = ConnectionStatus.DISCONNECTED
+                                    rxBus.send(EventTidepoolStatus(("Upload FAILED")))
+                                    releaseWakeLock()
+                                })
                         )
                     }
                 }
@@ -278,17 +302,18 @@ class TidepoolUploader @Inject constructor(
         if (session?.datasetReply?.id != null) {
             extendWakeLock(60000)
             val call = session!!.service?.deleteDataSet(session!!.token!!, session!!.datasetReply!!.id!!)
-            call?.enqueue(TidepoolCallback(
-                aapsLogger, rxBus, session!!, "Delete Dataset",
-                {
-                    connectionStatus = ConnectionStatus.DISCONNECTED
-                    rxBus.send(EventTidepoolStatus(("Dataset removed OK")))
-                    releaseWakeLock()
-                }, {
-                    connectionStatus = ConnectionStatus.DISCONNECTED
-                    rxBus.send(EventTidepoolStatus(("Dataset remove FAILED")))
-                    releaseWakeLock()
-                })
+            call?.enqueue(
+                TidepoolCallback(
+                    aapsLogger, rxBus, session!!, "Delete Dataset",
+                    {
+                        connectionStatus = ConnectionStatus.DISCONNECTED
+                        rxBus.send(EventTidepoolStatus(("Dataset removed OK")))
+                        releaseWakeLock()
+                    }, {
+                        connectionStatus = ConnectionStatus.DISCONNECTED
+                        rxBus.send(EventTidepoolStatus(("Dataset remove FAILED")))
+                        releaseWakeLock()
+                    })
             )
         } else {
             aapsLogger.error("Got login response but cannot determine datasetId - cannot proceed")
