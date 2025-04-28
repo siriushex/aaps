@@ -13,6 +13,7 @@ import app.aaps.core.data.model.HR
 import app.aaps.core.data.model.NE
 import app.aaps.core.data.model.OE
 import app.aaps.core.data.model.PS
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.SC
 import app.aaps.core.data.model.TB
 import app.aaps.core.data.model.TDD
@@ -635,6 +636,109 @@ interface PersistenceLayer {
      * @return List of modified records
      */
     fun updateProfileSwitchesNsIds(profileSwitches: List<PS>): Single<TransactionResult<PS>>
+
+    // RM
+    /**
+     * Get running running mode at time
+     *
+     * @param timestamp time
+     * @return running running mode or default
+     */
+    fun getRunningModeActiveAt(timestamp: Long): RM
+
+    /**
+     *  Get running mode by NS id
+     *  @return running mode
+     */
+    fun getRunningModeByNSId(nsId: String): RM?
+
+    /**
+     * Get running running mode at time with duration == 0 (infinite)
+     *
+     * @param timestamp time
+     * @return running running mode or default
+     */
+    fun getPermanentRunningModeActiveAt(timestamp: Long): RM
+
+    /**
+     * Get all running modes from db
+     *
+     * @return List of running modes
+     */
+    fun getRunningModes(): List<RM>
+
+    /**
+     * Get running modes from time
+     *
+     * @param startTime from
+     * @param ascending sort order
+     * @return List of running modes
+     */
+    fun getRunningModesFromTime(startTime: Long, ascending: Boolean): Single<List<RM>>
+
+    /**
+     * Get running modes from time including invalidated records
+     *
+     * @param startTime from
+     * @param ascending sort order
+     * @return List of running modes
+     */
+    fun getRunningModesIncludingInvalidFromTime(startTime: Long, ascending: Boolean): Single<List<RM>>
+
+    /**
+     * Get next changed record after id
+     *
+     * @param id record id
+     * @return database record
+     */
+    fun getNextSyncElementRunningMode(id: Long): Maybe<Pair<RM, RM>>
+
+    /**
+     * Get record with highest id
+     *
+     * @return database record id
+     */
+    fun getLastRunningModeId(): Long?
+
+    /**
+     * Insert or update new record in database
+     *
+     * @param runningMode record
+     * @param action Action for UserEntry logging
+     * @param source Source for UserEntry logging
+     * @param note Note for UserEntry logging
+     * @param listValues Values for UserEntry logging
+     * @return List of inserted/updated records
+     */
+    fun insertOrUpdateRunningMode(runningMode: RM, action: Action, source: Sources, note: String? = null, listValues: List<ValueWithUnit>): Single<TransactionResult<RM>>
+
+    /**
+     * Invalidate record with id
+     *
+     * @param id record id
+     * @param action Action for UserEntry logging
+     * @param source Source for UserEntry logging
+     * @param note Note for UserEntry logging
+     * @param listValues Values for UserEntry logging
+     * @return List of changed records
+     */
+    fun invalidateRunningMode(id: Long, action: Action, source: Sources, note: String? = null, listValues: List<ValueWithUnit>): Single<TransactionResult<RM>>
+
+    /**
+     * Store records coming from NS to database
+     *
+     * @param runningModes list of records
+     * @return List of inserted/updated/invalidated records
+     */
+    fun syncNsRunningModes(runningModes: List<RM>): Single<TransactionResult<RM>>
+
+    /**
+     * Update NS id' in database
+     *
+     * @param runningModes records containing NS id'
+     * @return List of modified records
+     */
+    fun updateRunningModesNsIds(runningModes: List<RM>): Single<TransactionResult<RM>>
 
     // TB
     /**

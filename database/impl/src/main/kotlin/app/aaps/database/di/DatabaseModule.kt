@@ -47,7 +47,7 @@ open class DatabaseModule {
         database.execSQL("CREATE INDEX IF NOT EXISTS `index_extendedBoluses_end` ON `extendedBoluses` (`timestamp` + `duration`)")
         database.execSQL("CREATE INDEX IF NOT EXISTS `index_temporaryTargets_end` ON `temporaryTargets` (`timestamp` + `duration`)")
         database.execSQL("CREATE INDEX IF NOT EXISTS `index_carbs_end` ON `carbs` (`timestamp` + `duration`)")
-        database.execSQL("CREATE INDEX IF NOT EXISTS `index_offlineEvents_end` ON `offlineEvents` (`timestamp` + `duration`)")
+        database.execSQL("CREATE INDEX IF NOT EXISTS `index_runningModes_end` ON `runningModes` (`timestamp` + `duration`)")
     }
 
     private fun dropCustomIndexes(database: SupportSQLiteDatabase) {
@@ -55,7 +55,7 @@ open class DatabaseModule {
         database.execSQL("DROP INDEX IF EXISTS `index_extendedBoluses_end`")
         database.execSQL("DROP INDEX IF EXISTS `index_temporaryTargets_end`")
         database.execSQL("DROP INDEX IF EXISTS `index_carbs_end`")
-        database.execSQL("DROP INDEX IF EXISTS `index_offlineEvents_end`")
+        database.execSQL("DROP INDEX IF EXISTS `index_runningModes_end`")
     }
 
     internal val migration20to21 = object : Migration(20, 21) {

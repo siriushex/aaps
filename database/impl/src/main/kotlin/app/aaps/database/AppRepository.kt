@@ -12,6 +12,7 @@ import app.aaps.database.entities.GlucoseValue
 import app.aaps.database.entities.HeartRate
 import app.aaps.database.entities.OfflineEvent
 import app.aaps.database.entities.ProfileSwitch
+import app.aaps.database.entities.RunningMode
 import app.aaps.database.entities.StepsCount
 import app.aaps.database.entities.TemporaryBasal
 import app.aaps.database.entities.TemporaryTarget
@@ -103,6 +104,7 @@ class AppRepository @Inject internal constructor(
         // keep foods database.foodDao.deleteOlderThan(than)
         removed.add(Pair("DeviceStatus", database.deviceStatusDao.deleteOlderThan(than)))
         removed.add(Pair("OfflineEvent", database.offlineEventDao.deleteOlderThan(than)))
+        removed.add(Pair("RunningMode", database.runningModeDao.deleteOlderThan(than)))
         removed.add(Pair("HeartRate", database.heartRateDao.deleteOlderThan(than)))
         removed.add(Pair("StepsCount", database.stepsCountDao.deleteOlderThan(than)))
 
@@ -122,6 +124,7 @@ class AppRepository @Inject internal constructor(
             removed.add(Pair("CHANGES ApsResult", database.apsResultDao.deleteTrackedChanges()))
             // keep food database.foodDao.deleteHistory()
             removed.add(Pair("CHANGES OfflineEvent", database.offlineEventDao.deleteTrackedChanges()))
+            removed.add(Pair("CHANGES RunningMode", database.runningModeDao.deleteTrackedChanges()))
             removed.add(Pair("CHANGES HeartRate", database.heartRateDao.deleteTrackedChanges()))
             removed.add(Pair("CHANGES StepsCount", database.stepsCountDao.deleteTrackedChanges()))
         }
@@ -282,6 +285,57 @@ class AppRepository @Inject internal constructor(
 
     fun getLastProfileSwitchId(): Long? =
         database.profileSwitchDao.getLastId()
+
+    // RUNNING MODE
+
+    fun findRunningModeByNSId(nsId: String): RunningMode? =
+        database.runningModeDao.findByNSId(nsId)
+
+    fun getNextSyncElementRunningMode(id: Long): Maybe<Pair<RunningMode, RunningMode>> =
+        database.runningModeDao.getNextModifiedOrNewAfter(id)
+            .flatMap { nextIdElement ->
+                val nextIdElemReferenceId = nextIdElement.referenceId
+                if (nextIdElemReferenceId == null) {
+                    Maybe.just(nextIdElement to nextIdElement)
+                } else {
+                    database.runningModeDao.getCurrentFromHistoric(nextIdElemReferenceId)
+                        .map { it to nextIdElement }
+                }
+            }
+
+    fun getRunningModeActiveAt(timestamp: Long): RunningMode? {
+        val trm = database.runningModeDao.getTemporaryRunningModeActiveAt(timestamp)
+            .subscribeOn(Schedulers.io())
+            .blockingGet()
+        val prm = database.runningModeDao.getPermanentRunningModeActiveAt(timestamp)
+            .subscribeOn(Schedulers.io())
+            .blockingGet()
+        if (trm != null && prm != null)
+            return if (prm.timestamp > trm.timestamp) prm else trm
+        if (prm == null) return trm
+        return prm // if (trm == null)
+    }
+
+    fun getPermanentRunningModeActiveAt(timestamp: Long): Maybe<RunningMode> =
+        database.runningModeDao.getPermanentRunningModeActiveAt(timestamp)
+            .subscribeOn(Schedulers.io())
+
+    fun getAllRunningModes(): Single<List<RunningMode>> =
+        database.runningModeDao.getAllRunningModes()
+            .subscribeOn(Schedulers.io())
+
+    fun getRunningModesFromTime(timestamp: Long, ascending: Boolean): Single<List<RunningMode>> =
+        database.runningModeDao.getRunningModeDataFromTime(timestamp)
+            .map { if (!ascending) it.reversed() else it }
+            .subscribeOn(Schedulers.io())
+
+    fun getRunningModesIncludingInvalidFromTime(timestamp: Long, ascending: Boolean): Single<List<RunningMode>> =
+        database.runningModeDao.getRunningModeDataIncludingInvalidFromTime(timestamp)
+            .map { if (!ascending) it.reversed() else it }
+            .subscribeOn(Schedulers.io())
+
+    fun getLastRunningModeId(): Long? =
+        database.runningModeDao.getLastId()
 
     // EFFECTIVE PROFILE SWITCH
     fun findEffectiveProfileSwitchByNSId(nsId: String): EffectiveProfileSwitch? =
