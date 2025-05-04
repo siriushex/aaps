@@ -10,7 +10,6 @@ import app.aaps.database.entities.ExtendedBolus
 import app.aaps.database.entities.Food
 import app.aaps.database.entities.GlucoseValue
 import app.aaps.database.entities.HeartRate
-import app.aaps.database.entities.OfflineEvent
 import app.aaps.database.entities.ProfileSwitch
 import app.aaps.database.entities.RunningMode
 import app.aaps.database.entities.StepsCount
@@ -103,7 +102,6 @@ class AppRepository @Inject internal constructor(
         removed.add(Pair("PreferenceChange", database.preferenceChangeDao.deleteOlderThan(than)))
         // keep foods database.foodDao.deleteOlderThan(than)
         removed.add(Pair("DeviceStatus", database.deviceStatusDao.deleteOlderThan(than)))
-        removed.add(Pair("OfflineEvent", database.offlineEventDao.deleteOlderThan(than)))
         removed.add(Pair("RunningMode", database.runningModeDao.deleteOlderThan(than)))
         removed.add(Pair("HeartRate", database.heartRateDao.deleteOlderThan(than)))
         removed.add(Pair("StepsCount", database.stepsCountDao.deleteOlderThan(than)))
@@ -123,7 +121,6 @@ class AppRepository @Inject internal constructor(
             removed.add(Pair("CHANGES ProfileSwitch", database.profileSwitchDao.deleteTrackedChanges()))
             removed.add(Pair("CHANGES ApsResult", database.apsResultDao.deleteTrackedChanges()))
             // keep food database.foodDao.deleteHistory()
-            removed.add(Pair("CHANGES OfflineEvent", database.offlineEventDao.deleteTrackedChanges()))
             removed.add(Pair("CHANGES RunningMode", database.runningModeDao.deleteTrackedChanges()))
             removed.add(Pair("CHANGES HeartRate", database.heartRateDao.deleteTrackedChanges()))
             removed.add(Pair("CHANGES StepsCount", database.stepsCountDao.deleteTrackedChanges()))
@@ -326,6 +323,11 @@ class AppRepository @Inject internal constructor(
 
     fun getRunningModesFromTime(timestamp: Long, ascending: Boolean): Single<List<RunningMode>> =
         database.runningModeDao.getRunningModeDataFromTime(timestamp)
+            .map { if (!ascending) it.reversed() else it }
+            .subscribeOn(Schedulers.io())
+
+    fun getRunningModesFromTimeToTime(startTime: Long, endTime: Long, ascending: Boolean): Single<List<RunningMode>> =
+        database.runningModeDao.getRunningModeDataFromTimeToTime(startTime, endTime)
             .map { if (!ascending) it.reversed() else it }
             .subscribeOn(Schedulers.io())
 
@@ -769,40 +771,7 @@ class AppRepository @Inject internal constructor(
         database.totalDailyDoseDao.findByTimestamp(timestamp, InterfaceIDs.PumpType.CACHE)
             .subscribeOn(Schedulers.io())
 
-    // OFFLINE EVENT
-    fun findOfflineEventByNSId(nsId: String): OfflineEvent? =
-        database.offlineEventDao.findByNSId(nsId)
-
-    /*
-       * returns a Pair of the next entity to sync and the ID of the "update".
-       * The update id might either be the entry id itself if it is a new entry - or the id
-       * of the update ("historic") entry. The sync counter should be incremented to that id if it was synced successfully.
-       *
-       * It is a Maybe as there might be no next element.
-       * */
-    fun getNextSyncElementOfflineEvent(id: Long): Maybe<Pair<OfflineEvent, OfflineEvent>> =
-        database.offlineEventDao.getNextModifiedOrNewAfter(id)
-            .flatMap { nextIdElement ->
-                val nextIdElemReferenceId = nextIdElement.referenceId
-                if (nextIdElemReferenceId == null) {
-                    Maybe.just(nextIdElement to nextIdElement)
-                } else {
-                    database.offlineEventDao.getCurrentFromHistoric(nextIdElemReferenceId)
-                        .map { it to nextIdElement }
-                }
-            }
-
-    fun getOfflineEventsFromTimeToTime(start: Long, end: Long, ascending: Boolean): Single<List<OfflineEvent>> =
-        database.offlineEventDao.getOfflineEventDataFromTimeToTime(start, end)
-            .map { if (!ascending) it.reversed() else it }
-            .subscribeOn(Schedulers.io())
-
-    fun getOfflineEventActiveAt(timestamp: Long): Maybe<OfflineEvent> =
-        database.offlineEventDao.getOfflineEventActiveAt(timestamp)
-            .subscribeOn(Schedulers.io())
-
-    fun getLastOfflineEventId(): Long? =
-        database.offlineEventDao.getLastId()
+    // HEART RATES
 
     fun getHeartRatesFromTime(timeMillis: Long): List<HeartRate> =
         database.heartRateDao.getFromTime(timeMillis)
@@ -831,7 +800,7 @@ class AppRepository @Inject internal constructor(
         effectiveProfileSwitches = database.effectiveProfileSwitchDao.getNewEntriesSince(since, until, limit, offset),
         extendedBoluses = database.extendedBolusDao.getNewEntriesSince(since, until, limit, offset),
         glucoseValues = database.glucoseValueDao.getNewEntriesSince(since, until, limit, offset),
-        offlineEvents = database.offlineEventDao.getNewEntriesSince(since, until, limit, offset),
+        runningModes = database.runningModeDao.getNewEntriesSince(since, until, limit, offset),
         preferencesChanges = database.preferenceChangeDao.getNewEntriesSince(since, until, limit, offset),
         profileSwitches = database.profileSwitchDao.getNewEntriesSince(since, until, limit, offset),
         temporaryBasals = database.temporaryBasalDao.getNewEntriesSince(since, until, limit, offset),

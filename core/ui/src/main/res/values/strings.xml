@@ -91,7 +91,6 @@
     <string name="alarm">Alarm</string>
     <string name="exportsettings">Export Settings</string>
     <string name="disableloop">Disable loop</string>
-    <string name="enableloop">Enable loop</string>
     <string name="resumeloop">Resume loop</string>
     <string name="suspendloop">Suspend loop</string>
     <string name="duration_min_label">Duration [min]</string>
@@ -119,6 +118,7 @@
     <string name="duration_label">Duration</string>
     <string name="shortgramm">g</string>
     <string name="pumpsuspended">Pump suspended</string>
+    <string name="pump_running">Pump running</string>
     <string name="notconfigured">Not configured</string>
     <string name="loopsuspended">Loop suspended</string>
     <string name="trend_arrow">Trend arrow</string>
@@ -162,6 +162,9 @@
     <string name="closedloop">Closed Loop</string>
     <string name="openloop">Open Loop</string>
     <string name="lowglucosesuspend">Low Glucose Suspend</string>
+    <string name="pump_disconnected">Pump disconnected</string>
+    <string name="pump_suspended">Pump suspended</string>
+    <string name="mode_reverted">Mode reverted</string>
     <string name="dia">DIA</string>
     <string name="ic_short">IC</string>
     <string name="isf_short">ISF</string>
@@ -311,7 +314,8 @@
     <string name="uel_lgs_loop_mode">LGS LOOP MODE</string>
     <string name="uel_open_loop_mode">OPEN LOOP MODE</string>
     <string name="uel_loop_disabled">LOOP DISABLED</string>
-    <string name="uel_loop_enabled">LOOP ENABLED</string>
+    <string name="uel_loop_resumed">LOOP RESUMED</string>
+    <string name="uel_pump_running">PUMP RUNNING</string>
     <string name="uel_reconnect">RECONNECT</string>
     <string name="uel_disconnect">DISCONNECT</string>
     <string name="uel_resume">RESUME</string>

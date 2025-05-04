@@ -2,10 +2,11 @@ package app.aaps.plugins.automation.actions
 
 import android.widget.LinearLayout
 import androidx.annotation.DrawableRes
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.aps.Loop
-import app.aaps.core.interfaces.logging.UserEntryLogger
+import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
@@ -22,7 +23,7 @@ class ActionLoopSuspend(injector: HasAndroidInjector) : Action(injector) {
 
     @Inject lateinit var loop: Loop
     @Inject lateinit var rxBus: RxBus
-    @Inject lateinit var uel: UserEntryLogger
+    @Inject lateinit var profileFunction: ProfileFunction
 
     var minutes = InputDuration(30, InputDuration.TimeUnit.MINUTES)
 
@@ -31,12 +32,14 @@ class ActionLoopSuspend(injector: HasAndroidInjector) : Action(injector) {
     @DrawableRes override fun icon(): Int = R.drawable.ic_pause_circle_outline_24dp
 
     override fun doAction(callback: Callback) {
-        if (!loop.isSuspended) {
-            loop.suspendLoop(
+        val profile = profileFunction.getProfile() ?: return
+        if (!loop.runningMode.isSuspended()) {
+            loop.handleRunningModeChange(
                 durationInMinutes = minutes.getMinutes(),
                 action = app.aaps.core.data.ue.Action.SUSPEND,
                 source = Sources.Automation,
-                note = title + ": " + rh.gs(R.string.suspendloopforXmin, minutes.getMinutes()),
+                newRM = RM.Mode.SUSPENDED_BY_USER,
+                profile = profile,
                 listValues = listOf(ValueWithUnit.Minute(minutes.getMinutes()))
             )
             rxBus.send(EventRefreshOverview("ActionLoopSuspend"))

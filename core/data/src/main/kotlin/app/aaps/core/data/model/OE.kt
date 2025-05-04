@@ -2,7 +2,7 @@ package app.aaps.core.data.model
 
 import java.util.TimeZone
 
-data class OE(
+data class OE1(
     override var id: Long = 0,
     override var version: Int = 0,
     override var dateCreated: Long = -1,
@@ -16,14 +16,14 @@ data class OE(
     var duration: Long
 ) : HasIDs {
 
-    fun contentEqualsTo(other: OE): Boolean =
+    fun contentEqualsTo(other: OE1): Boolean =
         timestamp == other.timestamp &&
             utcOffset == other.utcOffset &&
             reason == other.reason &&
             duration == other.duration &&
             isValid == other.isValid
 
-    fun onlyNsIdAdded(previous: OE): Boolean =
+    fun onlyNsIdAdded(previous: OE1): Boolean =
         previous.id != id &&
             contentEqualsTo(previous) &&
             previous.ids.nightscoutId == null &&

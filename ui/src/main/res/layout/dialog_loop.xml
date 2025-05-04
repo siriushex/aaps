@@ -81,8 +81,7 @@
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
                     android:text="@string/closedloop"
-                    android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                    android:visibility="gone" />
+                    android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
                 <app.aaps.core.ui.elements.SingleClickButton
                     android:id="@+id/overview_lgsloop"
@@ -95,8 +94,7 @@
                     android:drawableTop="@drawable/ic_loop_lgs"
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
-                    android:text="@string/lowglucosesuspend"
-                    android:visibility="gone" />
+                    android:text="@string/lowglucosesuspend" />
 
                 <app.aaps.core.ui.elements.SingleClickButton
                     android:id="@+id/overview_openloop"
@@ -109,23 +107,7 @@
                     android:drawableTop="@drawable/ic_loop_open"
                     android:paddingStart="10dp"
                     android:paddingEnd="10dp"
-                    android:text="@string/openloop"
-                    android:visibility="gone" />
-
-                <app.aaps.core.ui.elements.SingleClickButton
-                    android:id="@+id/overview_enable"
-                    style="@style/ButtonSmallFontStyle"
-                    android:layout_width="0dp"
-                    android:layout_height="fill_parent"
-                    android:layout_gravity="center"
-                    android:layout_marginEnd="@dimen/gray_material_button_margin_horizontal"
-                    android:layout_weight="0.5"
-                    android:drawableTop="@drawable/ic_loop_resume"
-                    android:paddingStart="10dp"
-                    android:paddingEnd="10dp"
-                    android:text="@string/enableloop"
-                    android:textSize="11sp"
-                    android:visibility="gone" />
+                    android:text="@string/openloop" />
 
                 <app.aaps.core.ui.elements.SingleClickButton
                     android:id="@+id/overview_disable"
@@ -179,8 +161,7 @@
                 android:drawableTop="@drawable/ic_loop_resume"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
-                android:text="@string/resumeloop"
-                android:visibility="gone" />
+                android:text="@string/resumeloop" />
 
             <LinearLayout
                 android:id="@+id/overview_suspend_buttons"
@@ -276,8 +257,7 @@
                 android:drawableTop="@drawable/ic_loop_reconnect"
                 android:paddingStart="10dp"
                 android:paddingEnd="10dp"
-                android:text="@string/reconnect"
-                android:visibility="gone" />
+                android:text="@string/reconnect" />
 
             <LinearLayout
                 android:id="@+id/overview_disconnect_buttons"

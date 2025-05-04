@@ -1,6 +1,6 @@
 package app.aaps.plugins.automation.actions
 
-import app.aaps.core.data.model.OE
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.queue.Callback
@@ -46,8 +46,8 @@ class ActionLoopResumeTest : ActionsTestBase() {
             // add(TemporaryTarget(id = 0, version = 0, dateCreated = 0, isValid = false, referenceId = null, interfaceIDs_backing = null, timestamp = 0, utcOffset = 0, reason =, highTarget = 0.0, lowTarget = 0.0, duration = 0))
             // insert all updated TTs
         }
-        `when`(persistenceLayer.cancelCurrentOfflineEvent(any(), any(), any(), any(), any()))
-            .thenReturn(Single.just(PersistenceLayer.TransactionResult<OE>().apply {
+        `when`(persistenceLayer.cancelCurrentRunningMode(any(), any(), any(), any(), any()))
+            .thenReturn(Single.just(PersistenceLayer.TransactionResult<RM>().apply {
                 inserted.addAll(inserted)
                 updated.addAll(updated)
             }))

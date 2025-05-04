@@ -200,7 +200,7 @@ open class PointsWithLabelGraphSeries<E : DataPointWithLabelInterface> : BaseSer
                         mPaint.isFakeBoldText = true
                         canvas.drawText(value.label, endX, endY, mPaint)
                     }
-                } else if (value.shape == Shape.HEARTRATE || value.shape === Shape.STEPS) {
+                } else if (value.shape == Shape.HEART_RATE || value.shape === Shape.STEPS) {
                     mPaint.strokeWidth = 0f
                     val bounds = Rect(endX.toInt(), endY.toInt() - 8, xPlusLength.toInt(), endY.toInt() + 8)
                     mPaint.style = Paint.Style.FILL_AND_STROKE
@@ -247,13 +247,11 @@ open class PointsWithLabelGraphSeries<E : DataPointWithLabelInterface> : BaseSer
                         mPaint.strokeWidth = 5f
                         canvas.drawRect(endX - 3, bounds.top + py - 3, xPlusLength + 3, bounds.bottom + py + 3, mPaint)
                     }
-                } else if (value.shape == Shape.OPENAPS_OFFLINE && value.duration != 0L) {
+                } else if (value.shape == Shape.RUNNING_MODE) {
                     mPaint.strokeWidth = 0f
-                    if (value.label.isNotEmpty()) {
-                        mPaint.style = Paint.Style.FILL_AND_STROKE
-                        mPaint.strokeWidth = 5f
-                        canvas.drawRect(endX - 3, graphTop, xPlusLength + 3, graphTop + graphHeight, mPaint)
-                    }
+                    mPaint.style = Paint.Style.FILL_AND_STROKE
+                    mPaint.strokeWidth = 5f
+                    canvas.drawRect(endX, graphTop, xPlusLength, graphTop + 4, mPaint)
                 } else if (value.shape == Shape.GENERAL_WITH_DURATION) {
                     mPaint.strokeWidth = 0f
                     if (value.label.isNotEmpty()) {

@@ -384,7 +384,7 @@ class XdripPlugin @Inject constructor(
 
                 is DataSyncSelector.PairProfileSwitch          -> dataPair.value.toJson(true, dateUtil, decimalFormatter)
                 is DataSyncSelector.PairEffectiveProfileSwitch -> dataPair.value.toJson(true, dateUtil)
-                is DataSyncSelector.PairOfflineEvent           -> dataPair.value.toJson(true, dateUtil)
+                is DataSyncSelector.PairRunningMode            -> dataPair.value.toJson(true, dateUtil)
                 else                                           -> null
             }?.let {
                 array.put(it)

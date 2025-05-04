@@ -37,18 +37,26 @@ data class RunningMode(
     override var utcOffset: Long = TimeZone.getDefault().getOffset(timestamp).toLong(),
     /** Current running mode. */
     var mode: Mode,
-    /** Duration in milliseconds */
-    override var duration: Long // planned duration
+    /** Planned duration in milliseconds */
+    override var duration: Long,
+    /**
+     * true if forced automatically in loop plugin,
+     * false if initiated by user
+     */
+    var autoForced: Boolean = false,
+    /** List of reasons for automated mode change */
+    var reasons: String? = null
 ) : TraceableDBEntry, DBEntryWithTimeAndDuration {
 
-    enum class Mode() {
+    enum class Mode {
         DISABLED_LOOP,
         OPEN_LOOP,
         CLOSED_LOOP,
-        LGS,
+        CLOSED_LOOP_LGS,
         SUPER_BOLUS,
         DISCONNECTED_PUMP,
-        PUMP_SUSPENDED
+        SUSPENDED_BY_PUMP,
+        SUSPENDED_BY_USER
         ;
     }
 }

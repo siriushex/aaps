@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 class ActionLoopResume(injector: HasAndroidInjector) : Action(injector) {
 
-    @Inject lateinit var loopPlugin: Loop
+    @Inject lateinit var loop: Loop
     @Inject lateinit var configBuilder: ConfigBuilder
     @Inject lateinit var rxBus: RxBus
     @Inject lateinit var persistenceLayer: PersistenceLayer
@@ -30,8 +30,9 @@ class ActionLoopResume(injector: HasAndroidInjector) : Action(injector) {
     val disposable = CompositeDisposable()
 
     override fun doAction(callback: Callback) {
-        if (loopPlugin.isSuspended) {
-            disposable += persistenceLayer.cancelCurrentOfflineEvent(dateUtil.now(), app.aaps.core.data.ue.Action.RESUME, Sources.Automation, title).subscribe()
+        val rm = persistenceLayer.getRunningModeActiveAt(dateUtil.now())
+        if (loop.runningMode.isSuspended() && !rm.autoForced) {
+            disposable += persistenceLayer.cancelCurrentRunningMode(dateUtil.now(), app.aaps.core.data.ue.Action.RESUME, Sources.Automation, title).subscribe()
             rxBus.send(EventRefreshOverview("ActionLoopResume"))
             callback.result(instantiator.providePumpEnactResult().success(true).comment(app.aaps.core.ui.R.string.ok)).run()
         } else {

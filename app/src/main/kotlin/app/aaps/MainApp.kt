@@ -11,9 +11,11 @@ import android.os.HandlerThread
 import androidx.lifecycle.ProcessLifecycleOwner
 import app.aaps.core.data.configuration.Constants
 import app.aaps.core.data.model.GlucoseUnit
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
+import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.alerts.LocalAlertUtils
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
@@ -346,6 +348,23 @@ class MainApp : DaggerApplication() {
                     preferences.put(ProfileComposedDoubleKey.LocalProfileNumberedDia, SafeParse.stringToInt(number), value = value as Double)
                 sp.remove(key)
             }
+        }
+
+        // Migrate loop mode
+        if (sp.contains("aps_mode")) {
+            val mode = when (sp.getString("aps_mode", "CLOSED")) {
+                "OPEN"   -> RM.Mode.OPEN_LOOP
+                "CLOSED" -> RM.Mode.CLOSED_LOOP
+                "LGS"    -> RM.Mode.CLOSED_LOOP_LGS
+                else     -> RM.Mode.CLOSED_LOOP
+            }
+            persistenceLayer.insertOrUpdateRunningMode(
+                runningMode = RM(timestamp = 1, duration = 0, mode = mode),
+                action = Action.CLOSED_LOOP_MODE,
+                listValues = listOf(ValueWithUnit.SimpleString("Migration")),
+                source = Sources.Loop
+            )
+            sp.remove("aps_mode")
         }
     }
 

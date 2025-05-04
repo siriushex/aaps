@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 
-class ActionLoopEnableTest : ActionsTestBase() {
+class ActionLoopClosedTest : ActionsTestBase() {
 
-    lateinit var sut: ActionLoopEnable
+    lateinit var sut: ActionLoopClosed
 
     @BeforeEach
     fun setup() {
@@ -20,7 +20,7 @@ class ActionLoopEnableTest : ActionsTestBase() {
         `when`(rh.gs(app.aaps.core.ui.R.string.enableloop)).thenReturn("Enable loop")
         `when`(rh.gs(R.string.alreadyenabled)).thenReturn("Already enabled")
 
-        sut = ActionLoopEnable(injector)
+        sut = ActionLoopClosed(injector)
     }
 
     @Test fun friendlyNameTest() {

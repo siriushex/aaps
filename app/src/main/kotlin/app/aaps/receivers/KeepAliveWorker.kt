@@ -11,6 +11,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.alerts.LocalAlertUtils
 import app.aaps.core.interfaces.aps.Loop
@@ -200,9 +201,9 @@ class KeepAliveWorker(
         // 300041 milliseconds instead of exactly 300000). Add 30 extra seconds to allow for
         // plenty of tolerance.
         if (lastReadStatus != 0L && (now - lastReadStatus).coerceIn(minimumValue = 0, maximumValue = null) <= T.secs(5 * 60 + 30).msecs()) {
-            localAlertUtils.checkPumpUnreachableAlarm(lastConnection, isStatusOutdated, loop.isDisconnected)
+            localAlertUtils.checkPumpUnreachableAlarm(lastConnection, isStatusOutdated, loop.runningMode == RM.Mode.DISCONNECTED_PUMP)
         }
-        if (loop.isDisconnected) {
+        if (loop.runningMode == RM.Mode.DISCONNECTED_PUMP) {
             // do nothing if pump is disconnected
         } else if (runningProfile == null || ((!pump.isThisProfileSet(requestedProfile) || !requestedProfile.isEqual(runningProfile)
                 || (runningProfile is ProfileSealed.EPS && runningProfile.value.originalEnd < dateUtil.now() && runningProfile.value.originalDuration != 0L))

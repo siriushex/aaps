@@ -8,10 +8,11 @@ fun RunningMode.Mode.fromDb(): RM.Mode =
         RunningMode.Mode.DISABLED_LOOP     -> RM.Mode.DISABLED_LOOP
         RunningMode.Mode.OPEN_LOOP         -> RM.Mode.OPEN_LOOP
         RunningMode.Mode.CLOSED_LOOP       -> RM.Mode.CLOSED_LOOP
-        RunningMode.Mode.LGS               -> RM.Mode.LGS
+        RunningMode.Mode.CLOSED_LOOP_LGS   -> RM.Mode.CLOSED_LOOP_LGS
         RunningMode.Mode.SUPER_BOLUS       -> RM.Mode.SUPER_BOLUS
         RunningMode.Mode.DISCONNECTED_PUMP -> RM.Mode.DISCONNECTED_PUMP
-        RunningMode.Mode.PUMP_SUSPENDED    -> RM.Mode.PUMP_SUSPENDED
+        RunningMode.Mode.SUSPENDED_BY_PUMP -> RM.Mode.SUSPENDED_BY_PUMP
+        RunningMode.Mode.SUSPENDED_BY_USER -> RM.Mode.SUSPENDED_BY_USER
     }
 
 fun RM.Mode.toDb(): RunningMode.Mode =
@@ -19,10 +20,12 @@ fun RM.Mode.toDb(): RunningMode.Mode =
         RM.Mode.DISABLED_LOOP     -> RunningMode.Mode.DISABLED_LOOP
         RM.Mode.OPEN_LOOP         -> RunningMode.Mode.OPEN_LOOP
         RM.Mode.CLOSED_LOOP       -> RunningMode.Mode.CLOSED_LOOP
-        RM.Mode.LGS               -> RunningMode.Mode.LGS
+        RM.Mode.CLOSED_LOOP_LGS   -> RunningMode.Mode.CLOSED_LOOP_LGS
         RM.Mode.SUPER_BOLUS       -> RunningMode.Mode.SUPER_BOLUS
         RM.Mode.DISCONNECTED_PUMP -> RunningMode.Mode.DISCONNECTED_PUMP
-        RM.Mode.PUMP_SUSPENDED    -> RunningMode.Mode.PUMP_SUSPENDED
+        RM.Mode.SUSPENDED_BY_PUMP -> RunningMode.Mode.SUSPENDED_BY_PUMP
+        RM.Mode.SUSPENDED_BY_USER -> RunningMode.Mode.SUSPENDED_BY_USER
+        RM.Mode.RESUME            -> error("Invalid mode")
     }
 
 fun RunningMode.fromDb(): RM =

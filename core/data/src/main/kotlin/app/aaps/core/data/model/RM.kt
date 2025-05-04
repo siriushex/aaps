@@ -13,8 +13,15 @@ data class RM(
     var utcOffset: Long = TimeZone.getDefault().getOffset(timestamp).toLong(),
     /** Current running mode. */
     var mode: Mode,
-    /** Duration in milliseconds */
-    var duration: Long // Planned duration
+    /** Planned duration in milliseconds */
+    var duration: Long,
+    /**
+     * true if forced automatically in loop plugin,
+     * false if initiated by user
+     */
+    var autoForced: Boolean = false,
+    /** List of reasons for automated mode change */
+    var reasons: String? = null
 ) : HasIDs {
 
     fun contentEqualsTo(other: RM): Boolean =
@@ -22,6 +29,7 @@ data class RM(
             utcOffset == other.utcOffset &&
             mode == other.mode &&
             duration == other.duration &&
+            autoForced == other.autoForced &&
             isValid == other.isValid
 
     fun onlyNsIdAdded(previous: RM): Boolean =
@@ -30,15 +38,32 @@ data class RM(
             previous.ids.nightscoutId == null &&
             ids.nightscoutId != null
 
+    fun isTemporary() = duration > 0
+
     enum class Mode {
-        DISABLED_LOOP,
         OPEN_LOOP,
         CLOSED_LOOP,
-        LGS,
+        CLOSED_LOOP_LGS,
+
+        // Temporary only
+        DISABLED_LOOP,
         SUPER_BOLUS,
         DISCONNECTED_PUMP,
-        PUMP_SUSPENDED
+        SUSPENDED_BY_PUMP,
+        SUSPENDED_BY_USER,
+
+        /**
+         * Not a real mode but only option to cancel temporary mode
+         * (ie. RECONNECT_PUMP, RESUME_LOOP, CANCEL_SUPERBOLUS)
+         */
+        RESUME
         ;
+
+        fun isClosedLoopOrLgs() = this == CLOSED_LOOP || this == CLOSED_LOOP_LGS
+        fun isLoopRunning() = this == OPEN_LOOP || this == CLOSED_LOOP || this == CLOSED_LOOP_LGS
+        fun isSuspended() = this == DISCONNECTED_PUMP || this == SUSPENDED_BY_PUMP || this == SUSPENDED_BY_USER || this == SUPER_BOLUS
+        // DISABLED_LOOP is added to "mustBeTemporary" to be properly rendered in NS
+        fun mustBeTemporary() = this == DISCONNECTED_PUMP || this == SUSPENDED_BY_PUMP || this == SUSPENDED_BY_USER || this == SUPER_BOLUS || this == DISABLED_LOOP
 
         companion object {
 

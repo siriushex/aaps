@@ -1,6 +1,6 @@
 package app.aaps.implementation.utils
 
-import app.aaps.core.data.model.OE
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.ue.Action
@@ -37,7 +37,8 @@ class TranslatorImpl @Inject internal constructor(
         Action.LGS_LOOP_MODE                   -> rh.gs(app.aaps.core.ui.R.string.uel_lgs_loop_mode)
         Action.OPEN_LOOP_MODE                  -> rh.gs(app.aaps.core.ui.R.string.uel_open_loop_mode)
         Action.LOOP_DISABLED                   -> rh.gs(app.aaps.core.ui.R.string.uel_loop_disabled)
-        Action.LOOP_ENABLED                    -> rh.gs(app.aaps.core.ui.R.string.uel_loop_enabled)
+        Action.LOOP_RESUME                     -> rh.gs(app.aaps.core.ui.R.string.uel_loop_resumed)
+        Action.PUMP_RUNNING                    -> rh.gs(app.aaps.core.ui.R.string.uel_pump_running)
         Action.RECONNECT                       -> rh.gs(app.aaps.core.ui.R.string.uel_reconnect)
         Action.DISCONNECT                      -> rh.gs(app.aaps.core.ui.R.string.uel_disconnect)
         Action.RESUME                          -> rh.gs(app.aaps.core.ui.R.string.uel_resume)
@@ -190,11 +191,14 @@ class TranslatorImpl @Inject internal constructor(
         else                   -> rh.gs(app.aaps.core.ui.R.string.unknown)
     }
 
-    override fun translate(reason: OE.Reason?): String = when (reason) {
-        OE.Reason.SUSPEND         -> rh.gs(app.aaps.core.ui.R.string.uel_suspend)
-        OE.Reason.DISABLE_LOOP    -> rh.gs(app.aaps.core.ui.R.string.disableloop)
-        OE.Reason.DISCONNECT_PUMP -> rh.gs(app.aaps.core.ui.R.string.uel_disconnect)
-        OE.Reason.OTHER           -> rh.gs(app.aaps.core.ui.R.string.uel_other)
+    override fun translate(mode: RM.Mode?): String = when (mode) {
+        RM.Mode.DISABLED_LOOP     -> rh.gs(app.aaps.core.ui.R.string.disableloop)
+        RM.Mode.OPEN_LOOP         -> rh.gs(app.aaps.core.ui.R.string.openloop)
+        RM.Mode.CLOSED_LOOP       -> rh.gs(app.aaps.core.ui.R.string.closedloop)
+        RM.Mode.CLOSED_LOOP_LGS   -> rh.gs(app.aaps.core.ui.R.string.lowglucosesuspend)
+        RM.Mode.SUPER_BOLUS       -> rh.gs(app.aaps.core.ui.R.string.superbolus)
+        RM.Mode.DISCONNECTED_PUMP -> rh.gs(app.aaps.core.ui.R.string.pump_disconnected)
+        RM.Mode.SUSPENDED_BY_PUMP -> rh.gs(app.aaps.core.ui.R.string.pump_suspended)
 
         else                      -> rh.gs(app.aaps.core.ui.R.string.unknown)
     }

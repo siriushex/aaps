@@ -46,6 +46,9 @@ internal interface RunningModeDao : TraceableDao<RunningMode> {
     @Query("SELECT * FROM $TABLE_RUNNING_MODE WHERE unlikely(timestamp >= :timestamp) AND likely(isValid = 1) AND likely(referenceId IS NULL) ORDER BY timestamp ASC")
     fun getRunningModeDataFromTime(timestamp: Long): Single<List<RunningMode>>
 
+    @Query("SELECT * FROM $TABLE_RUNNING_MODE WHERE unlikely(timestamp >= :startTime) AND unlikely(timestamp <= :endTime) AND likely(isValid = 1) AND likely(referenceId IS NULL) ORDER BY timestamp ASC")
+    fun getRunningModeDataFromTimeToTime(startTime: Long, endTime: Long): Single<List<RunningMode>>
+
     // for WS we need 1 record only
     @Query("SELECT * FROM $TABLE_RUNNING_MODE WHERE id > :id ORDER BY id ASC limit 1")
     fun getNextModifiedOrNewAfter(id: Long): Maybe<RunningMode>

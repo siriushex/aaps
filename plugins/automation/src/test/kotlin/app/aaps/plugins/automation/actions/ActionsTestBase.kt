@@ -1,7 +1,7 @@
 package app.aaps.plugins.automation.actions
 
 import app.aaps.core.data.model.GlucoseUnit
-import app.aaps.core.data.model.OE
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
@@ -48,7 +48,7 @@ ActionsTestBase : TestBaseWithProfile() {
         override fun invoke(initiator: String, allowNotification: Boolean, tempBasalFallback: Boolean) {}
         override fun acceptChangeRequest() {}
         override fun minutesToEndOfSuspend(): Int = 0
-        override fun goToZeroTemp(durationInMinutes: Int, profile: Profile, reason: OE.Reason, action: app.aaps.core.data.ue.Action, source: Sources, listValues: List<ValueWithUnit>) {}
+        override fun goToZeroTemp(durationInMinutes: Int, profile: Profile, mode: RM.Mode, action: app.aaps.core.data.ue.Action, source: Sources, listValues: List<ValueWithUnit>) {}
         override fun suspendLoop(durationInMinutes: Int, action: app.aaps.core.data.ue.Action, source: Sources, note: String?, listValues: List<ValueWithUnit>) {}
         override fun disableCarbSuggestions(durationMinutes: Int) {}
         override fun scheduleBuildAndStoreDeviceStatus(reason: String) {}
@@ -105,13 +105,13 @@ ActionsTestBase : TestBaseWithProfile() {
                 it.uel = uel
             }
             if (it is ActionLoopResume) {
-                it.loopPlugin = loopPlugin
+                it.loop = loopPlugin
                 it.configBuilder = configBuilder
                 it.rxBus = rxBus
                 it.persistenceLayer = persistenceLayer
                 it.dateUtil = dateUtil
             }
-            if (it is ActionLoopEnable) {
+            if (it is ActionLoopClosed) {
                 it.loopPlugin = loopPlugin
                 it.configBuilder = configBuilder
                 it.rxBus = rxBus

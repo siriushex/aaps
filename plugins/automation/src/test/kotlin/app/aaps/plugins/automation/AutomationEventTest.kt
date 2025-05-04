@@ -4,7 +4,7 @@ import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.plugins.automation.actions.Action
-import app.aaps.plugins.automation.actions.ActionLoopEnable
+import app.aaps.plugins.automation.actions.ActionLoopClosed
 import app.aaps.plugins.automation.actions.ActionStopProcessing
 import app.aaps.plugins.automation.triggers.TriggerConnector
 import app.aaps.plugins.automation.triggers.TriggerConnectorTest
@@ -32,7 +32,7 @@ class AutomationEventTest : TestBase() {
             if (it is Action) {
                 it.aapsLogger = aapsLogger
             }
-            if (it is ActionLoopEnable) {
+            if (it is ActionLoopClosed) {
                 it.loopPlugin = loopPlugin
                 it.rh = rh
                 it.configBuilder = configBuilder
@@ -46,7 +46,7 @@ class AutomationEventTest : TestBase() {
         val event = AutomationEventObject(injector)
         event.title = "Test"
         event.trigger = TriggerDummy(injector).instantiate(JSONObject(TriggerConnectorTest().oneItem)) as TriggerConnector
-        event.addAction(ActionLoopEnable(injector))
+        event.addAction(ActionLoopClosed(injector))
 
         // export to json
         val eventJsonExpected =
