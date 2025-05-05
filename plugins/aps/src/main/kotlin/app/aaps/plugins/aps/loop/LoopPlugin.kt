@@ -423,7 +423,7 @@ class LoopPlugin @Inject constructor(
     }
 
     override fun applyMaxIOBConstraints(maxIob: Constraint<Double>): Constraint<Double> {
-        if (runningMode == RM.Mode.CLOSED_LOOP_LGS) maxIob.setIfSmaller(
+        if (persistenceLayer.getRunningModeActiveAt(dateUtil.now()).mode == RM.Mode.CLOSED_LOOP_LGS) maxIob.setIfSmaller(
             HardLimits.MAX_IOB_LGS,
             rh.gs(app.aaps.core.ui.R.string.limiting_iob, HardLimits.MAX_IOB_LGS, rh.gs(app.aaps.core.ui.R.string.lowglucosesuspend)),
             this

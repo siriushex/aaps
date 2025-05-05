@@ -119,7 +119,8 @@ open class PointsWithLabelGraphSeries<E : DataPointWithLabelInterface> : BaseSer
                 x = 0.0
             }
 
-            /* Fix a bug that continue to show the DOT after Y axis */if (x < 0) {
+            /* Fix a bug that continue to show the DOT after Y axis */
+            if (x < 0) {
                 overdraw = true
             }
             val endX = x.toFloat() + (graphLeft + 1)

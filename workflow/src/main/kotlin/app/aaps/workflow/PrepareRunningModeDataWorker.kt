@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.aaps.core.data.model.RM
-import app.aaps.core.graph.data.LineGraphSeries
 import app.aaps.core.graph.data.PointsWithLabelGraphSeries
 import app.aaps.core.graph.data.RunningModeDataPoint
 import app.aaps.core.interfaces.aps.Loop
@@ -16,11 +15,8 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventIobCalculationProgress
 import app.aaps.core.interfaces.workflow.CalculationWorkflow
-import app.aaps.core.objects.extensions.target
 import app.aaps.core.objects.workflow.LoggingWorker
-import app.aaps.core.ui.R
 import app.aaps.core.utils.receivers.DataWorkerStorage
-import com.jjoe64.graphview.series.DataPoint
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 import kotlin.math.max
@@ -37,7 +33,6 @@ class PrepareRunningModeDataWorker(
     @Inject lateinit var persistenceLayer: PersistenceLayer
     @Inject lateinit var loop: Loop
     @Inject lateinit var rxBus: RxBus
-    private var ctx: Context = rh.getThemedCtx(context)
 
     class PrepareRunningModeData(
         val overviewData: OverviewData
@@ -62,12 +57,14 @@ class PrepareRunningModeDataWorker(
             rxBus.send(EventIobCalculationProgress(CalculationWorkflow.ProgressData.PREPARE_RUNNING_MODE_DATA, progress.toInt(), null))
             val mode = persistenceLayer.getRunningModeActiveAt(time)
             if (lastMode != mode.mode) {
-                modesSeriesArray.add(RunningModeDataPoint(mode.mode, lastModeChange, time, rh))
+                if (lastMode != RM.Mode.RESUME)
+                    modesSeriesArray.add(RunningModeDataPoint(lastMode, lastModeChange, time, rh))
                 lastModeChange = time
                 lastMode = mode.mode
             }
             time += 5 * 60 * 1000L
         }
+        modesSeriesArray.add(RunningModeDataPoint(lastMode, lastModeChange, time, rh))
         // create series
         data.overviewData.runningModesSeries = PointsWithLabelGraphSeries(Array(modesSeriesArray.size) { i -> modesSeriesArray[i] })
         rxBus.send(EventIobCalculationProgress(CalculationWorkflow.ProgressData.PREPARE_RUNNING_MODE_DATA, 100, null))
