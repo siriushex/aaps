@@ -246,7 +246,7 @@ class XdripPlugin @Inject constructor(
 
     private fun buildStatusLine(profile: Profile): String {
         val status = StringBuilder()
-        if (!loop.isEnabled() && config.APS)
+        if (!loop.runningMode.isLoopRunning() && config.APS)
             status.append(rh.gs(R.string.disabled_loop)).append("\n")
 
         //Temp basal

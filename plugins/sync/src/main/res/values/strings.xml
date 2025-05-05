@@ -182,6 +182,7 @@
     <string name="last_aps_result_na">Last result not available!</string>
     <string name="loop_status_closed">CLOSED LOOP</string>
     <string name="loop_status_open">OPEN LOOP</string>
+    <string name="loop_status_lgs">LGS</string>
     <string name="loop_status_disabled">LOOP DISABLED</string>
     <string name="aps">APS</string>
     <string name="last_run">Last run</string>

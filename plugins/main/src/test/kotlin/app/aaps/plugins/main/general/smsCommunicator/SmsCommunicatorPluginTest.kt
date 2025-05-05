@@ -935,6 +935,7 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
         `when`(dateUtilMocked.now()).thenReturn(Constants.remoteBolusMinDistance + 1002L)
 
         //BOLUS 0
+        `when`(loop.runningMode).thenReturn(RM.Mode.CLOSED_LOOP)
         smsCommunicatorPlugin.messages = ArrayList()
         sms = Sms("1234", "BOLUS 0")
         smsCommunicatorPlugin.processSms(sms)
@@ -963,7 +964,7 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
 
         //BOLUS 1 (Suspended pump)
         smsCommunicatorPlugin.lastRemoteBolusTime = 0
-        testPumpPlugin.pumpSuspended = true
+        `when`(loop.runningMode).thenReturn(RM.Mode.SUSPENDED_BY_PUMP)
         smsCommunicatorPlugin.messages = ArrayList()
         sms = Sms("1234", "BOLUS 1")
         smsCommunicatorPlugin.processSms(sms)

@@ -913,7 +913,7 @@ class DataHandlerMobile @Inject constructor(
 
         val pump = activePlugin.activePump
         val pumpDescription = pump.pumpDescription
-        if (pump.isSuspended()) return
+        if (loop.runningMode.isSuspended()) return
         if (!profileFunction.isProfileValid("WearDataHandler_LoopChangeState")) return
 
         val disconnectDurs = arrayListOf<Int>()
@@ -1413,12 +1413,16 @@ class DataHandlerMobile @Inject constructor(
         get() {
             var ret = ""
             // decide if enabled/disabled closed/open; what Plugin as APS?
-            if (loop.isEnabled()) {
-                ret += if (constraintChecker.isClosedLoopAllowed().value()) {
-                    rh.gs(R.string.loop_status_closed) + "\n"
-                } else {
-                    rh.gs(R.string.loop_status_open) + "\n"
+            when (loop.runningMode) {
+                RM.Mode.CLOSED_LOOP     -> ret += rh.gs(R.string.loop_status_closed) + "\n"
+                RM.Mode.OPEN_LOOP       -> ret += rh.gs(R.string.loop_status_open) + "\n"
+                RM.Mode.CLOSED_LOOP_LGS -> ret += rh.gs(R.string.loop_status_lgs) + "\n"
+                RM.Mode.DISABLED_LOOP   -> ret += rh.gs(R.string.loop_status_disabled) + "\n"
+
+                else                    -> { /* do nothing */
                 }
+            }
+            if (loop.runningMode.isLoopRunning()) {
                 val aps = activePlugin.activeAPS
                 ret += rh.gs(R.string.aps) + ": " + (aps as PluginBase).name
                 val lastRun = loop.lastRun
@@ -1426,8 +1430,6 @@ class DataHandlerMobile @Inject constructor(
                     ret += "\n" + rh.gs(R.string.last_run) + ": " + dateUtil.timeString(lastRun.lastAPSRun)
                     if (lastRun.lastTBREnact != 0L) ret += "\n" + rh.gs(R.string.last_enact) + ": " + dateUtil.timeString(lastRun.lastTBREnact)
                 }
-            } else {
-                ret += rh.gs(R.string.loop_status_disabled) + "\n"
             }
             return ret
         }
@@ -1512,7 +1514,7 @@ class DataHandlerMobile @Inject constructor(
     private fun generateStatusString(profile: Profile?): String {
         var status = ""
         profile ?: return rh.gs(app.aaps.core.ui.R.string.noprofile)
-        if (!loop.isEnabled()) status += rh.gs(R.string.disabled_loop) + "\n"
+        if (!loop.runningMode.isLoopRunning()) status += rh.gs(R.string.disabled_loop) + "\n"
         return status
     }
 

@@ -241,7 +241,7 @@ class AutomationPlugin @Inject constructor(
     internal fun processActions() {
         if (!config.appInitialized) return
         var commonEventsEnabled = true
-        if (loop.runningMode.isSuspended() || !loop.isEnabled()) {
+        if (loop.runningMode.isSuspended() || !loop.runningMode.isLoopRunning()) {
             aapsLogger.debug(LTag.AUTOMATION, "Loop suspended")
             executionLog.add(rh.gs(app.aaps.core.ui.R.string.loopsuspended))
             rxBus.send(EventAutomationUpdateGui())

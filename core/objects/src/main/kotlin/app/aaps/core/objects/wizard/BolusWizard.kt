@@ -486,7 +486,7 @@ class BolusWizard @Inject constructor(
         OKDialog.showConfirmation(ctx, rh.gs(app.aaps.core.ui.R.string.boluswizard), confirmMessage, {
             if (insulinAfterConstraints > 0 || carbs > 0) {
                 if (useSuperBolus) {
-                    if (loop.isEnabled()) {
+                    if (loop.allowedNextModes().contains(RM.Mode.SUPER_BOLUS)) {
                         loop.handleRunningModeChange(
                             durationInMinutes = 2 * 60,
                             profile = profile,
