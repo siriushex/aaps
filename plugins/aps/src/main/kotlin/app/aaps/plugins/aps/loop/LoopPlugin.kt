@@ -32,6 +32,7 @@ import app.aaps.core.interfaces.aps.Loop.LastRun
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.Constraint
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
+import app.aaps.core.interfaces.constraints.PluginConstraints
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.iob.IobCobCalculator
@@ -128,7 +129,7 @@ class LoopPlugin @Inject constructor(
         .alwaysEnabled(config.APS)
         .description(R.string.description_loop),
     aapsLogger, rh
-), Loop {
+), Loop, PluginConstraints {
 
     private val disposable = CompositeDisposable()
     override var lastBgTriggeredRun: Long = 0
@@ -419,6 +420,15 @@ class LoopPlugin @Inject constructor(
             )
             rxBus.send(EventRefreshOverview("runningModePreCheck"))
         }
+    }
+
+    override fun applyMaxIOBConstraints(maxIob: Constraint<Double>): Constraint<Double> {
+        if (runningMode == RM.Mode.CLOSED_LOOP_LGS) maxIob.setIfSmaller(
+            HardLimits.MAX_IOB_LGS,
+            rh.gs(app.aaps.core.ui.R.string.limiting_iob, HardLimits.MAX_IOB_LGS, rh.gs(app.aaps.core.ui.R.string.lowglucosesuspend)),
+            this
+        )
+        return maxIob
     }
 
     @Suppress("SameParameterValue")

@@ -1,7 +1,7 @@
 package app.aaps.plugins.automation
 
 import app.aaps.core.interfaces.aps.Loop
-import app.aaps.core.interfaces.configuration.ConfigBuilder
+import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.plugins.automation.actions.Action
 import app.aaps.plugins.automation.actions.ActionLoopClosed
@@ -20,9 +20,9 @@ import org.skyscreamer.jsonassert.JSONAssert
 
 class AutomationEventTest : TestBase() {
 
-    @Mock lateinit var loopPlugin: Loop
+    @Mock lateinit var loop: Loop
     @Mock lateinit var rh: ResourceHelper
-    @Mock lateinit var configBuilder: ConfigBuilder
+    @Mock lateinit var profileFunction: ProfileFunction
 
     var injector: HasAndroidInjector = HasAndroidInjector {
         AndroidInjector {
@@ -31,12 +31,11 @@ class AutomationEventTest : TestBase() {
             }
             if (it is Action) {
                 it.aapsLogger = aapsLogger
+                it.rh = rh
             }
             if (it is ActionLoopClosed) {
-                it.loopPlugin = loopPlugin
-                it.rh = rh
-                it.configBuilder = configBuilder
-                it.rxBus = rxBus
+                it.loop = loop
+                it.profileFunction = profileFunction
             }
         }
     }
@@ -50,7 +49,7 @@ class AutomationEventTest : TestBase() {
 
         // export to json
         val eventJsonExpected =
-            "{\"userAction\":false,\"autoRemove\":false,\"readOnly\":false,\"trigger\":\"{\\\"data\\\":{\\\"connectorType\\\":\\\"AND\\\",\\\"triggerList\\\":[\\\"{\\\\\\\"data\\\\\\\":{\\\\\\\"connectorType\\\\\\\":\\\\\\\"AND\\\\\\\",\\\\\\\"triggerList\\\\\\\":[]},\\\\\\\"type\\\\\\\":\\\\\\\"TriggerConnector\\\\\\\"}\\\"]},\\\"type\\\":\\\"TriggerConnector\\\"}\",\"title\":\"Test\",\"systemAction\":false,\"actions\":[\"{\\\"type\\\":\\\"ActionLoopEnable\\\"}\"],\"enabled\":true}"
+            "{\"userAction\":false,\"autoRemove\":false,\"readOnly\":false,\"trigger\":\"{\\\"data\\\":{\\\"connectorType\\\":\\\"AND\\\",\\\"triggerList\\\":[\\\"{\\\\\\\"data\\\\\\\":{\\\\\\\"connectorType\\\\\\\":\\\\\\\"AND\\\\\\\",\\\\\\\"triggerList\\\\\\\":[]},\\\\\\\"type\\\\\\\":\\\\\\\"TriggerConnector\\\\\\\"}\\\"]},\\\"type\\\":\\\"TriggerConnector\\\"}\",\"title\":\"Test\",\"systemAction\":false,\"actions\":[\"{\\\"type\\\":\\\"ActionLoopClosed\\\"}\"],\"enabled\":true}"
         JSONAssert.assertEquals(eventJsonExpected, event.toJSON(), true)
 
         // clone

@@ -48,7 +48,6 @@ import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventNSClientRestart
 import app.aaps.core.interfaces.rx.events.EventNewNotification
 import app.aaps.core.interfaces.rx.events.EventPreferenceChange
-import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.smsCommunicator.Sms
 import app.aaps.core.interfaces.smsCommunicator.SmsCommunicator
 import app.aaps.core.interfaces.sync.XDripBroadcast
@@ -395,22 +394,21 @@ class SmsCommunicatorPlugin @Inject constructor(
         val profile = profileFunction.getProfile() ?: return
         when (divided[1].uppercase(Locale.getDefault())) {
             "DISABLE", "STOP" -> {
-                if (loop.isEnabled()) {
+                if (loop.allowedNextModes().contains(RM.Mode.DISABLED_LOOP)) {
                     val passCode = generatePassCode()
                     val reply = rh.gs(R.string.smscommunicator_loop_disable_reply_with_code, passCode)
                     receivedSms.processed = true
                     messageToConfirm = AuthRequest(injector, receivedSms, reply, passCode, object : SmsAction(pumpCommand = false) {
                         override fun run() {
-                            uel.log(Action.LOOP_DISABLED, Sources.SMS)
-                            (loop as PluginBase).setPluginEnabled(PluginType.LOOP, false)
-                            commandQueue.cancelTempBasal(true, object : Callback() {
-                                override fun run() {
-                                    rxBus.send(EventRefreshOverview("SMS_LOOP_STOP"))
-                                    val replyText = rh.gs(R.string.smscommunicator_loop_has_been_disabled) + " " +
-                                        rh.gs(if (result.success) R.string.smscommunicator_tempbasal_canceled else R.string.smscommunicator_tempbasal_cancel_failed)
-                                    sendSMS(Sms(receivedSms.phoneNumber, replyText))
-                                }
-                            })
+                            val result = loop.handleRunningModeChange(
+                                newRM = RM.Mode.DISABLED_LOOP,
+                                action = Action.LOOP_DISABLED,
+                                source = Sources.SMS,
+                                profile = profile
+                            )
+                            val replyText = rh.gs(R.string.smscommunicator_loop_has_been_disabled) + " " +
+                                rh.gs(if (result) R.string.smscommunicator_tempbasal_canceled else R.string.smscommunicator_tempbasal_cancel_failed)
+                            sendSMS(Sms(receivedSms.phoneNumber, replyText))
                         }
                     })
                 } else
@@ -436,7 +434,7 @@ class SmsCommunicatorPlugin @Inject constructor(
             }
 
             "RESUME"          -> {
-                if (loop.runningMode == RM.Mode.SUSPENDED_BY_USER) {
+                if (loop.allowedNextModes().contains(RM.Mode.RESUME)) {
                     val profile = profileFunction.getProfile() ?: return
                     val passCode = generatePassCode()
                     val reply = rh.gs(R.string.smscommunicator_loop_resume_reply_with_code, passCode)
@@ -453,7 +451,7 @@ class SmsCommunicatorPlugin @Inject constructor(
                         }
                     })
                 } else {
-                    sendSMS(Sms(receivedSms.phoneNumber, rh.gs(R.string.smscommunicator_loop_resumed)))
+                    sendSMS(Sms(receivedSms.phoneNumber, rh.gs(R.string.smscommunicator_remote_command_not_possible)))
                     return
                 }
             }
@@ -467,7 +465,7 @@ class SmsCommunicatorPlugin @Inject constructor(
                     receivedSms.processed = true
                     sendSMS(Sms(receivedSms.phoneNumber, rh.gs(R.string.smscommunicator_wrong_duration)))
                     return
-                } else {
+                } else if (loop.allowedNextModes().contains(RM.Mode.SUSPENDED_BY_USER)) {
                     val profile = profileFunction.getProfile() ?: return
                     val passCode = generatePassCode()
                     val reply = rh.gs(R.string.smscommunicator_suspend_reply_with_code, duration, passCode)
@@ -496,43 +494,56 @@ class SmsCommunicatorPlugin @Inject constructor(
                             })
                         }
                     })
+                } else {
+                    sendSMS(Sms(receivedSms.phoneNumber, rh.gs(R.string.smscommunicator_remote_command_not_possible)))
+                    return
                 }
             }
 
             "LGS"             -> {
-                val passCode = generatePassCode()
-                val reply = rh.gs(R.string.smscommunicator_set_lgs_reply_with_code, passCode)
-                receivedSms.processed = true
-                messageToConfirm = AuthRequest(injector, receivedSms, reply, passCode, object : SmsAction(pumpCommand = false) {
-                    override fun run() {
-                        loop.handleRunningModeChange(
-                            newRM = RM.Mode.CLOSED_LOOP_LGS,
-                            action = Action.LGS_LOOP_MODE,
-                            source = Sources.SMS,
-                            profile = profile
-                        )
-                        val replyText = rh.gs(R.string.smscommunicator_current_loop_mode, rh.gs(app.aaps.core.ui.R.string.lowglucosesuspend))
-                        sendSMSToAllNumbers(Sms(receivedSms.phoneNumber, replyText))
-                    }
-                })
+                if (loop.allowedNextModes().contains(RM.Mode.CLOSED_LOOP_LGS)) {
+                    val passCode = generatePassCode()
+                    val reply = rh.gs(R.string.smscommunicator_set_lgs_reply_with_code, passCode)
+                    receivedSms.processed = true
+                    messageToConfirm = AuthRequest(injector, receivedSms, reply, passCode, object : SmsAction(pumpCommand = false) {
+                        override fun run() {
+                            loop.handleRunningModeChange(
+                                newRM = RM.Mode.CLOSED_LOOP_LGS,
+                                action = Action.LGS_LOOP_MODE,
+                                source = Sources.SMS,
+                                profile = profile
+                            )
+                            val replyText = rh.gs(R.string.smscommunicator_current_loop_mode, rh.gs(app.aaps.core.ui.R.string.lowglucosesuspend))
+                            sendSMSToAllNumbers(Sms(receivedSms.phoneNumber, replyText))
+                        }
+                    })
+                } else {
+                    sendSMS(Sms(receivedSms.phoneNumber, rh.gs(R.string.smscommunicator_remote_command_not_possible)))
+                    return
+                }
             }
 
             "CLOSED"          -> {
-                val passCode = generatePassCode()
-                val reply = rh.gs(R.string.smscommunicator_set_closed_loop_reply_with_code, passCode)
-                receivedSms.processed = true
-                messageToConfirm = AuthRequest(injector, receivedSms, reply, passCode, object : SmsAction(pumpCommand = false) {
-                    override fun run() {
-                        loop.handleRunningModeChange(
-                            newRM = RM.Mode.CLOSED_LOOP,
-                            action = Action.CLOSED_LOOP_MODE,
-                            source = Sources.SMS,
-                            profile = profile
-                        )
-                        val replyText = rh.gs(R.string.smscommunicator_current_loop_mode, rh.gs(app.aaps.core.ui.R.string.closedloop))
-                        sendSMSToAllNumbers(Sms(receivedSms.phoneNumber, replyText))
-                    }
-                })
+                if (loop.allowedNextModes().contains(RM.Mode.CLOSED_LOOP)) {
+                    val passCode = generatePassCode()
+                    val reply = rh.gs(R.string.smscommunicator_set_closed_loop_reply_with_code, passCode)
+                    receivedSms.processed = true
+                    messageToConfirm = AuthRequest(injector, receivedSms, reply, passCode, object : SmsAction(pumpCommand = false) {
+                        override fun run() {
+                            loop.handleRunningModeChange(
+                                newRM = RM.Mode.CLOSED_LOOP,
+                                action = Action.CLOSED_LOOP_MODE,
+                                source = Sources.SMS,
+                                profile = profile
+                            )
+                            val replyText = rh.gs(R.string.smscommunicator_current_loop_mode, rh.gs(app.aaps.core.ui.R.string.closedloop))
+                            sendSMSToAllNumbers(Sms(receivedSms.phoneNumber, replyText))
+                        }
+                    })
+                } else {
+                    sendSMS(Sms(receivedSms.phoneNumber, rh.gs(R.string.smscommunicator_remote_command_not_possible)))
+                    return
+                }
             }
 
             else              -> sendSMS(Sms(receivedSms.phoneNumber, rh.gs(R.string.wrong_format)))
@@ -586,7 +597,7 @@ class SmsCommunicatorPlugin @Inject constructor(
             })
             receivedSms.processed = true
         } else if ((divided.size == 2) && (divided[1].equals("CONNECT", ignoreCase = true))) {
-            if (loop.runningMode == RM.Mode.DISCONNECTED_PUMP) {
+            if (loop.allowedNextModes().contains(RM.Mode.RESUME)) {
                 val passCode = generatePassCode()
                 val reply = rh.gs(R.string.smscommunicator_pump_connect_with_code, passCode)
                 receivedSms.processed = true
@@ -594,6 +605,7 @@ class SmsCommunicatorPlugin @Inject constructor(
                     override fun run() {
                         val profile = profileFunction.getProfile() ?: return
                         loop.handleRunningModeChange(newRM = RM.Mode.RESUME, action = Action.RECONNECT, source = Sources.SMS, profile = profile)
+                        sendSMS(Sms(receivedSms.phoneNumber, rh.gs(R.string.smscommunicator_reconnect)))
                     }
                 })
             } else {
