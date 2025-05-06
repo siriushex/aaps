@@ -27,6 +27,7 @@ fun TE.Companion.fromJson(jsonObject: JSONObject): TE? {
     val durationInMilliseconds = JsonHelper.safeGetLongAllowNull(jsonObject, "durationInMilliseconds")
     val glucose = JsonHelper.safeGetDoubleAllowNull(jsonObject, "glucose")
     val glucoseType = TE.MeterType.fromString(JsonHelper.safeGetString(jsonObject, "glucoseType"))
+    val location = TE.Location.fromJson(jsonObject)
     val enteredBy = JsonHelper.safeGetStringAllowNull(jsonObject, "enteredBy", null)
     val note = JsonHelper.safeGetStringAllowNull(jsonObject, "notes", null)
     val id = JsonHelper.safeGetStringAllowNull(jsonObject, "identifier", null)
@@ -45,6 +46,7 @@ fun TE.Companion.fromJson(jsonObject: JSONObject): TE? {
         glucoseType = glucoseType,
         enteredBy = enteredBy,
         note = note,
+        location = location,
         isValid = isValid
     )
     te.ids.nightscoutId = id
@@ -66,5 +68,17 @@ fun TE.toJson(isAdd: Boolean, dateUtil: DateUtil): JSONObject =
             if (glucoseType != null) it.put("glucoseType", glucoseType!!.text)
             if (isAdd && ids.nightscoutId != null) it.put("_id", ids.nightscoutId)
             if (type == TE.Type.ANNOUNCEMENT) it.put("isAnnouncement", true)
+            if (location != null) it.put("location", location!!.toJson())
         }
 
+fun TE.Location.toJson(): JSONObject =
+    JSONObject()
+        .put("location", text)
+        .put("orientation", orientation)
+
+
+fun TE.Location.Companion.fromJson(jsonObject: JSONObject): TE.Location? {
+    val location = TE.Location.fromString(JsonHelper.safeGetString(jsonObject, "location", TE.Location.NONE.text))
+    val orientation = JsonHelper.safeGetInt(jsonObject, "orientation", 0)
+    return if (location != TE.Location.NONE) location.also { it.orientation = orientation} else null
+}

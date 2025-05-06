@@ -45,6 +45,7 @@ data class TherapyEvent(
     var glucose: Double? = null,
     var glucoseType: MeterType? = null,
     var glucoseUnit: GlucoseUnit,
+    val location: Location? = null
 ) : TraceableDBEntry, DBEntryWithTimeAndDuration {
 
     enum class MeterType {
@@ -109,5 +110,36 @@ data class TherapyEvent(
         // Default
         NONE
         ;
+    }
+    enum class Location(var orientation: Int? = null) {
+        FRONT_RIGHT_UPPER_CHEST,
+        FRONT_LEFT_UPPER_CHEST,
+        SIDE_RIGHT_UPPER_ARM,
+        SIDE_LEFT_UPPER_ARM,
+        BACK_RIGHT_UPPER_ARM,
+        BACK_LEFT_UPPER_ARM,
+        SIDE_RIGHT_UPPER_ABDOMEN,
+        SIDE_LEFT_UPPER_ABDOMEN,
+        SIDE_RIGHT_LOWER_ABDOMEN,
+        SIDE_LEFT_LOWER_ABDOMEN,
+        FRONT_RIGHT_UPPER_ABDOMEN,
+        FRONT_LEFT_UPPER_ABDOMEN,
+        FRONT_RIGHT_LOWER_ABDOMEN,
+        FRONT_LEFT_LOWER_ABDOMEN,
+        BACK_RIGHT_BUTTOCK,
+        BACK_LEFT_BUTTOCK,
+        FRONT_RIGHT_UPPER_THIGH,
+        FRONT_LEFT_UPPER_THIGH,
+        FRONT_RIGHT_LOWER_THIGH,
+        FRONT_LEFT_LOWER_THIGH,
+        SIDE_RIGHT_UPPER_THIGH,
+        SIDE_LEFT_UPPER_THIGH,
+        SIDE_RIGHT_LOWER_THIGH,
+        SIDE_LEFT_LOWER_THIGH,
+        NONE;
+
+        companion object {
+            fun fromString(text: String?) = entries.firstOrNull { it.name == text }
+        }
     }
 }

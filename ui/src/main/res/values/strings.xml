@@ -44,6 +44,11 @@
     <string name="format_carbs_ic">%1$.0fg IC: %2$.1f</string>
     <string name="treatments_wizard_total_label">Total</string>
 
+    <!-- WizardDialog -->
+    <string name="site_synthesis">Synthesis</string>
+    <string name="site_front">Front</string>
+    <string name="site_back">Back</string>
+
     <!-- FillDialog -->
     <string name="fill_warning">Please make sure the amount matches the specification of your infusion set!</string>
     <string name="record_pump_site_change">Record pump site change</string>
