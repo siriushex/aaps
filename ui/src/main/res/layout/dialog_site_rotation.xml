@@ -47,7 +47,7 @@
             android:padding="5dp" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="5dp">
@@ -55,7 +55,7 @@
             <CheckBox
                 android:id="@+id/pump_site_management"
                 style="@style/Widget.App.CheckBox"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:text="@string/careportal_pump_site_management" />
@@ -63,7 +63,7 @@
             <CheckBox
                 android:id="@+id/cgm_site_management"
                 style="@style/Widget.App.CheckBox"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
                 android:text="@string/careportal_cgm_site_management" />
@@ -98,15 +98,12 @@
         </com.google.android.material.tabs.TabLayout>
 
         <androidx.core.widget.NestedScrollView
+            android:id="@+id/site_layout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
             android:layout_gravity="center"
             android:padding="5dp">
-
-            <include
-                android:id="@+id/info_layout"
-                layout="@layout/dialog_site_rotation_man" />
 
         </androidx.core.widget.NestedScrollView>
 
@@ -114,7 +111,30 @@
             android:id="@+id/settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:orientation="vertical">
+
+            <RadioGroup
+            android:id="@+id/layoutSelectorGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/manLayoutOption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Man"
+                android:padding="8dp"/>
+
+            <RadioButton
+                android:id="@+id/womanLayoutOption"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Woman"
+                android:padding="8dp"/>
+        </RadioGroup>
 
         </LinearLayout>
 

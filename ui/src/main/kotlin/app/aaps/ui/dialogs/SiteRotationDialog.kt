@@ -4,14 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import androidx.constraintlayout.widget.ConstraintLayout
 import app.aaps.core.data.model.BS
-import app.aaps.core.data.model.GlucoseUnit
-import app.aaps.core.data.model.TE
-import app.aaps.core.data.ue.Action
-import app.aaps.core.data.ue.Sources
-import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.LTag
@@ -24,16 +18,14 @@ import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DecimalFormatter
-import app.aaps.core.interfaces.utils.SafeParse
-import app.aaps.core.keys.DoubleKey
-import app.aaps.core.objects.constraints.ConstraintObject
 import app.aaps.core.objects.extensions.formatColor
-import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.toast.ToastUtils
-import app.aaps.core.utils.HtmlHelper
 import app.aaps.ui.R
 import app.aaps.ui.databinding.DialogSiteRotationBinding
+import app.aaps.ui.databinding.DialogSiteRotationManBinding
+import app.aaps.ui.databinding.DialogSiteRotationWomanBinding
+import app.aaps.ui.dialogs.utils.SiteRotationViewAdapter
 import com.google.android.material.tabs.TabLayout
 import com.google.common.base.Joiner
 import dagger.android.HasAndroidInjector
@@ -59,9 +51,11 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private var queryingProtection = false
     private val disposable = CompositeDisposable()
     private var _binding: DialogSiteRotationBinding? = null
+    private var _siteBinding: SiteRotationViewAdapter? = null
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
+    private val siteBinding get() = _siteBinding!!
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
         super.onSaveInstanceState(savedInstanceState)
@@ -79,6 +73,15 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        loadDynamicContent(0)
+
+        binding.layoutSelectorGroup.setOnCheckedChangeListener { _, checkedId ->
+            when (checkedId) {
+                R.id.manLayoutOption -> loadDynamicContent(0)
+                R.id.womanLayoutOption -> loadDynamicContent(1)
+            }
+            processVisibility(3)
+        }
 
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
@@ -205,27 +208,38 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         }
     }
 
+    private fun loadDynamicContent(selectedLayout: Int) {
+        binding.siteLayout.removeAllViews()
+        val bindLayout = when (selectedLayout) {
+            0 -> DialogSiteRotationManBinding.inflate(layoutInflater)
+            1 -> DialogSiteRotationWomanBinding.inflate(layoutInflater)
+            else -> DialogSiteRotationManBinding.inflate(layoutInflater)
+        }
+        _siteBinding = SiteRotationViewAdapter.getBinding(bindLayout)
+        binding.siteLayout.addView(siteBinding.root)
+    }
+
     private fun processVisibility(position: Int) {
-        binding.infoLayout.front.visibility = (position == 0 || position == 1).toVisibility()
-        binding.infoLayout.back.visibility = (position == 0 || position == 2).toVisibility()
+        siteBinding.front.visibility = (position == 0 || position == 1).toVisibility()
+        siteBinding.back.visibility = (position == 0 || position == 2).toVisibility()
         binding.settings.visibility = (position == 3).toVisibility()
-        val paramsFront = binding.infoLayout.front.layoutParams as ConstraintLayout.LayoutParams
-        val paramsBack = binding.infoLayout.back.layoutParams as ConstraintLayout.LayoutParams
+        val paramsFront = siteBinding.front.layoutParams as ConstraintLayout.LayoutParams
+        val paramsBack = siteBinding.back.layoutParams as ConstraintLayout.LayoutParams
         when(position) {
             0 -> {
                 paramsFront.matchConstraintPercentWidth = 0.45f
                 paramsBack.matchConstraintPercentWidth = 0.45f
-                binding.infoLayout.front.layoutParams = paramsFront
-                binding.infoLayout.back.layoutParams = paramsBack
+                siteBinding.front.layoutParams = paramsFront
+                siteBinding.back.layoutParams = paramsBack
             }
             else -> {
                 paramsFront.matchConstraintPercentWidth = 0.80f
                 paramsBack.matchConstraintPercentWidth = 0.80f
-                binding.infoLayout.front.layoutParams = paramsFront
-                binding.infoLayout.back.layoutParams = paramsBack
+                siteBinding.front.layoutParams = paramsFront
+                siteBinding.back.layoutParams = paramsBack
             }
         }
-        binding.infoLayout.front.requestLayout()
-        binding.infoLayout.back.requestLayout()
+        siteBinding.front.requestLayout()
+        siteBinding.back.requestLayout()
     }
 }
