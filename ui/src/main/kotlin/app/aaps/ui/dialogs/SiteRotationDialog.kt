@@ -23,6 +23,7 @@ import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.ui.R
 import app.aaps.ui.databinding.DialogSiteRotationBinding
+import app.aaps.ui.databinding.DialogSiteRotationChildBinding
 import app.aaps.ui.databinding.DialogSiteRotationManBinding
 import app.aaps.ui.databinding.DialogSiteRotationWomanBinding
 import app.aaps.ui.dialogs.utils.SiteRotationViewAdapter
@@ -77,8 +78,9 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
         binding.layoutSelectorGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
-                R.id.manLayoutOption -> loadDynamicContent(0)
-                R.id.womanLayoutOption -> loadDynamicContent(1)
+                R.id.man_layout_option -> loadDynamicContent(0)
+                R.id.woman_layout_option -> loadDynamicContent(1)
+                R.id.child_layout_option -> loadDynamicContent(2)
             }
             processVisibility(3)
         }
@@ -213,6 +215,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         val bindLayout = when (selectedLayout) {
             0 -> DialogSiteRotationManBinding.inflate(layoutInflater)
             1 -> DialogSiteRotationWomanBinding.inflate(layoutInflater)
+            2 -> DialogSiteRotationChildBinding.inflate(layoutInflater)
             else -> DialogSiteRotationManBinding.inflate(layoutInflater)
         }
         _siteBinding = SiteRotationViewAdapter.getBinding(bindLayout)

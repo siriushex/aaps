@@ -48,6 +48,9 @@
     <string name="site_synthesis">Synthesis</string>
     <string name="site_front">Front</string>
     <string name="site_back">Back</string>
+    <string name="site_man">Man</string>
+    <string name="site_woman">Woman</string>
+    <string name="site_child">Child</string>
 
     <!-- FillDialog -->
     <string name="fill_warning">Please make sure the amount matches the specification of your infusion set!</string>

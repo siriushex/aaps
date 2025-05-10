@@ -115,25 +115,32 @@
             android:orientation="vertical">
 
             <RadioGroup
-            android:id="@+id/layoutSelectorGroup"
+            android:id="@+id/layout_selector_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <RadioButton
-                android:id="@+id/manLayoutOption"
+                android:id="@+id/man_layout_option"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:checked="true"
-                android:text="Man"
+                android:text="@string/site_man"
                 android:padding="8dp"/>
 
             <RadioButton
-                android:id="@+id/womanLayoutOption"
+                android:id="@+id/woman_layout_option"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Woman"
+                android:text="@string/site_woman"
                 android:padding="8dp"/>
+
+                <RadioButton
+                    android:id="@+id/child_layout_option"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/site_child"
+                    android:padding="8dp"/>
         </RadioGroup>
 
         </LinearLayout>
