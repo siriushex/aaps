@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import app.aaps.core.data.model.BS
+import app.aaps.core.data.model.TE
+import app.aaps.core.data.model.UE
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.LTag
@@ -53,6 +55,11 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private val disposable = CompositeDisposable()
     private var _binding: DialogSiteRotationBinding? = null
     private var _siteBinding: SiteRotationViewAdapter? = null
+    private var siteMode = UiInteraction.SiteMode.VIEW
+    private var siteType = UiInteraction.SiteType.PUMP
+    private var location = TE.Location.NONE
+    private var orientation = 0
+    private var time: Long = 0
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
@@ -60,13 +67,29 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
         super.onSaveInstanceState(savedInstanceState)
-        //savedInstanceState.putDouble("fill_insulin_amount", binding.fillInsulinAmount.value)
+        savedInstanceState.putInt("siteMode", siteMode.ordinal)
+        if (siteMode == UiInteraction.SiteMode.EDIT) {
+            savedInstanceState.putInt("siteType", siteType.ordinal)
+            savedInstanceState.putInt("location", location.ordinal)
+            savedInstanceState.putInt("orientation", orientation)
+            savedInstanceState.putLong("time", time)
+        }
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // load data from bundle
+        (savedInstanceState ?: arguments)?.let { bundle ->
+            siteMode = UiInteraction.SiteMode.entries.toTypedArray()[bundle.getInt("siteMode", UiInteraction.SiteMode.VIEW.ordinal)]
+            if (siteMode == UiInteraction.SiteMode.EDIT) {
+                siteType = UiInteraction.SiteType.entries.toTypedArray()[bundle.getInt("siteType", UiInteraction.SiteType.PUMP.ordinal)]
+                location = TE.Location.entries.toTypedArray()[bundle.getInt("location", TE.Location.NONE.ordinal)]
+                orientation = bundle.getInt("orientation", 0)
+                time = bundle.getLong("time", 0)
+            }
+        }
         onCreateViewGeneral()
         _binding = DialogSiteRotationBinding.inflate(inflater, container, false)
         return binding.root
@@ -75,7 +98,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loadDynamicContent(0)
-
         binding.layoutSelectorGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.man_layout_option -> loadDynamicContent(0)
@@ -93,7 +115,8 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
-
+        binding.tabLayout.selectTab(binding.tabLayout.getTabAt(siteMode.ordinal))
+        processVisibility(siteMode.ordinal)
         val maxInsulin = constraintChecker.getMaxBolusAllowed().value()
         val bolusStep = activePlugin.activePump.pumpDescription.bolusStep
         /*
@@ -223,6 +246,15 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     }
 
     private fun processVisibility(position: Int) {
+        if (siteMode == UiInteraction.SiteMode.VIEW) {
+            binding.tabLayout.getTabAt(0)?.view?.visibility = View.VISIBLE
+            binding.tabLayout.getTabAt(1)?.view?.visibility = View.GONE
+            binding.tabLayout.getTabAt(2)?.view?.visibility = View.GONE
+        } else {
+            binding.tabLayout.getTabAt(0)?.view?.visibility = View.GONE
+            binding.tabLayout.getTabAt(1)?.view?.visibility = View.VISIBLE
+            binding.tabLayout.getTabAt(2)?.view?.visibility = View.VISIBLE
+        }
         siteBinding.front.visibility = (position == 0 || position == 1).toVisibility()
         siteBinding.back.visibility = (position == 0 || position == 2).toVisibility()
         binding.settings.visibility = (position == 3).toVisibility()

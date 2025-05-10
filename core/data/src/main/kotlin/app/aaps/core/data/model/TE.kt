@@ -115,9 +115,9 @@ data class TE(
     }
 
     @Suppress("unused")
-    enum class Location(val text: String, var orientation: Int? = null) {
-        FRONT_RIGHT_UPPER_CHEST("Front Right Upper Chest"),
-        FRONT_LEFT_UPPER_CHEST("Front Left Upper Chest"),
+    enum class Location(val text: String, val pump: Boolean = true, var orientation: Int? = null) {
+        FRONT_RIGHT_UPPER_CHEST("Front Right Upper Chest", false),
+        FRONT_LEFT_UPPER_CHEST("Front Left Upper Chest", false),
         SIDE_RIGHT_UPPER_ARM("Side Right Upper Arm"),
         SIDE_LEFT_UPPER_ARM("Side Left Upper Arm"),
         BACK_RIGHT_UPPER_ARM("Back Right Upper Arm"),
@@ -140,7 +140,7 @@ data class TE(
         SIDE_LEFT_UPPER_THIGH("Side Left Upper Thigh"),
         SIDE_RIGHT_LOWER_THIGH("Side Right Lower Thigh"),
         SIDE_LEFT_LOWER_THIGH("Side Left Lower Thigh"),
-        NONE("<none>");
+        NONE("<none>", false);
 
         companion object{
 
