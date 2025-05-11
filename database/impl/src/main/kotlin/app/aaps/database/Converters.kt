@@ -85,20 +85,16 @@ class Converters {
     fun toTherapyEventType(therapyEventType: String?) = therapyEventType?.let { TherapyEvent.Type.valueOf(it) }
 
     @TypeConverter
-    fun fromTherapyEventLocation(therapyEventLocation: TherapyEvent.Location?): String? = therapyEventLocation?.let {
-        JSONObject()
-            .put("location", it.name)
-            .put("orientation", it.orientation)
-            .toString()
-    }
+    fun fromTherapyEventLocation(therapyEventLocation: TherapyEvent.Location?) = therapyEventLocation?.name
 
     @TypeConverter
-    fun toTherapyEventLocation(therapyEventLocation: String?): TherapyEvent.Location? = therapyEventLocation?.let {
-        val jsonObject = JSONObject(it)
-        TherapyEvent.Location.fromString(jsonObject.optString("location"))?.also {
-            it.orientation = jsonObject.optInt("orientation")
-        }
-    }
+    fun toTherapyEventLocation(therapyEventLocation: String?): TherapyEvent.Location? = therapyEventLocation?.let { TherapyEvent.Location.valueOf(it) }
+
+    @TypeConverter
+    fun fromTherapyEventRotation(therapyEventRotation: TherapyEvent.Rotation?) = therapyEventRotation?.name
+
+    @TypeConverter
+    fun toTherapyEventRotation(therapyEventRotation: String?): TherapyEvent.Rotation? = therapyEventRotation?.let { TherapyEvent.Rotation.valueOf(it) }
 
     @TypeConverter
     fun fromGlucoseType(meterType: TherapyEvent.MeterType?) = meterType?.name

@@ -19,7 +19,8 @@ data class TE(
     var glucose: Double? = null,
     var glucoseType: MeterType? = null,
     var glucoseUnit: GlucoseUnit,
-    var location: Location? = null
+    var location: Location? = null,
+    var rotation: Rotation? = null
 ) : HasIDs {
 
     fun contentEqualsTo(other: TE): Boolean =
@@ -115,7 +116,7 @@ data class TE(
     }
 
     @Suppress("unused")
-    enum class Location(val text: String, val pump: Boolean = true, var orientation: Int? = null) {
+    enum class Location(val text: String, val pump: Boolean = true) {
         FRONT_RIGHT_UPPER_CHEST("Front Right Upper Chest", false),
         FRONT_LEFT_UPPER_CHEST("Front Left Upper Chest", false),
         SIDE_RIGHT_UPPER_ARM("Side Right Upper Arm"),
@@ -145,6 +146,25 @@ data class TE(
         companion object{
 
             fun fromString(text: String?) = Location.entries.firstOrNull { it.text == text } ?: NONE
+        }
+    }
+
+    @Suppress("unused")
+    enum class Rotation(val text: String) {
+        UP("Up"),
+        UP_RIGHT("Up Right"),
+        RIGHT("Right"),
+        DOWN_RIGHT("Down Right"),
+        DOWN("Down"),
+        DOWN_LEFT("Down Left"),
+        LEFT("Left"),
+        UP_LEFT("Up Left"),
+        CENTER("Center"),
+        NONE("<none>");
+
+        companion object{
+
+            fun fromString(text: String?) = Rotation.entries.firstOrNull { it.text == text } ?: NONE
         }
     }
 

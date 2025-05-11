@@ -136,8 +136,8 @@ fun TherapyEvent.Location.fromDb(): TE.Location? = when (this) {
     TherapyEvent.Location.SIDE_LEFT_UPPER_THIGH     -> TE.Location.SIDE_LEFT_UPPER_THIGH
     TherapyEvent.Location.SIDE_RIGHT_LOWER_THIGH    -> TE.Location.SIDE_RIGHT_LOWER_THIGH
     TherapyEvent.Location.SIDE_LEFT_LOWER_THIGH     -> TE.Location.SIDE_LEFT_LOWER_THIGH
-    TherapyEvent.Location.NONE                      -> null
-}?.also {it.orientation = orientation}
+    TherapyEvent.Location.NONE                      -> TE.Location.NONE
+}
 
 fun TE.Location.toDb(): TherapyEvent.Location = when (this) {
     TE.Location.FRONT_RIGHT_UPPER_CHEST   -> TherapyEvent.Location.FRONT_RIGHT_UPPER_CHEST
@@ -165,7 +165,33 @@ fun TE.Location.toDb(): TherapyEvent.Location = when (this) {
     TE.Location.SIDE_RIGHT_LOWER_THIGH    -> TherapyEvent.Location.SIDE_RIGHT_LOWER_THIGH
     TE.Location.SIDE_LEFT_LOWER_THIGH     -> TherapyEvent.Location.SIDE_LEFT_LOWER_THIGH
     TE.Location.NONE                      -> TherapyEvent.Location.NONE
-}.also {it.orientation = orientation}
+}
+
+fun TherapyEvent.Rotation.fromDb(): TE.Rotation? = when (this) {
+    TherapyEvent.Rotation.UP         -> TE.Rotation.UP
+    TherapyEvent.Rotation.UP_RIGHT   -> TE.Rotation.UP_RIGHT
+    TherapyEvent.Rotation.RIGHT      -> TE.Rotation.RIGHT
+    TherapyEvent.Rotation.DOWN_RIGHT -> TE.Rotation.DOWN_RIGHT
+    TherapyEvent.Rotation.DOWN       -> TE.Rotation.DOWN
+    TherapyEvent.Rotation.DOWN_LEFT  -> TE.Rotation.DOWN_LEFT
+    TherapyEvent.Rotation.LEFT       -> TE.Rotation.LEFT
+    TherapyEvent.Rotation.UP_LEFT    -> TE.Rotation.UP_LEFT
+    TherapyEvent.Rotation.CENTER     -> TE.Rotation.CENTER
+    TherapyEvent.Rotation.NONE       -> TE.Rotation.NONE
+}
+
+fun TE.Rotation.toDb(): TherapyEvent.Rotation = when (this) {
+    TE.Rotation.UP         -> TherapyEvent.Rotation.UP
+    TE.Rotation.UP_RIGHT   -> TherapyEvent.Rotation.UP_RIGHT
+    TE.Rotation.RIGHT      -> TherapyEvent.Rotation.RIGHT
+    TE.Rotation.DOWN_RIGHT -> TherapyEvent.Rotation.DOWN_RIGHT
+    TE.Rotation.DOWN       -> TherapyEvent.Rotation.DOWN
+    TE.Rotation.DOWN_LEFT  -> TherapyEvent.Rotation.DOWN_LEFT
+    TE.Rotation.LEFT       -> TherapyEvent.Rotation.LEFT
+    TE.Rotation.UP_LEFT    -> TherapyEvent.Rotation.UP_LEFT
+    TE.Rotation.CENTER     -> TherapyEvent.Rotation.CENTER
+    TE.Rotation.NONE       -> TherapyEvent.Rotation.NONE
+}
 
 fun TherapyEvent.fromDb(): TE = TE(
     id = this.id,
@@ -183,7 +209,8 @@ fun TherapyEvent.fromDb(): TE = TE(
     glucose = this.glucose,
     glucoseType = this.glucoseType?.fromDb(),
     glucoseUnit = this.glucoseUnit.fromDb(),
-    location = this.location?.fromDb()
+    location = this.location?.fromDb(),
+    rotation = this.rotation?.fromDb()
 )
 
 fun TE.toDb(): TherapyEvent = TherapyEvent(
@@ -202,5 +229,6 @@ fun TE.toDb(): TherapyEvent = TherapyEvent(
     glucose = this.glucose,
     glucoseType = this.glucoseType?.toDb(),
     glucoseUnit = this.glucoseUnit.toDb(),
-    location = this.location?.toDb()
+    location = this.location?.toDb(),
+    rotation = this.rotation?.toDb()
 )
