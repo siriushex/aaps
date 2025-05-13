@@ -53,7 +53,7 @@
             android:padding="5dp">
 
             <CheckBox
-                android:id="@+id/pump_site_management"
+                android:id="@+id/pump_site_visible"
                 style="@style/Widget.App.CheckBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -61,7 +61,7 @@
                 android:text="@string/careportal_pump_site_management" />
 
             <CheckBox
-                android:id="@+id/cgm_site_management"
+                android:id="@+id/cgm_site_visible"
                 style="@style/Widget.App.CheckBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -111,29 +111,50 @@
             android:id="@+id/settings"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
+            android:visibility="visible"
             android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_margin="5dp"
+                android:layout_marginEnd="5dp"
+                android:text="@string/user_profile"
+                android:textAlignment="textStart"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:layout_margin="10dp"
+                android:layout_marginEnd="5dp"
+                android:text="@string/user_profile_description"
+                android:textAlignment="textStart"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
             <RadioGroup
             android:id="@+id/layout_selector_group"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:orientation="vertical">
 
-            <RadioButton
-                android:id="@+id/man_layout_option"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="@string/site_man"
-                android:padding="8dp"/>
+                <RadioButton
+                    android:id="@+id/man_layout_option"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="@string/site_man"
+                    android:padding="8dp"/>
 
-            <RadioButton
-                android:id="@+id/woman_layout_option"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/site_woman"
-                android:padding="8dp"/>
+                <RadioButton
+                    android:id="@+id/woman_layout_option"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/site_woman"
+                    android:padding="8dp"/>
 
                 <RadioButton
                     android:id="@+id/child_layout_option"
@@ -142,6 +163,42 @@
                     android:text="@string/site_child"
                     android:padding="8dp"/>
         </RadioGroup>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_margin="5dp"
+            android:layout_marginEnd="5dp"
+            android:text="@string/site_management"
+            android:textAlignment="textStart"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_margin="10dp"
+            android:layout_marginEnd="5dp"
+            android:text="@string/site_management_description"
+            android:textAlignment="textStart"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <CheckBox
+                android:id="@+id/pump_site_management"
+                style="@style/Widget.App.CheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="@string/careportal_pump_site_management" />
+
+            <CheckBox
+                android:id="@+id/cgm_site_management"
+                style="@style/Widget.App.CheckBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="@string/careportal_cgm_site_management" />
 
         </LinearLayout>
 

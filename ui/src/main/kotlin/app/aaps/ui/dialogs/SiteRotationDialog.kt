@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import androidx.constraintlayout.widget.ConstraintLayout
 import app.aaps.core.data.model.BS
 import app.aaps.core.data.model.TE
@@ -20,6 +21,8 @@ import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DecimalFormatter
+import app.aaps.core.keys.BooleanKey
+import app.aaps.core.keys.IntKey
 import app.aaps.core.objects.extensions.formatColor
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.toast.ToastUtils
@@ -97,7 +100,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadDynamicContent(0)
+        loadDynamicContent(preferences.get(IntKey.SiteRotationUserProfile))
         binding.layoutSelectorGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.man_layout_option -> loadDynamicContent(0)
@@ -106,25 +109,24 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             }
             processVisibility(3)
         }
+        // checkboxes
+        loadCheckedStates()
+        binding.pumpSiteVisible.isChecked = binding.pumpSiteManagement.isChecked
+        binding.cgmSiteVisible.isChecked = binding.cgmSiteManagement.isChecked
+        binding.pumpSiteManagement.setOnCheckedChangeListener(::onCheckedChanged)
+        binding.cgmSiteManagement.setOnCheckedChangeListener(::onCheckedChanged)
+        binding.pumpSiteVisible.setOnCheckedChangeListener(::onCheckedChanged)
+        binding.cgmSiteVisible.setOnCheckedChangeListener(::onCheckedChanged)
 
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 processVisibility(tab.position)
             }
-
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
         binding.tabLayout.selectTab(binding.tabLayout.getTabAt(siteMode.ordinal))
         processVisibility(siteMode.ordinal)
-        val maxInsulin = constraintChecker.getMaxBolusAllowed().value()
-        val bolusStep = activePlugin.activePump.pumpDescription.bolusStep
-        /*
-        binding.fillInsulinAmount.setParams(
-            savedInstanceState?.getDouble("fill_insulin_amount")
-                ?: 0.0, 0.0, maxInsulin, bolusStep, decimalFormatter.pumpSupportedBolusFormat(activePlugin.activePump.pumpDescription.bolusStep), true, binding.okcancel.ok
-        )
-         */
     }
 
     override fun onDestroyView() {
@@ -202,21 +204,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         dismiss()
         return true
     }
-
-    private fun requestPrimeBolus(insulin: Double, notes: String) {
-        val detailedBolusInfo = DetailedBolusInfo()
-        detailedBolusInfo.insulin = insulin
-        detailedBolusInfo.context = context
-        detailedBolusInfo.bolusType = BS.Type.PRIMING
-        detailedBolusInfo.notes = notes
-        commandQueue.bolus(detailedBolusInfo, object : Callback() {
-            override fun run() {
-                if (!result.success) {
-                    uiInteraction.runAlarm(result.comment, rh.gs(app.aaps.core.ui.R.string.treatmentdeliveryerror), app.aaps.core.ui.R.raw.boluserror)
-                }
-            }
-        })
-    }
     override fun onResume() {
         super.onResume()
         if (!queryingProtection) {
@@ -234,6 +221,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     }
 
     private fun loadDynamicContent(selectedLayout: Int) {
+        preferences.put(IntKey.SiteRotationUserProfile, selectedLayout)
         binding.siteLayout.removeAllViews()
         val bindLayout = when (selectedLayout) {
             0 -> DialogSiteRotationManBinding.inflate(layoutInflater)
@@ -276,5 +264,25 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         }
         siteBinding.front.requestLayout()
         siteBinding.back.requestLayout()
+    }
+
+    private fun onCheckedChanged(buttonView: CompoundButton, @Suppress("unused") state: Boolean) {
+        saveCheckedStates()
+        if (buttonView.id == binding.pumpSiteManagement.id)
+            binding.pumpSiteVisible.isChecked = binding.pumpSiteManagement.isChecked
+        if (buttonView.id == binding.cgmSiteManagement.id)
+            binding.cgmSiteVisible.isChecked = binding.cgmSiteManagement.isChecked
+        //processEnabledIcons()
+    }
+
+    private fun saveCheckedStates() {
+        preferences.put(BooleanKey.SiteRotationManagePump, binding.pumpSiteManagement.isChecked)
+        preferences.put(BooleanKey.SiteRotationManageCgm, binding.cgmSiteManagement.isChecked)
+    }
+
+    private fun loadCheckedStates() {
+        binding.pumpSiteManagement.isChecked = preferences.get(BooleanKey.SiteRotationManagePump)
+        binding.cgmSiteManagement.isChecked = preferences.get(BooleanKey.SiteRotationManageCgm)
+        //binding.correctionPercent.isChecked = usePercentage
     }
 }
