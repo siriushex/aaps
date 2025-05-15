@@ -1,26 +1,35 @@
 package app.aaps.ui.dialogs
 
+import android.content.res.ColorStateList
+import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.VectorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
+import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
-import app.aaps.core.data.model.BS
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import app.aaps.core.data.model.TE
-import app.aaps.core.data.model.UE
+import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.protection.ProtectionCheck
-import app.aaps.core.interfaces.pump.DetailedBolusInfo
-import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
+import app.aaps.core.interfaces.rx.AapsSchedulers
+import app.aaps.core.interfaces.rx.bus.RxBus
+import app.aaps.core.interfaces.rx.events.EventTherapyEventChange
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DecimalFormatter
+import app.aaps.core.interfaces.utils.Translator
+import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.objects.extensions.formatColor
@@ -29,17 +38,17 @@ import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.ui.R
 import app.aaps.ui.databinding.DialogSiteRotationBinding
 import app.aaps.ui.databinding.DialogSiteRotationChildBinding
+import app.aaps.ui.databinding.DialogSiteRotationItemBinding
 import app.aaps.ui.databinding.DialogSiteRotationManBinding
 import app.aaps.ui.databinding.DialogSiteRotationWomanBinding
+import app.aaps.ui.dialogs.SiteRotationDialog.RecyclerViewAdapter.SiteManagementViewHolder
 import app.aaps.ui.dialogs.utils.SiteRotationViewAdapter
 import com.google.android.material.tabs.TabLayout
-import com.google.common.base.Joiner
 import dagger.android.HasAndroidInjector
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import java.util.LinkedList
 import javax.inject.Inject
-import kotlin.math.abs
 
 class SiteRotationDialog : DialogFragmentWithDate() {
 
@@ -52,6 +61,10 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     @Inject lateinit var protectionCheck: ProtectionCheck
     @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var decimalFormatter: DecimalFormatter
+    @Inject lateinit var rxBus: RxBus
+    @Inject lateinit var translator: Translator
+    @Inject lateinit var fabricPrivacy: FabricPrivacy
+    @Inject lateinit var aapsSchedulers: AapsSchedulers
     @Inject lateinit var injector: HasAndroidInjector
 
     private var queryingProtection = false
@@ -61,8 +74,9 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private var siteMode = UiInteraction.SiteMode.VIEW
     private var siteType = UiInteraction.SiteType.PUMP
     private var location = TE.Location.NONE
-    private var orientation = 0
+    private var rotation = 0
     private var time: Long = 0
+    private val millsToThePast = T.days(45).msecs()
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
@@ -74,7 +88,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         if (siteMode == UiInteraction.SiteMode.EDIT) {
             savedInstanceState.putInt("siteType", siteType.ordinal)
             savedInstanceState.putInt("location", location.ordinal)
-            savedInstanceState.putInt("orientation", orientation)
+            savedInstanceState.putInt("rotation", rotation)
             savedInstanceState.putLong("time", time)
         }
     }
@@ -89,7 +103,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             if (siteMode == UiInteraction.SiteMode.EDIT) {
                 siteType = UiInteraction.SiteType.entries.toTypedArray()[bundle.getInt("siteType", UiInteraction.SiteType.PUMP.ordinal)]
                 location = TE.Location.entries.toTypedArray()[bundle.getInt("location", TE.Location.NONE.ordinal)]
-                orientation = bundle.getInt("orientation", 0)
+                rotation = bundle.getInt("orientation", 0)
                 time = bundle.getLong("time", 0)
             }
         }
@@ -101,6 +115,15 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         loadDynamicContent(preferences.get(IntKey.SiteRotationUserProfile))
+        if (siteMode == UiInteraction.SiteMode.EDIT) {
+            binding.headerIcon.setImageResource(
+                when (siteType) {
+                    UiInteraction.SiteType.PUMP -> app.aaps.core.objects.R.drawable.ic_cp_pump_cannula
+                    UiInteraction.SiteType.CGM -> app.aaps.core.objects.R.drawable.ic_cp_cgm_insert
+                }
+            )
+        }
+
         binding.layoutSelectorGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.man_layout_option -> loadDynamicContent(0)
@@ -127,6 +150,10 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         })
         binding.tabLayout.selectTab(binding.tabLayout.getTabAt(siteMode.ordinal))
         processVisibility(siteMode.ordinal)
+        binding.recyclerview.setHasFixedSize(true)
+        binding.recyclerview.layoutManager = LinearLayoutManager(view.context)
+        binding.recyclerview.emptyView = binding.noRecordsText
+        binding.recyclerview.loadingView = binding.progressBar
     }
 
     override fun onDestroyView() {
@@ -218,6 +245,20 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 protectionCheck.queryProtection(activity, ProtectionCheck.Protection.BOLUS, { queryingProtection = false }, cancelFail, cancelFail)
             }
         }
+        swapAdapter()
+        disposable += rxBus
+            .toObservable(EventTherapyEventChange::class.java)
+            .observeOn(aapsSchedulers.main)
+            .subscribe({ swapAdapter() }, fabricPrivacy::logException)
+    }
+
+    fun swapAdapter() {
+        val now = System.currentTimeMillis()
+        binding.recyclerview.isLoading = true
+        disposable += persistenceLayer
+                    .getTherapyEventDataFromTime(now - millsToThePast, false)
+                    .observeOn(aapsSchedulers.main)
+                    .subscribe { list -> binding.recyclerview.swapAdapter(RecyclerViewAdapter(list.filter { te -> te.type == TE.Type.CANNULA_CHANGE || te.type == TE.Type.SENSOR_CHANGE }), true) }
     }
 
     private fun loadDynamicContent(selectedLayout: Int) {
@@ -245,6 +286,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         }
         siteBinding.front.visibility = (position == 0 || position == 1).toVisibility()
         siteBinding.back.visibility = (position == 0 || position == 2).toVisibility()
+        binding.listLayout.visibility = (position != 3).toVisibility()
         binding.settings.visibility = (position == 3).toVisibility()
         val paramsFront = siteBinding.front.layoutParams as ConstraintLayout.LayoutParams
         val paramsBack = siteBinding.back.layoutParams as ConstraintLayout.LayoutParams
@@ -285,4 +327,70 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         binding.cgmSiteManagement.isChecked = preferences.get(BooleanKey.SiteRotationManageCgm)
         //binding.correctionPercent.isChecked = usePercentage
     }
+
+    inner class RecyclerViewAdapter internal constructor(private var therapyList: List<TE>) : RecyclerView.Adapter<SiteManagementViewHolder>() {
+
+        override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): SiteManagementViewHolder {
+            val v = LayoutInflater.from(viewGroup.context).inflate(R.layout.dialog_site_rotation_item, viewGroup, false)
+            return SiteManagementViewHolder(v)
+        }
+
+        override fun onBindViewHolder(holder: SiteManagementViewHolder, position: Int) {
+            val therapyEvent = therapyList[position]
+            /*
+            if (therapyEvent.type == TE.Type.CANNULA_CHANGE)
+                therapyEvent.glucose?.let { holder.binding.bg.text = profileUtil.stringInCurrentUnitsDetect(it) }
+            if (therapyEvent.type == TE.Type.SENSOR_CHANGE)
+                therapyEvent.glucose?.let { holder.binding.bg.text = profileUtil.stringInCurrentUnitsDetect(it) }
+
+             */
+            holder.binding.location.text = "not defined"
+            holder.binding.update.text = "Edit"
+            holder.binding.update.tag = therapyEvent
+            holder.binding.time.text = dateUtil.dateStringShort(therapyEvent.timestamp)
+            holder.binding.notes.text = therapyEvent.note
+            holder.binding.notes.visibility = (therapyEvent.note != "").toVisibility()
+            if (therapyEvent.type == TE.Type.SENSOR_CHANGE)
+                holder.binding.iconSource.setImageResource(app.aaps.core.objects.R.drawable.ic_cp_cgm_insert) //app.aaps.core.objects.R.drawable.ic_cp_pump_cannula
+            /*
+            if (therapyEvent.type == TE.Type.FINGER_STICK_BG_VALUE)
+                therapyEvent.glucose?.let { holder.binding.bg.text = profileUtil.stringInCurrentUnitsDetect(it) }
+            holder.binding.type.text = translator.translate(therapyEvent.type)
+            holder.binding.cbRemove.visibility = (therapyEvent.isValid && actionHelper.isRemoving).toVisibility()
+            holder.binding.cbRemove.setOnCheckedChangeListener { _, value ->
+                actionHelper.updateSelection(position, therapyEvent, value)
+            }
+            holder.binding.root.setOnClickListener {
+                holder.binding.cbRemove.toggle()
+                actionHelper.updateSelection(position, therapyEvent, holder.binding.cbRemove.isChecked)
+            }
+            holder.binding.cbRemove.isChecked = actionHelper.isSelected(position)
+             */
+        }
+
+        override fun getItemCount() = therapyList.size
+
+        inner class SiteManagementViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+
+            val binding = DialogSiteRotationItemBinding.bind(view)
+            init {
+                binding.update.setOnClickListener {
+                    SiteRotationDialog().also { srd ->
+                        srd.arguments = Bundle().also { args ->
+                            val therapyEvent = it.tag as TE
+                            args.putLong("time", therapyEvent.timestamp)
+                            args.putInt("siteMode", UiInteraction.SiteMode.EDIT.ordinal)
+                            args.putInt("siteType", if (therapyEvent.type == TE.Type.SENSOR_CHANGE) UiInteraction.SiteType.CGM.ordinal else UiInteraction.SiteType.PUMP.ordinal)
+                            args.putInt("location", therapyEvent.location?.ordinal ?: TE.Location.NONE.ordinal)
+                            args.putInt("rotation", therapyEvent.rotation?.ordinal ?: TE.Rotation.NONE.ordinal)
+                        }
+                        srd.show(childFragmentManager, "SiteRotationViewDialog")
+                    }
+                }
+                if (siteMode == UiInteraction.SiteMode.EDIT)
+                    binding.update.visibility = View.GONE
+            }
+        }
+    }
+
 }

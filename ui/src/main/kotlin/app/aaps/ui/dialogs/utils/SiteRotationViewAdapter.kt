@@ -1,6 +1,7 @@
 package app.aaps.ui.dialogs.utils
 
 import android.view.View
+import android.widget.ImageView
 import androidx.viewbinding.ViewBinding
 import app.aaps.core.data.model.TE
 import app.aaps.ui.databinding.DialogSiteRotationManBinding
@@ -19,7 +20,7 @@ class SiteRotationViewAdapter(
         }
     }
     private val errorMessage = "Missing require View Binding parameter"
-    val listViews: MutableList<View> = ArrayList()
+    val listViews: MutableList<ImageView> = ArrayList()
 
     // Required attributes
     val root = man?.root ?: woman?.root ?: child?.root ?: throw IllegalArgumentException(errorMessage)

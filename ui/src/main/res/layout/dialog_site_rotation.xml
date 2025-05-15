@@ -21,6 +21,7 @@
             android:layout_gravity="center">
 
             <ImageView
+                android:id="@+id/header_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:importantForAccessibility="no"
@@ -50,14 +51,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="5dp">
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp">
 
             <CheckBox
                 android:id="@+id/pump_site_visible"
                 style="@style/Widget.App.CheckBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="0dp"
                 android:text="@string/careportal_pump_site_management" />
 
             <CheckBox
@@ -65,7 +67,7 @@
                 style="@style/Widget.App.CheckBox"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="0dp"
                 android:text="@string/careportal_cgm_site_management" />
 
         </LinearLayout>
@@ -101,11 +103,44 @@
             android:id="@+id/site_layout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_weight="2.5"
             android:layout_gravity="center"
             android:padding="5dp">
 
         </androidx.core.widget.NestedScrollView>
+
+        <RelativeLayout
+            android:id="@+id/list_layout"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/no_records_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:paddingVertical="50dp"
+                android:text="@string/no_records_available"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:visibility="gone" />
+
+            <app.aaps.ui.elements.EmptyRecyclerView
+                android:id="@+id/recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentTop="true" />
+
+        </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/settings"
