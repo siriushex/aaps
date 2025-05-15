@@ -141,7 +141,8 @@ class DataSyncSelectorV3 @Inject constructor(
         }
     }
 
-    private suspend fun processChangedBoluses() {
+    @OpenForTesting
+    suspend fun processChangedBoluses() {
         var cont = true
         while (cont) {
             if (isPaused) return

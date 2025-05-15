@@ -12,12 +12,15 @@ import app.aaps.plugins.sync.nsShared.StoreDataForDbImpl
 import app.aaps.plugins.sync.nsclientV3.keys.NsclientLongKey
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
-import org.junit.jupiter.api.AfterEach
+import io.reactivex.rxjava3.core.Maybe
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
+import org.mockito.Mockito.verifyNoMoreInteractions
 import org.mockito.Mockito.`when`
 import org.mockito.internal.verification.Times
+import org.mockito.kotlin.clearInvocations
 import org.mockito.kotlin.verify
 
 class DataSyncSelectorV3Test : TestBaseWithProfile() {
@@ -34,10 +37,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
     fun setUp() {
         storeDataForDb = StoreDataForDbImpl(aapsLogger, rxBus, persistenceLayer, preferences, uel, config, nsClientSource, virtualPump)
         sut = DataSyncSelectorV3(preferences, aapsLogger, dateUtil, profileFunction, activePlugin, persistenceLayer, rxBus, storeDataForDb, config)
-    }
-
-    @AfterEach
-    fun tearDown() {
     }
 
     @Test
@@ -186,5 +185,16 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // ProfileStore
         sut.confirmLastProfileStore(2)
         verify(preferences, Times(1)).put(NsclientLongKey.ProfileStoreLastSyncedId, 2)
+    }
+
+    @Test
+    fun processChangedBolusesAfterDbResetTest() = runBlocking {
+        `when`(persistenceLayer.getLastBolusId()).thenReturn(0)
+        `when`(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(1)
+        `when`(persistenceLayer.getNextSyncElementBolus(0)).thenReturn(Maybe.empty())
+        sut.processChangedBoluses()
+        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+        clearInvocations(preferences, activePlugin)
     }
 }
