@@ -179,6 +179,49 @@ class TranslatorImpl @Inject internal constructor(
         else                            -> rh.gs(app.aaps.core.ui.R.string.unknown)
     }
 
+    override fun translate(location: TE.Location?): String = when (location) {
+        TE.Location.FRONT_RIGHT_UPPER_CHEST   -> rh.gs(app.aaps.core.ui.R.string.location_front_right_upper_chest)
+        TE.Location.FRONT_LEFT_UPPER_CHEST    -> rh.gs(app.aaps.core.ui.R.string.location_front_left_upper_chest)
+        TE.Location.SIDE_RIGHT_UPPER_ARM      -> rh.gs(app.aaps.core.ui.R.string.location_side_right_upper_arm)
+        TE.Location.SIDE_LEFT_UPPER_ARM       -> rh.gs(app.aaps.core.ui.R.string.location_side_left_upper_arm)
+        TE.Location.BACK_RIGHT_UPPER_ARM      -> rh.gs(app.aaps.core.ui.R.string.location_side_right_lower_arm)
+        TE.Location.BACK_LEFT_UPPER_ARM       -> rh.gs(app.aaps.core.ui.R.string.location_side_left_lower_arm)
+        TE.Location.SIDE_RIGHT_UPPER_ABDOMEN  -> rh.gs(app.aaps.core.ui.R.string.location_side_right_upper_abdomen)
+        TE.Location.SIDE_LEFT_UPPER_ABDOMEN   -> rh.gs(app.aaps.core.ui.R.string.location_side_left_upper_abdomen)
+        TE.Location.SIDE_RIGHT_LOWER_ABDOMEN  -> rh.gs(app.aaps.core.ui.R.string.location_side_right_lower_abdomen)
+        TE.Location.SIDE_LEFT_LOWER_ABDOMEN   -> rh.gs(app.aaps.core.ui.R.string.location_side_left_lower_abdomen)
+        TE.Location.FRONT_RIGHT_UPPER_ABDOMEN -> rh.gs(app.aaps.core.ui.R.string.location_side_right_upper_abdomen)
+        TE.Location.FRONT_LEFT_UPPER_ABDOMEN  -> rh.gs(app.aaps.core.ui.R.string.location_side_left_upper_abdomen)
+        TE.Location.FRONT_RIGHT_LOWER_ABDOMEN -> rh.gs(app.aaps.core.ui.R.string.location_side_right_lower_abdomen)
+        TE.Location.FRONT_LEFT_LOWER_ABDOMEN  -> rh.gs(app.aaps.core.ui.R.string.location_side_left_lower_abdomen)
+        TE.Location.BACK_RIGHT_BUTTOCK        -> rh.gs(app.aaps.core.ui.R.string.location_back_right_buttock)
+        TE.Location.BACK_LEFT_BUTTOCK         -> rh.gs(app.aaps.core.ui.R.string.location_back_left_buttock)
+        TE.Location.FRONT_RIGHT_UPPER_THIGH   -> rh.gs(app.aaps.core.ui.R.string.location_front_right_upper_thigh)
+        TE.Location.FRONT_LEFT_UPPER_THIGH    -> rh.gs(app.aaps.core.ui.R.string.location_front_left_upper_thigh)
+        TE.Location.FRONT_RIGHT_LOWER_THIGH   -> rh.gs(app.aaps.core.ui.R.string.location_front_right_lower_thigh)
+        TE.Location.FRONT_LEFT_LOWER_THIGH    -> rh.gs(app.aaps.core.ui.R.string.location_front_left_lower_thigh)
+        TE.Location.SIDE_RIGHT_UPPER_THIGH    -> rh.gs(app.aaps.core.ui.R.string.location_side_right_upper_thigh)
+        TE.Location.SIDE_LEFT_UPPER_THIGH     -> rh.gs(app.aaps.core.ui.R.string.location_side_left_upper_thigh)
+        TE.Location.SIDE_RIGHT_LOWER_THIGH    -> rh.gs(app.aaps.core.ui.R.string.location_side_right_lower_thigh)
+        TE.Location.SIDE_LEFT_LOWER_THIGH     -> rh.gs(app.aaps.core.ui.R.string.location_side_left_lower_thigh)
+        TE.Location.NONE                      -> rh.gs(app.aaps.core.ui.R.string.unknown)
+        else                                  -> rh.gs(app.aaps.core.ui.R.string.unknown)
+    }
+
+    override fun translate(rotation: TE.Rotation?): String = when (rotation) {
+        TE.Rotation.UP         -> rh.gs(app.aaps.core.ui.R.string.rotation_up)
+        TE.Rotation.UP_RIGHT   -> rh.gs(app.aaps.core.ui.R.string.rotation_up_right)
+        TE.Rotation.RIGHT      -> rh.gs(app.aaps.core.ui.R.string.rotation_right)
+        TE.Rotation.DOWN_RIGHT -> rh.gs(app.aaps.core.ui.R.string.rotation_down_right)
+        TE.Rotation.DOWN       -> rh.gs(app.aaps.core.ui.R.string.rotation_down)
+        TE.Rotation.DOWN_LEFT  -> rh.gs(app.aaps.core.ui.R.string.rotation_down_left)
+        TE.Rotation.LEFT       -> rh.gs(app.aaps.core.ui.R.string.rotation_left)
+        TE.Rotation.UP_LEFT    -> rh.gs(app.aaps.core.ui.R.string.rotation_up_left)
+        TE.Rotation.CENTER     -> rh.gs(app.aaps.core.ui.R.string.rotation_center)
+        TE.Rotation.NONE       -> rh.gs(app.aaps.core.ui.R.string.unknown)
+        else                   -> rh.gs(app.aaps.core.ui.R.string.unknown)
+    }
+
     override fun translate(reason: TT.Reason?): String = when (reason) {
         TT.Reason.CUSTOM       -> rh.gs(app.aaps.core.ui.R.string.custom)
         TT.Reason.HYPOGLYCEMIA -> rh.gs(app.aaps.core.ui.R.string.hypo)

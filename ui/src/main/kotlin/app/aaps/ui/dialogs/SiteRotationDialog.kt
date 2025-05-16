@@ -32,6 +32,7 @@ import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
+import app.aaps.core.objects.extensions.directionToIcon
 import app.aaps.core.objects.extensions.formatColor
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.toast.ToastUtils
@@ -351,7 +352,11 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             holder.binding.notes.text = therapyEvent.note
             holder.binding.notes.visibility = (therapyEvent.note != "").toVisibility()
             if (therapyEvent.type == TE.Type.SENSOR_CHANGE)
-                holder.binding.iconSource.setImageResource(app.aaps.core.objects.R.drawable.ic_cp_cgm_insert) //app.aaps.core.objects.R.drawable.ic_cp_pump_cannula
+                holder.binding.iconSource.setImageResource(app.aaps.core.objects.R.drawable.ic_cp_cgm_insert)
+            else
+                holder.binding.iconSource.setImageResource(app.aaps.core.objects.R.drawable.ic_cp_pump_cannula)
+            holder.binding.location.text = translator.translate(therapyEvent.location)
+            holder.binding.iconRotation.setImageResource(therapyEvent.rotation?.directionToIcon() ?: TE.Rotation.NONE.directionToIcon())
             /*
             if (therapyEvent.type == TE.Type.FINGER_STICK_BG_VALUE)
                 therapyEvent.glucose?.let { holder.binding.bg.text = profileUtil.stringInCurrentUnitsDetect(it) }
