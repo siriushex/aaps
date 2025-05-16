@@ -481,6 +481,7 @@ class BolusWizard @Inject constructor(
     private fun commonProcessing(ctx: Context, quickWizardEntry: QuickWizardEntry? = null) {
         val profile = profileFunction.getProfile() ?: return
         val pump = activePlugin.activePump
+        val now = dateUtil.now()
 
         val confirmMessage = confirmMessageAfterConstraints(ctx, advisor = false, quickWizardEntry)
         OKDialog.showConfirmation(ctx, rh.gs(app.aaps.core.ui.R.string.boluswizard), confirmMessage, {
@@ -522,7 +523,7 @@ class BolusWizard @Inject constructor(
                     context = ctx
                     mgdlGlucose = profileUtil.convertToMgdl(bg, profile.units)
                     glucoseType = TE.MeterType.MANUAL
-                    carbsTimestamp = dateUtil.now() + T.mins(this@BolusWizard.carbTime.toLong()).msecs()
+                    carbsTimestamp = now + T.mins(this@BolusWizard.carbTime.toLong()).msecs()
                     bolusCalculatorResult = createBolusCalculatorResult()
                     notes = this@BolusWizard.notes
                     if (insulin > 0 || carbs > 0) {
