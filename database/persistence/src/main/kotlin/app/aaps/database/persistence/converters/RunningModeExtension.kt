@@ -39,6 +39,8 @@ fun RunningMode.fromDb(): RM =
         timestamp = this.timestamp,
         utcOffset = this.utcOffset,
         mode = this.mode.fromDb(),
+        autoForced = this.autoForced,
+        reasons = this.reasons,
         duration = this.duration
     )
 
@@ -53,6 +55,8 @@ fun RM.toDb(): RunningMode =
         timestamp = this.timestamp,
         utcOffset = this.utcOffset,
         mode = this.mode.toDb(),
+        autoForced = this.autoForced,
+        reasons = this.reasons,
         duration = this.duration
     )
 

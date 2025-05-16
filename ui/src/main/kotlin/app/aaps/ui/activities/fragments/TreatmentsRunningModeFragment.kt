@@ -160,7 +160,7 @@ class TreatmentsRunningModeFragment : DaggerFragment(), MenuProvider {
                 when {
                     runningMode.id == currentlyActiveMode.id -> rh.gac(context, app.aaps.core.ui.R.attr.activeColor)
                     runningMode.timestamp > dateUtil.now()    -> rh.gac(context, app.aaps.core.ui.R.attr.scheduledColor)
-                    else                                        -> holder.binding.time.currentTextColor
+                    else -> holder.binding.duration.currentTextColor
                 }
             )
         }

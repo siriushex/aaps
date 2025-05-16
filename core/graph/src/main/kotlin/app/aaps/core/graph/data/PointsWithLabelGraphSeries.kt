@@ -13,6 +13,8 @@ import app.aaps.core.interfaces.graph.SeriesData
 import com.jjoe64.graphview.GraphView
 import com.jjoe64.graphview.series.BaseSeries
 import kotlin.math.min
+import androidx.core.graphics.withSave
+import androidx.core.graphics.withRotation
 
 /**
  * Series that plots the data as points.
@@ -281,37 +283,35 @@ open class PointsWithLabelGraphSeries<E : DataPointWithLabelInterface> : BaseSer
      * @param paint  paint object
      */
     private fun drawArrows(point: Array<Point>, canvas: Canvas, paint: Paint) {
-        canvas.save()
-        val path = Path()
-        path.moveTo(point[0].x.toFloat(), point[0].y.toFloat())
-        path.lineTo(point[1].x.toFloat(), point[1].y.toFloat())
-        path.lineTo(point[2].x.toFloat(), point[2].y.toFloat())
-        path.close()
-        canvas.drawPath(path, paint)
-        canvas.restore()
+        canvas.withSave {
+            val path = Path()
+            path.moveTo(point[0].x.toFloat(), point[0].y.toFloat())
+            path.lineTo(point[1].x.toFloat(), point[1].y.toFloat())
+            path.lineTo(point[2].x.toFloat(), point[2].y.toFloat())
+            path.close()
+            drawPath(path, paint)
+        }
     }
 
     private fun drawLabel45Right(endX: Float, endY: Float, value: E, canvas: Canvas, scaledPxSize: Float, scaledTextSize: Float) {
         val py = endY - scaledPxSize
-        canvas.save()
-        canvas.rotate(-45f, endX, py)
-        mPaint.textSize = (scaledTextSize * 0.8).toFloat()
-        mPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL))
-        mPaint.isFakeBoldText = true
-        canvas.drawText(value.label, endX + scaledPxSize, py, mPaint)
-        canvas.restore()
+        canvas.withRotation(-45f, endX, py) {
+            mPaint.textSize = (scaledTextSize * 0.8).toFloat()
+            mPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL))
+            mPaint.isFakeBoldText = true
+            drawText(value.label, endX + scaledPxSize, py, mPaint)
+        }
     }
 
     private fun drawLabel45Left(endX: Float, endY: Float, value: E, canvas: Canvas, scaledPxSize: Float, scaledTextSize: Float) {
         val py = endY + scaledPxSize
-        canvas.save()
-        canvas.rotate(-45f, endX, py)
-        mPaint.textSize = (scaledTextSize * 0.8).toFloat()
-        mPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL))
-        mPaint.isFakeBoldText = true
-        mPaint.textAlign = Paint.Align.RIGHT
-        canvas.drawText(value.label, endX - scaledPxSize, py, mPaint)
-        mPaint.textAlign = Paint.Align.LEFT
-        canvas.restore()
+        canvas.withRotation(-45f, endX, py) {
+            mPaint.textSize = (scaledTextSize * 0.8).toFloat()
+            mPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.NORMAL))
+            mPaint.isFakeBoldText = true
+            mPaint.textAlign = Paint.Align.RIGHT
+            drawText(value.label, endX - scaledPxSize, py, mPaint)
+            mPaint.textAlign = Paint.Align.LEFT
+        }
     }
 }

@@ -31,14 +31,15 @@ class RunningModeDataPoint(
     override fun color(context: Context?): Int {
         return when (mode) {
             RM.Mode.OPEN_LOOP         -> rh.gac(context, R.attr.loopOpened)
-            RM.Mode.CLOSED_LOOP       -> rh.gac(context, R.attr.loopClosed)
+            RM.Mode.CLOSED_LOOP       -> android.R.color.transparent //rh.gac(context, R.attr.loopClosed)
             RM.Mode.CLOSED_LOOP_LGS   -> rh.gac(context, R.attr.loopLgs)
             RM.Mode.DISABLED_LOOP     -> rh.gac(context, R.attr.loopDisabled)
             RM.Mode.SUPER_BOLUS       -> rh.gac(context, R.attr.loopSuperBolus)
             RM.Mode.DISCONNECTED_PUMP -> rh.gac(context, R.attr.loopDisconnected)
-            RM.Mode.SUSPENDED_BY_PUMP -> rh.gac(context, R.attr.loopPaused)
-            RM.Mode.SUSPENDED_BY_USER -> rh.gac(context, R.attr.loopPaused)
+            RM.Mode.SUSPENDED_BY_PUMP -> rh.gac(context, R.attr.loopSuspended)
+            RM.Mode.SUSPENDED_BY_USER -> rh.gac(context, R.attr.loopSuspended)
             RM.Mode.RESUME            -> 0
         }
     }
+
 }

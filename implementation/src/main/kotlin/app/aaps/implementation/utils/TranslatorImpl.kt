@@ -8,6 +8,7 @@ import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.Translator
+import app.aaps.implementation.R
 import dagger.Reusable
 import javax.inject.Inject
 
@@ -192,15 +193,16 @@ class TranslatorImpl @Inject internal constructor(
     }
 
     override fun translate(mode: RM.Mode?): String = when (mode) {
-        RM.Mode.DISABLED_LOOP     -> rh.gs(app.aaps.core.ui.R.string.disableloop)
+        RM.Mode.DISABLED_LOOP     -> rh.gs(app.aaps.core.ui.R.string.disabled_loop)
         RM.Mode.OPEN_LOOP         -> rh.gs(app.aaps.core.ui.R.string.openloop)
         RM.Mode.CLOSED_LOOP       -> rh.gs(app.aaps.core.ui.R.string.closedloop)
         RM.Mode.CLOSED_LOOP_LGS   -> rh.gs(app.aaps.core.ui.R.string.lowglucosesuspend)
         RM.Mode.SUPER_BOLUS       -> rh.gs(app.aaps.core.ui.R.string.superbolus)
         RM.Mode.DISCONNECTED_PUMP -> rh.gs(app.aaps.core.ui.R.string.pump_disconnected)
         RM.Mode.SUSPENDED_BY_PUMP -> rh.gs(app.aaps.core.ui.R.string.pump_suspended)
-
-        else                      -> rh.gs(app.aaps.core.ui.R.string.unknown)
+        RM.Mode.SUSPENDED_BY_USER -> rh.gs(app.aaps.core.ui.R.string.loopsuspended)
+        RM.Mode.RESUME            -> rh.gs(app.aaps.core.ui.R.string.resumeloop)
+        null                      -> ""
     }
 
     override fun translate(source: Sources): String = when (source) {

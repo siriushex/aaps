@@ -674,9 +674,9 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
         runOnUiThread {
             _binding ?: return@runOnUiThread
-            if (config.APS && pump.pumpDescription.isTempBasalCapable) {
+            if (pump.pumpDescription.isTempBasalCapable) {
                 binding.infoLayout.apsMode.visibility = View.VISIBLE
-                binding.infoLayout.timeLayout.visibility = View.GONE
+                binding.infoLayout.apsModeText.visibility = View.VISIBLE
                 when (loop.runningMode) {
                     RM.Mode.SUPER_BOLUS       -> {
                         binding.infoLayout.apsMode.setImageResource(R.drawable.ic_loop_superbolus)
@@ -693,23 +693,15 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                     }
 
                     RM.Mode.SUSPENDED_BY_PUMP -> {
-                        binding.infoLayout.apsMode.setImageResource(
-                            if (pump.model() == PumpType.OMNIPOD_EROS || pump.model() == PumpType.OMNIPOD_DASH) {
-                                // For Omnipod, indicate the pump as disconnected when it's suspended.
-                                // The only way to 'reconnect' it, is through the Omnipod tab
-                                apsModeSetA11yLabel(app.aaps.core.ui.R.string.disconnected)
-                                app.aaps.core.ui.R.drawable.ic_loop_disconnected
-                            } else {
-                                apsModeSetA11yLabel(app.aaps.core.ui.R.string.pump_paused)
-                                app.aaps.core.ui.R.drawable.ic_loop_paused
-                            }
-                        )
+                        binding.infoLayout.apsMode.setImageResource(app.aaps.core.ui.R.drawable.ic_loop_paused)
+                        apsModeSetA11yLabel(app.aaps.core.ui.R.string.pumpsuspended)
+                        binding.infoLayout.apsModeText.text = rh.gs(app.aaps.core.ui.R.string.pumpsuspended)
                         binding.infoLayout.apsModeText.visibility = View.GONE
                     }
 
                     RM.Mode.SUSPENDED_BY_USER -> {
                         binding.infoLayout.apsMode.setImageResource(app.aaps.core.ui.R.drawable.ic_loop_paused)
-                        apsModeSetA11yLabel(app.aaps.core.ui.R.string.suspendloop_label)
+                        apsModeSetA11yLabel(app.aaps.core.ui.R.string.loopsuspended)
                         binding.infoLayout.apsModeText.text = dateUtil.age(loop.minutesToEndOfSuspend() * 60000L, true, rh)
                         binding.infoLayout.apsModeText.visibility = View.VISIBLE
                     }
@@ -741,10 +733,9 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                     RM.Mode.RESUME            -> error("Invalid mode")
                 }
             } else {
-                //nsclient
+                // loop not supported by pump, hide aps mode
                 binding.infoLayout.apsMode.visibility = View.GONE
                 binding.infoLayout.apsModeText.visibility = View.GONE
-                binding.infoLayout.timeLayout.visibility = View.VISIBLE
             }
 
             // pump status from ns
@@ -853,7 +844,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
             binding.infoLayout.timeAgo.text = dateUtil.minAgo(rh, lastBg?.timestamp)
             binding.infoLayout.timeAgo.contentDescription = dateUtil.minAgoLong(rh, lastBg?.timestamp)
-            binding.infoLayout.timeAgoShort.text = "(" + dateUtil.minAgoShort(lastBg?.timestamp) + ")"
+            binding.infoLayout.timeAgoShort.text = dateUtil.minAgoShort(lastBg?.timestamp)
 
             val qualityIcon = bgQualityCheck.icon()
             if (qualityIcon != 0) {

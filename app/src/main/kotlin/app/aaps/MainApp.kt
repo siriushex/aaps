@@ -17,12 +17,14 @@ import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.alerts.LocalAlertUtils
+import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.PluginBase
+import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.ui.UiInteraction
@@ -98,6 +100,8 @@ class MainApp : DaggerApplication() {
     @Inject lateinit var themeSwitcherPlugin: ThemeSwitcherPlugin
     @Inject lateinit var localAlertUtils: LocalAlertUtils
     @Inject lateinit var rh: Provider<ResourceHelper>
+    @Inject lateinit var loop: Loop
+    @Inject lateinit var profileFunction: ProfileFunction
 
     private var handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)
     private lateinit var refreshWidget: Runnable
@@ -351,19 +355,24 @@ class MainApp : DaggerApplication() {
         }
 
         // Migrate loop mode
-        if (sp.contains("aps_mode")) {
+        if (config.APS && sp.contains("aps_mode")) {
             val mode = when (sp.getString("aps_mode", "CLOSED")) {
                 "OPEN"   -> RM.Mode.OPEN_LOOP
                 "CLOSED" -> RM.Mode.CLOSED_LOOP
                 "LGS"    -> RM.Mode.CLOSED_LOOP_LGS
                 else     -> RM.Mode.CLOSED_LOOP
             }
-            persistenceLayer.insertOrUpdateRunningMode(
-                runningMode = RM(timestamp = 1, duration = 0, mode = mode),
-                action = Action.CLOSED_LOOP_MODE,
-                listValues = listOf(ValueWithUnit.SimpleString("Migration")),
-                source = Sources.Loop
-            )
+            profileFunction.getProfile()?.let { profile ->
+                loop.handleRunningModeChange(
+                    newRM = mode,
+                    action = Action.CLOSED_LOOP_MODE,
+                    listValues = listOf(ValueWithUnit.SimpleString("Migration")),
+                    source = Sources.Aaps,
+                    profile = profile
+                )
+            } ?: {
+                aapsLogger.error("Profile is null. Migration not performed")
+            }
             sp.remove("aps_mode")
         }
     }

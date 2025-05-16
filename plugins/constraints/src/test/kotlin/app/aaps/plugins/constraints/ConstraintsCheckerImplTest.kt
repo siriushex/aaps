@@ -188,10 +188,10 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
     fun isClosedLoopAllowedTest() {
         `when`(config.isEngineeringModeOrRelease()).thenReturn(true)
         `when`(loop.runningMode).thenReturn(RM.Mode.CLOSED_LOOP)
-        objectivesPlugin.objectives[Objectives.MAXIOB_ZERO_CL_OBJECTIVE].startedOn = 0
+        objectivesPlugin.objectives[Objectives.CLOSED_LOOP_OBJECTIVE].startedOn = 0
         var c: Constraint<Boolean> = constraintChecker.isClosedLoopAllowed()
         aapsLogger.debug("Reason list: " + c.reasonList.toString())
-        assertThat(c.reasonList[0].toString()).contains("Objectives: Objective 6 not started") // Safety & Objectives
+        assertThat(c.reasonList[0].toString()).contains("Objectives: Objective 7 not started") // Safety & Objectives
         assertThat(c.value()).isFalse()
     }
 

@@ -16,6 +16,7 @@ import app.aaps.core.data.time.T
 import app.aaps.core.data.ue.Action
 import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.aps.Loop
+import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -30,6 +31,7 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
+import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanNonKey
 import app.aaps.core.keys.interfaces.Preferences
@@ -64,6 +66,8 @@ class LoopDialog : DaggerDialogFragment() {
     @Inject lateinit var protectionCheck: ProtectionCheck
     @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var injector: HasAndroidInjector
+    @Inject lateinit var config: Config
+    @Inject lateinit var translator: Translator
 
     private var queryingProtection = false
     private var showOkCancel: Boolean = true
@@ -149,8 +153,15 @@ class LoopDialog : DaggerDialogFragment() {
         aapsLogger.debug("UpdateGUI from $from")
         val pumpDescription: PumpDescription = activePlugin.activePump.pumpDescription
 
-        val runningMode = loop.runningMode
+        val runningModeRecord = loop.runningModeRecord
+        val runningMode = loop.runningModeRecord.mode
         val allowedModes = loop.allowedNextModes()
+
+        binding.runningMode.text = translator.translate(runningMode)
+        if (runningModeRecord.reasons?.isNotEmpty() == true) {
+            binding.overviewReasonsLayout.visibility = View.VISIBLE
+            binding.overviewReasons.text = runningModeRecord.reasons
+        } else binding.overviewReasonsLayout.visibility = View.GONE
 
         binding.overviewLoop.visibility = (
             allowedModes.contains(RM.Mode.DISABLED_LOOP) ||
@@ -166,7 +177,8 @@ class LoopDialog : DaggerDialogFragment() {
             allowedModes.contains(RM.Mode.DISCONNECTED_PUMP) ||
                 allowedModes.contains(RM.Mode.RESUME) && runningMode == RM.Mode.DISCONNECTED_PUMP
             ).toVisibility()
-        binding.overviewDisconnectButtons.visibility = allowedModes.contains(RM.Mode.DISCONNECTED_PUMP).toVisibility()
+        binding.overviewDisconnectButtons.visibility = (allowedModes.contains(RM.Mode.DISCONNECTED_PUMP) && config.APS).toVisibility()
+        binding.overviewPumpHeader.visibility = config.APS.toVisibility()
         binding.overviewReconnect.visibility = (allowedModes.contains(RM.Mode.RESUME) && runningMode == RM.Mode.DISCONNECTED_PUMP).toVisibility()
         binding.overviewSuspendButtons.visibility = allowedModes.contains(RM.Mode.SUSPENDED_BY_USER).toVisibility()
         binding.overviewResume.visibility = (allowedModes.contains(RM.Mode.RESUME) && runningMode == RM.Mode.SUSPENDED_BY_USER).toVisibility()
