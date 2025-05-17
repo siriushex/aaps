@@ -46,7 +46,7 @@ data class TherapyEvent(
     var glucoseType: MeterType? = null,
     var glucoseUnit: GlucoseUnit,
     val location: Location? = null,
-    val rotation: Rotation? = null
+    val arrow: Arrow? = null
 ) : TraceableDBEntry, DBEntryWithTimeAndDuration {
 
     enum class MeterType {
@@ -141,7 +141,7 @@ data class TherapyEvent(
         ;
     }
 
-    enum class Rotation {
+    enum class Arrow {
         UP,
         UP_RIGHT,
         RIGHT,

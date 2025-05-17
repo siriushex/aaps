@@ -291,15 +291,15 @@
     <string name="location_front_left_upper_thigh">Upper Left Front Thigh</string>
     <string name="location_front_right_lower_thigh">Lower Right Front Thigh</string>
     <string name="location_front_left_lower_thigh">Lower Left Front Thigh</string>
-    <string name="rotation_up">Up</string>
-    <string name="rotation_up_right">Up Right</string>
-    <string name="rotation_right">Right</string>
-    <string name="rotation_down_right">Down Right</string>
-    <string name="rotation_down">Down</string>
-    <string name="rotation_down_left">Down Left</string>
-    <string name="rotation_left">Left</string>
-    <string name="rotation_up_left">Up Left</string>
-    <string name="rotation_center">Center</string>
+    <string name="arrow_up">Up</string>
+    <string name="arrow_up_right">Up Right</string>
+    <string name="arrow_right">Right</string>
+    <string name="arrow_down_right">Down Right</string>
+    <string name="arrow_down">Down</string>
+    <string name="arrow_down_left">Down Left</string>
+    <string name="arrow_left">Left</string>
+    <string name="arrow_up_left">Up Left</string>
+    <string name="arrow_center">Center</string>
 
 
     <!--    Command-->

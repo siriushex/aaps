@@ -2,7 +2,6 @@ package app.aaps.plugins.sync.nsclient.extensions
 
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.TE
-import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.objects.R
@@ -30,7 +29,7 @@ fun TE.Companion.fromJson(jsonObject: JSONObject): TE? {
     val glucose = JsonHelper.safeGetDoubleAllowNull(jsonObject, "glucose")
     val glucoseType = TE.MeterType.fromString(JsonHelper.safeGetString(jsonObject, "glucoseType"))
     val location = TE.Location.fromString(JsonHelper.safeGetString(jsonObject, "location"))
-    val rotation = TE.Rotation.fromString(JsonHelper.safeGetString(jsonObject, "rotation"))
+    val arrow = TE.Arrow.fromString(JsonHelper.safeGetString(jsonObject, "rotation"))
     val enteredBy = JsonHelper.safeGetStringAllowNull(jsonObject, "enteredBy", null)
     val note = JsonHelper.safeGetStringAllowNull(jsonObject, "notes", null)
     val id = JsonHelper.safeGetStringAllowNull(jsonObject, "identifier", null)
@@ -72,19 +71,19 @@ fun TE.toJson(isAdd: Boolean, dateUtil: DateUtil): JSONObject =
             if (isAdd && ids.nightscoutId != null) it.put("_id", ids.nightscoutId)
             if (type == TE.Type.ANNOUNCEMENT) it.put("isAnnouncement", true)
             if (location != null) it.put("location", location?.text)
-            if (rotation != null) it.put("rotation", location?.text)
+            if (arrow != null) it.put("rotation", location?.text)
         }
 
-fun TE.Rotation.directionToIcon(): Int =
+fun TE.Arrow.directionToIcon(): Int =
     when (this) {
-        TE.Rotation.UP         -> R.drawable.ic_singleup
-        TE.Rotation.UP_RIGHT   -> R.drawable.ic_fortyfiveup
-        TE.Rotation.RIGHT      -> R.drawable.ic_flat
-        TE.Rotation.DOWN_RIGHT -> R.drawable.ic_fortyfivedown
-        TE.Rotation.DOWN       -> R.drawable.ic_singledown
-        TE.Rotation.DOWN_LEFT  -> R.drawable.ic_down_left
-        TE.Rotation.LEFT       -> R.drawable.ic_left
-        TE.Rotation.UP_LEFT    -> R.drawable.ic_up_left
-        TE.Rotation.CENTER     -> R.drawable.ic_center
-        TE.Rotation.NONE       -> R.drawable.ic_invalid
+        TE.Arrow.UP         -> R.drawable.ic_singleup
+        TE.Arrow.UP_RIGHT   -> R.drawable.ic_fortyfiveup
+        TE.Arrow.RIGHT      -> R.drawable.ic_flat
+        TE.Arrow.DOWN_RIGHT -> R.drawable.ic_fortyfivedown
+        TE.Arrow.DOWN       -> R.drawable.ic_singledown
+        TE.Arrow.DOWN_LEFT  -> R.drawable.ic_down_left
+        TE.Arrow.LEFT       -> R.drawable.ic_left
+        TE.Arrow.UP_LEFT    -> R.drawable.ic_up_left
+        TE.Arrow.CENTER     -> R.drawable.ic_center
+        TE.Arrow.NONE       -> R.drawable.ic_invalid
     }

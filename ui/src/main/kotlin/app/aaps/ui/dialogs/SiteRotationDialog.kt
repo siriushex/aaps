@@ -1,18 +1,13 @@
 package app.aaps.ui.dialogs
 
-import android.content.res.ColorStateList
-import android.graphics.drawable.LayerDrawable
-import android.graphics.drawable.VectorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CompoundButton
-import android.widget.ImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.vectordrawable.graphics.drawable.VectorDrawableCompat
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
@@ -75,7 +70,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private var siteMode = UiInteraction.SiteMode.VIEW
     private var siteType = UiInteraction.SiteType.PUMP
     private var location = TE.Location.NONE
-    private var rotation = 0
+    private var arrow = 0
     private var time: Long = 0
     private val millsToThePast = T.days(45).msecs()
 
@@ -88,8 +83,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         savedInstanceState.putInt("siteMode", siteMode.ordinal)
         if (siteMode == UiInteraction.SiteMode.EDIT) {
             savedInstanceState.putInt("siteType", siteType.ordinal)
-            savedInstanceState.putInt("location", location.ordinal)
-            savedInstanceState.putInt("rotation", rotation)
             savedInstanceState.putLong("time", time)
         }
     }
@@ -103,8 +96,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             siteMode = UiInteraction.SiteMode.entries.toTypedArray()[bundle.getInt("siteMode", UiInteraction.SiteMode.VIEW.ordinal)]
             if (siteMode == UiInteraction.SiteMode.EDIT) {
                 siteType = UiInteraction.SiteType.entries.toTypedArray()[bundle.getInt("siteType", UiInteraction.SiteType.PUMP.ordinal)]
-                location = TE.Location.entries.toTypedArray()[bundle.getInt("location", TE.Location.NONE.ordinal)]
-                rotation = bundle.getInt("orientation", 0)
                 time = bundle.getLong("time", 0)
             }
         }
@@ -356,7 +347,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             else
                 holder.binding.iconSource.setImageResource(app.aaps.core.objects.R.drawable.ic_cp_pump_cannula)
             holder.binding.location.text = translator.translate(therapyEvent.location)
-            holder.binding.iconRotation.setImageResource(therapyEvent.rotation?.directionToIcon() ?: TE.Rotation.NONE.directionToIcon())
+            holder.binding.iconArrow.setImageResource(therapyEvent.arrow?.directionToIcon() ?: TE.Arrow.NONE.directionToIcon())
             /*
             if (therapyEvent.type == TE.Type.FINGER_STICK_BG_VALUE)
                 therapyEvent.glucose?.let { holder.binding.bg.text = profileUtil.stringInCurrentUnitsDetect(it) }
@@ -387,7 +378,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                             args.putInt("siteMode", UiInteraction.SiteMode.EDIT.ordinal)
                             args.putInt("siteType", if (therapyEvent.type == TE.Type.SENSOR_CHANGE) UiInteraction.SiteType.CGM.ordinal else UiInteraction.SiteType.PUMP.ordinal)
                             args.putInt("location", therapyEvent.location?.ordinal ?: TE.Location.NONE.ordinal)
-                            args.putInt("rotation", therapyEvent.rotation?.ordinal ?: TE.Rotation.NONE.ordinal)
+                            args.putInt("rotation", therapyEvent.arrow?.ordinal ?: TE.Arrow.NONE.ordinal)
                         }
                         srd.show(childFragmentManager, "SiteRotationViewDialog")
                     }

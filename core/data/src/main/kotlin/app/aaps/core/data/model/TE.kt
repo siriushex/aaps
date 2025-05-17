@@ -20,7 +20,7 @@ data class TE(
     var glucoseType: MeterType? = null,
     var glucoseUnit: GlucoseUnit,
     var location: Location? = null,
-    var rotation: Rotation? = null
+    var arrow: Arrow? = null
 ) : HasIDs {
 
     fun contentEqualsTo(other: TE): Boolean =
@@ -150,7 +150,7 @@ data class TE(
     }
 
     @Suppress("unused")
-    enum class Rotation(val text: String) {
+    enum class Arrow(val text: String) {
         UP("Up"),
         UP_RIGHT("Up Right"),
         RIGHT("Right"),
@@ -164,7 +164,7 @@ data class TE(
 
         companion object{
 
-            fun fromString(text: String?) = Rotation.entries.firstOrNull { it.text == text } ?: NONE
+            fun fromString(text: String?) = Arrow.entries.firstOrNull { it.text == text } ?: NONE
         }
     }
 

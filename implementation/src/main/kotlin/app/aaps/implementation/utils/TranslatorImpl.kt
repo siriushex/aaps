@@ -208,18 +208,18 @@ class TranslatorImpl @Inject internal constructor(
         else                                  -> rh.gs(app.aaps.core.ui.R.string.unknown)
     }
 
-    override fun translate(rotation: TE.Rotation?): String = when (rotation) {
-        TE.Rotation.UP         -> rh.gs(app.aaps.core.ui.R.string.rotation_up)
-        TE.Rotation.UP_RIGHT   -> rh.gs(app.aaps.core.ui.R.string.rotation_up_right)
-        TE.Rotation.RIGHT      -> rh.gs(app.aaps.core.ui.R.string.rotation_right)
-        TE.Rotation.DOWN_RIGHT -> rh.gs(app.aaps.core.ui.R.string.rotation_down_right)
-        TE.Rotation.DOWN       -> rh.gs(app.aaps.core.ui.R.string.rotation_down)
-        TE.Rotation.DOWN_LEFT  -> rh.gs(app.aaps.core.ui.R.string.rotation_down_left)
-        TE.Rotation.LEFT       -> rh.gs(app.aaps.core.ui.R.string.rotation_left)
-        TE.Rotation.UP_LEFT    -> rh.gs(app.aaps.core.ui.R.string.rotation_up_left)
-        TE.Rotation.CENTER     -> rh.gs(app.aaps.core.ui.R.string.rotation_center)
-        TE.Rotation.NONE       -> rh.gs(app.aaps.core.ui.R.string.unknown)
-        else                   -> rh.gs(app.aaps.core.ui.R.string.unknown)
+    override fun translate(arrow: TE.Arrow?): String = when (arrow) {
+        TE.Arrow.UP         -> rh.gs(app.aaps.core.ui.R.string.arrow_up)
+        TE.Arrow.UP_RIGHT   -> rh.gs(app.aaps.core.ui.R.string.arrow_up_right)
+        TE.Arrow.RIGHT      -> rh.gs(app.aaps.core.ui.R.string.arrow_right)
+        TE.Arrow.DOWN_RIGHT -> rh.gs(app.aaps.core.ui.R.string.arrow_down_right)
+        TE.Arrow.DOWN       -> rh.gs(app.aaps.core.ui.R.string.arrow_down)
+        TE.Arrow.DOWN_LEFT  -> rh.gs(app.aaps.core.ui.R.string.arrow_down_left)
+        TE.Arrow.LEFT       -> rh.gs(app.aaps.core.ui.R.string.arrow_left)
+        TE.Arrow.UP_LEFT    -> rh.gs(app.aaps.core.ui.R.string.arrow_up_left)
+        TE.Arrow.CENTER     -> rh.gs(app.aaps.core.ui.R.string.arrow_center)
+        TE.Arrow.NONE       -> rh.gs(app.aaps.core.ui.R.string.unknown)
+        else                -> rh.gs(app.aaps.core.ui.R.string.unknown)
     }
 
     override fun translate(reason: TT.Reason?): String = when (reason) {
