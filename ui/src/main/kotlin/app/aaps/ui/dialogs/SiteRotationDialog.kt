@@ -106,7 +106,8 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        loadDynamicContent(preferences.get(IntKey.SiteRotationUserProfile))
+        //loadDynamicContent(preferences.get(IntKey.SiteRotationUserProfile))
+
         if (siteMode == UiInteraction.SiteMode.EDIT) {
             binding.headerIcon.setImageResource(
                 when (siteType) {
@@ -115,7 +116,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 }
             )
         }
-
         binding.layoutSelectorGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.man_layout_option -> loadDynamicContent(0)
@@ -124,6 +124,16 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             }
             processVisibility(3)
         }
+
+        binding.layoutSelectorGroup.check(
+            when (preferences.get(IntKey.SiteRotationUserProfile)) {
+                0    -> R.id.man_layout_option
+                1    -> R.id.woman_layout_option
+                2    -> R.id.child_layout_option
+                else -> R.id.man_layout_option
+            }
+        )
+
         // checkboxes
         loadCheckedStates()
         binding.pumpSiteVisible.isChecked = binding.pumpSiteManagement.isChecked
