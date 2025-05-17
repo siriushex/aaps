@@ -750,9 +750,10 @@ interface PersistenceLayer {
      * Store records coming from NS to database
      *
      * @param runningModes list of records
+     * @param doLog create UserEntry if true
      * @return List of inserted/updated/invalidated records
      */
-    fun syncNsRunningModes(runningModes: List<RM>): Single<TransactionResult<RM>>
+    fun syncNsRunningModes(runningModes: List<RM>, doLog: Boolean): Single<TransactionResult<RM>>
 
     /**
      * Update NS id' in database

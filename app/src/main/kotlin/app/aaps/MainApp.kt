@@ -1,5 +1,6 @@
 package app.aaps
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.Intent
 import android.content.IntentFilter
@@ -362,17 +363,18 @@ class MainApp : DaggerApplication() {
                 "LGS"    -> RM.Mode.CLOSED_LOOP_LGS
                 else     -> RM.Mode.CLOSED_LOOP
             }
-            profileFunction.getProfile()?.let { profile ->
-                loop.handleRunningModeChange(
-                    newRM = mode,
-                    action = Action.CLOSED_LOOP_MODE,
-                    listValues = listOf(ValueWithUnit.SimpleString("Migration")),
-                    source = Sources.Aaps,
-                    profile = profile
-                )
-            } ?: {
-                aapsLogger.error("Profile is null. Migration not performed")
-            }
+            @SuppressLint("CheckResult")
+            persistenceLayer.insertOrUpdateRunningMode(
+                runningMode = RM(
+                    timestamp = dateUtil.now(),
+                    mode = mode,
+                    autoForced = false,
+                    duration = 0
+                ),
+                action = Action.CLOSED_LOOP_MODE,
+                source = Sources.Aaps,
+                listValues = listOf(ValueWithUnit.SimpleString("Migration"))
+            ).blockingGet()
             sp.remove("aps_mode")
         }
     }

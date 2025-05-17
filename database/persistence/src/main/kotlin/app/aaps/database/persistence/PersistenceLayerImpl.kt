@@ -844,14 +844,14 @@ class PersistenceLayerImpl @Inject constructor(
                 transactionResult
             }
 
-    override fun syncNsRunningModes(runningModes: List<RM>): Single<PersistenceLayer.TransactionResult<RM>> =
+    override fun syncNsRunningModes(runningModes: List<RM>, doLog: Boolean): Single<PersistenceLayer.TransactionResult<RM>> =
         repository.runTransactionForResult(SyncNsRunningModeTransaction(runningModes.map { it.toDb() }))
             .doOnError { aapsLogger.error(LTag.DATABASE, "Error while saving RunningMode", it) }
             .map { result ->
                 val transactionResult = PersistenceLayer.TransactionResult<RM>()
                 result.inserted.forEach {
                     if (config.AAPSCLIENT.not())
-                        log(
+                        if (doLog) log(
                             timestamp = dateUtil.now(),
                             action = Action.PROFILE_SWITCH,
                             source = Sources.NSClient,
@@ -863,7 +863,7 @@ class PersistenceLayerImpl @Inject constructor(
                 }
                 result.invalidated.forEach {
                     if (config.AAPSCLIENT.not())
-                        log(
+                        if (doLog) log(
                             timestamp = dateUtil.now(),
                             action = Action.PROFILE_SWITCH_REMOVED,
                             source = Sources.NSClient,
