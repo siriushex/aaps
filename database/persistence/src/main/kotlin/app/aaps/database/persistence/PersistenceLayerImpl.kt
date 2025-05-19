@@ -52,6 +52,7 @@ import app.aaps.database.transactions.InsertOrUpdateCarbsTransaction
 import app.aaps.database.transactions.InsertOrUpdateHeartRateTransaction
 import app.aaps.database.transactions.InsertOrUpdateProfileSwitch
 import app.aaps.database.transactions.InsertOrUpdateStepsCountTransaction
+import app.aaps.database.transactions.InsertOrUpdateTherapyEventTransaction
 import app.aaps.database.transactions.InsertTemporaryBasalWithTempIdTransaction
 import app.aaps.database.transactions.InvalidateBolusCalculatorResultTransaction
 import app.aaps.database.transactions.InvalidateBolusTransaction
@@ -1345,6 +1346,22 @@ class PersistenceLayerImpl @Inject constructor(
                     aapsLogger.debug(LTag.DATABASE, "Inserted TherapyEvent from ${source.name} $it")
                     transactionResult.inserted.add(it.fromDb())
                     log(timestamp = timestamp, action = action, source = source, note = note, listValues = listValues)
+                }
+                transactionResult
+            }
+
+    override fun insertOrUpdateTherapyEvent(therapyEvent: TE): Single<PersistenceLayer.TransactionResult<TE>> =
+        repository.runTransactionForResult(InsertOrUpdateTherapyEventTransaction(therapyEvent.toDb()))
+            .doOnError { aapsLogger.error(LTag.DATABASE, "Error while saving HeartRate", it) }
+            .map { result ->
+                val transactionResult = PersistenceLayer.TransactionResult<TE>()
+                result.inserted.forEach {
+                    aapsLogger.debug(LTag.DATABASE, "Inserted TherapyEvent $it")
+                    transactionResult.inserted.add(it.fromDb())
+                }
+                result.updated.forEach {
+                    aapsLogger.debug(LTag.DATABASE, "Updated TherapyEvent $it")
+                    transactionResult.updated.add(it.fromDb())
                 }
                 transactionResult
             }

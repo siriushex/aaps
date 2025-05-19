@@ -66,10 +66,6 @@ interface UiInteraction {
         VIEW(1),
         EDIT(2)
     }
-    enum class SiteType(val i: Int) {
-        PUMP(1),
-        CGM(2)
-    }
     fun runSiteRotationDialog(fragmentManager: FragmentManager)
     fun runBolusProgressDialog(fragmentManager: FragmentManager, insulin: Double, id: Long)
     enum class Mode(val i: Int) {

@@ -44,7 +44,7 @@
     <string name="format_carbs_ic">%1$.0fg IC: %2$.1f</string>
     <string name="treatments_wizard_total_label">Total</string>
 
-    <!-- WizardDialog -->
+    <!-- SiteRotationDialog -->
     <string name="site_synthesis">Synthesis</string>
     <string name="site_front">Front</string>
     <string name="site_back">Back</string>
@@ -55,6 +55,10 @@
     <string name="user_profile_description">User Profile Description is used to show most frequent sites available for a man, a woman or a child</string>
     <string name="site_management">Site ManagementProfile</string>
     <string name="site_management_description">You will set here if you want to manage Pump site, CGM site or both. This setting will be used to automatically send the site management dialog on each detected new entry</string>
+    <string name="record_site_change">Record Site Location</string>
+    <string name="record_site_location">Site Location: %1$s</string>
+    <string name="record_site_arrow">Site Arrow: %1$s</string>
+    <string name="record_site_note">Note: %1$s</string>
 
     <!-- FillDialog -->
     <string name="fill_warning">Please make sure the amount matches the specification of your infusion set!</string>

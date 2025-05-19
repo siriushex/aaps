@@ -1,6 +1,7 @@
 package app.aaps.ui.dialogs
 
 import android.os.Bundle
+import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +11,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.time.T
+import app.aaps.core.data.ue.Action
+import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.LTag
@@ -29,8 +32,10 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.objects.extensions.directionToIcon
 import app.aaps.core.objects.extensions.formatColor
+import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.toast.ToastUtils
+import app.aaps.core.utils.HtmlHelper
 import app.aaps.ui.R
 import app.aaps.ui.databinding.DialogSiteRotationBinding
 import app.aaps.ui.databinding.DialogSiteRotationChildBinding
@@ -40,6 +45,7 @@ import app.aaps.ui.databinding.DialogSiteRotationWomanBinding
 import app.aaps.ui.dialogs.SiteRotationDialog.RecyclerViewAdapter.SiteManagementViewHolder
 import app.aaps.ui.dialogs.utils.SiteRotationViewAdapter
 import com.google.android.material.tabs.TabLayout
+import com.google.common.base.Joiner
 import dagger.android.HasAndroidInjector
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
@@ -68,11 +74,13 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private var _binding: DialogSiteRotationBinding? = null
     private var _siteBinding: SiteRotationViewAdapter? = null
     private var siteMode = UiInteraction.SiteMode.VIEW
-    private var siteType = UiInteraction.SiteType.PUMP
-    private var location = TE.Location.NONE
-    private var arrow = 0
+    private var siteType = TE.Type.CANNULA_CHANGE
     private var time: Long = 0
     private val millsToThePast = T.days(45).msecs()
+    private var listTE: List<TE> = ArrayList()
+    private var therapyEdited: TE? = null
+    private var selectedLocation = TE.Location.NONE
+    private var selectedArrow = TE.Arrow.NONE
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
@@ -95,7 +103,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         (savedInstanceState ?: arguments)?.let { bundle ->
             siteMode = UiInteraction.SiteMode.entries.toTypedArray()[bundle.getInt("siteMode", UiInteraction.SiteMode.VIEW.ordinal)]
             if (siteMode == UiInteraction.SiteMode.EDIT) {
-                siteType = UiInteraction.SiteType.entries.toTypedArray()[bundle.getInt("siteType", UiInteraction.SiteType.PUMP.ordinal)]
+                siteType = TE.Type.entries.toTypedArray()[bundle.getInt("siteType", TE.Type.CANNULA_CHANGE.ordinal)]
                 time = bundle.getLong("time", 0)
             }
         }
@@ -106,15 +114,19 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        //loadDynamicContent(preferences.get(IntKey.SiteRotationUserProfile))
 
         if (siteMode == UiInteraction.SiteMode.EDIT) {
             binding.headerIcon.setImageResource(
                 when (siteType) {
-                    UiInteraction.SiteType.PUMP -> app.aaps.core.objects.R.drawable.ic_cp_pump_cannula
-                    UiInteraction.SiteType.CGM -> app.aaps.core.objects.R.drawable.ic_cp_cgm_insert
+                    TE.Type.CANNULA_CHANGE -> app.aaps.core.objects.R.drawable.ic_cp_pump_cannula
+                    TE.Type.SENSOR_CHANGE -> app.aaps.core.objects.R.drawable.ic_cp_cgm_insert
+                    else-> app.aaps.core.objects.R.drawable.ic_cp_pump_cannula.also { siteType = TE.Type.CANNULA_CHANGE }
                 }
             )
+            binding.notesLayout.root.visibility = View.VISIBLE // independent to preferences
+            binding.editSite.visibility = View.VISIBLE
+        } else {
+            binding.editSite.visibility = View.GONE
         }
         binding.layoutSelectorGroup.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
@@ -133,6 +145,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 else -> R.id.man_layout_option
             }
         )
+        loadDynamicContent(preferences.get(IntKey.SiteRotationUserProfile))
 
         // checkboxes
         loadCheckedStates()
@@ -165,88 +178,42 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
     override fun submit(): Boolean {
         if (_binding == null) return false
-        val actions: LinkedList<String?> = LinkedList()
+
 
         val siteChange = binding.pumpSiteManagement.isChecked
-        if (siteChange)
-            actions.add(rh.gs(R.string.record_pump_site_change).formatColor(context, rh, app.aaps.core.ui.R.attr.actionsConfirmColor))
-        val insulinChange = binding.pumpSiteManagement.isChecked
-        if (insulinChange)
-            actions.add(rh.gs(R.string.record_insulin_cartridge_change).formatColor(context, rh, app.aaps.core.ui.R.attr.actionsConfirmColor))
         eventTime -= eventTime % 1000
 
-        if (eventTimeChanged)
-            actions.add(rh.gs(app.aaps.core.ui.R.string.time) + ": " + dateUtil.dateAndTimeString(eventTime))
-        /*
-        if (insulinAfterConstraints > 0 || binding.cgmSiteManagement.isChecked || binding.cgmSiteManagement.isChecked) {
-            activity?.let { activity ->
-                OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.prime_fill), HtmlHelper.fromHtml(Joiner.on("<br/>").join(actions)), {
-
-                    if (insulinAfterConstraints > 0) {
-                        uel.log(
-                            action = Action.PRIME_BOLUS, source = Sources.FillDialog,
-                            note = notes,
-                            value = ValueWithUnit.Insulin(insulinAfterConstraints)
-                        )
-                        requestPrimeBolus(insulinAfterConstraints, notes)
+        if (siteMode == UiInteraction.SiteMode.EDIT && therapyEdited != null) {
+            therapyEdited?.let { te ->
+                val actions: LinkedList<String?> = LinkedList()
+                val note = binding.notesLayout.notes.text.toString()
+                val siteChange = te.location != selectedLocation || te.arrow != selectedArrow || te.note != note
+                if (siteChange) {
+                    actions.add(rh.gs(R.string.record_site_change).formatColor(context, rh, app.aaps.core.ui.R.attr.actionsConfirmColor))
+                    te.location = selectedLocation
+                    actions.add(rh.gs(R.string.record_site_location, translator.translate(te.location)))
+                    te.arrow = selectedArrow
+                    actions.add(rh.gs(R.string.record_site_arrow, translator.translate(te.arrow)))
+                    val note = binding.notesLayout.notes.text.toString()
+                    if (note.isNotEmpty()) {
+                        te.note = note
+                        actions.add(rh.gs(R.string.record_site_note, te.note))
                     }
-                    if (siteChange)
-                        disposable += persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
-                            therapyEvent = TE(
-                                timestamp = eventTime,
-                                type = TE.Type.CANNULA_CHANGE,
-                                note = notes,
-                                glucoseUnit = GlucoseUnit.MGDL
-                            ),
-                            action = Action.SITE_CHANGE, source = Sources.FillDialog,
-                            note = notes,
-                            listValues = listOf(
-                                ValueWithUnit.Timestamp(eventTime).takeIf { eventTimeChanged },
-                                ValueWithUnit.TEType(TE.Type.CANNULA_CHANGE)
-                            ).filterNotNull()
-                        ).subscribe()
-                    if (insulinChange)
-                    // add a second for case of both checked
-                        disposable += persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(
-                            therapyEvent = TE(
-                                timestamp = eventTime + 1000,
-                                type = TE.Type.INSULIN_CHANGE,
-                                note = notes,
-                                glucoseUnit = GlucoseUnit.MGDL
-                            ),
-                            action = Action.RESERVOIR_CHANGE, source = Sources.FillDialog,
-                            note = notes,
-                            listValues = listOf(
-                                ValueWithUnit.Timestamp(eventTime).takeIf { eventTimeChanged },
-                                ValueWithUnit.TEType(TE.Type.INSULIN_CHANGE)
-                            ).filterNotNull()
-
-                        ).subscribe()
-                }, null)
-            }
-        } else {
-            activity?.let { activity ->
-                OKDialog.show(activity, rh.gs(app.aaps.core.ui.R.string.prime_fill), rh.gs(app.aaps.core.ui.R.string.no_action_selected))
+                    activity?.let { activity ->
+                        OKDialog.showConfirmation(activity, rh.gs(R.string.record_site_change), HtmlHelper.fromHtml(Joiner.on("<br/>").join(actions)), {
+                            disposable += persistenceLayer.insertOrUpdateTherapyEvent(
+                                therapyEvent = te
+                            ).subscribe()
+                        }, null)
+                    }
+                }
             }
         }
-        */
         dismiss()
         return true
     }
     override fun onResume() {
         super.onResume()
-        if (!queryingProtection) {
-            queryingProtection = true
-            activity?.let { activity ->
-                val cancelFail = {
-                    queryingProtection = false
-                    aapsLogger.debug(LTag.APS, "Dialog canceled on resume protection: ${this.javaClass.simpleName}")
-                    ToastUtils.warnToast(activity, R.string.dialog_canceled)
-                    dismiss()
-                }
-                protectionCheck.queryProtection(activity, ProtectionCheck.Protection.BOLUS, { queryingProtection = false }, cancelFail, cancelFail)
-            }
-        }
         swapAdapter()
         disposable += rxBus
             .toObservable(EventTherapyEventChange::class.java)
@@ -260,7 +227,42 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         disposable += persistenceLayer
                     .getTherapyEventDataFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list -> binding.recyclerview.swapAdapter(RecyclerViewAdapter(list.filter { te -> te.type == TE.Type.CANNULA_CHANGE || te.type == TE.Type.SENSOR_CHANGE }), true) }
+                    .subscribe { list -> listTE = list.filter { te -> te.type == TE.Type.CANNULA_CHANGE || te.type == TE.Type.SENSOR_CHANGE }; filterViews(); editView() }
+
+    }
+
+    fun editView() {
+        binding.time.text = dateUtil.dateStringShort(time)
+        listTE.firstOrNull { it.timestamp == time }?.let {
+            therapyEdited = it
+            binding.location.text = translator.translate(it.location)
+            binding.iconArrow.setImageResource(it.arrow?.directionToIcon() ?: TE.Arrow.NONE.directionToIcon())
+            binding.notesLayout.notes.editableText.insert(0, it.note)
+        }
+        aapsLogger.debug("XXXXX listTE ${listTE.size} edited = $therapyEdited")
+    }
+
+    fun filterViews() {
+        val showCannula = binding.pumpSiteVisible.isChecked
+        val showCgm = binding.cgmSiteVisible.isChecked
+        if (siteMode == UiInteraction.SiteMode.VIEW) {
+            binding.recyclerview.swapAdapter(RecyclerViewAdapter(listTE.filter { te ->
+                (te.type == TE.Type.CANNULA_CHANGE && showCannula) || (te.type == TE.Type.SENSOR_CHANGE && showCgm)
+            }), true)
+            siteBinding.listViews.forEach {
+                it.visibility = ((it.tag as TE.Location).pump || showCgm).toVisibility()
+            }
+        } else {
+            binding.recyclerview.swapAdapter(RecyclerViewAdapter(listTE.filter { te ->
+                te.type == siteType || (te.type == TE.Type.CANNULA_CHANGE && showCannula) || (te.type == TE.Type.SENSOR_CHANGE && showCgm)
+            }), true)
+            siteBinding.listViews.forEach {
+                it.visibility = ((it.tag as TE.Location).pump || siteType == TE.Type.SENSOR_CHANGE).toVisibility()
+            }
+            listTE.firstOrNull{ it.timestamp == time }?.let {
+
+            }
+        }
     }
 
     private fun loadDynamicContent(selectedLayout: Int) {
@@ -316,7 +318,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             binding.pumpSiteVisible.isChecked = binding.pumpSiteManagement.isChecked
         if (buttonView.id == binding.cgmSiteManagement.id)
             binding.cgmSiteVisible.isChecked = binding.cgmSiteManagement.isChecked
-        //processEnabledIcons()
+        filterViews()
     }
 
     private fun saveCheckedStates() {
@@ -386,9 +388,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                             val therapyEvent = it.tag as TE
                             args.putLong("time", therapyEvent.timestamp)
                             args.putInt("siteMode", UiInteraction.SiteMode.EDIT.ordinal)
-                            args.putInt("siteType", if (therapyEvent.type == TE.Type.SENSOR_CHANGE) UiInteraction.SiteType.CGM.ordinal else UiInteraction.SiteType.PUMP.ordinal)
-                            args.putInt("location", therapyEvent.location?.ordinal ?: TE.Location.NONE.ordinal)
-                            args.putInt("rotation", therapyEvent.arrow?.ordinal ?: TE.Arrow.NONE.ordinal)
+                            args.putInt("siteType", therapyEvent.type.ordinal)
                         }
                         srd.show(childFragmentManager, "SiteRotationViewDialog")
                     }

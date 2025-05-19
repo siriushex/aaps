@@ -138,7 +138,7 @@ class UiInteractionImpl @Inject constructor(
     }
 
     override fun runFillDialog(fragmentManager: FragmentManager) {
-        FillDialog()
+        FillDialog(fragmentManager)
             .show(fragmentManager, "FillDialog")
     }
 
@@ -162,7 +162,7 @@ class UiInteractionImpl @Inject constructor(
     }
 
     override fun runCareDialog(fragmentManager: FragmentManager, options: UiInteraction.EventType, @StringRes event: Int) {
-        CareDialog()
+        CareDialog(fragmentManager)
             .also {
                 it.arguments = Bundle().also { bundle ->
                     bundle.putInt("event", event)
