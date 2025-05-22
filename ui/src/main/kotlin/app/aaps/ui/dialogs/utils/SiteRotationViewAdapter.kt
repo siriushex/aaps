@@ -1,6 +1,5 @@
 package app.aaps.ui.dialogs.utils
 
-import android.view.View
 import android.widget.ImageView
 import androidx.viewbinding.ViewBinding
 import app.aaps.core.data.model.TE

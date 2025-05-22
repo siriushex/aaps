@@ -85,5 +85,5 @@ fun TE.Arrow.directionToIcon(): Int =
         TE.Arrow.LEFT       -> R.drawable.ic_left
         TE.Arrow.UP_LEFT    -> R.drawable.ic_up_left
         TE.Arrow.CENTER     -> R.drawable.ic_center
-        TE.Arrow.NONE       -> R.drawable.ic_invalid
+        TE.Arrow.NONE       -> R.drawable.ic_none
     }
