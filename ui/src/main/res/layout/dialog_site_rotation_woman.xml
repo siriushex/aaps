@@ -28,98 +28,98 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_side_r_arm"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_l_arm"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_side_l_arm"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_ru_abdomen"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_side_ru_abdomen"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_rl_abdomen"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_side_rl_abdomen"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_lu_abdomen"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_side_lu_abdomen"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_ll_abdomen"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_side_ll_abdomen"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/front_ru_abdomen"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_front_ru_abdomen"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/front_rl_abdomen"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_front_rl_abdomen"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/front_lu_abdomen"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_front_lu_abdomen"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/front_ll_abdomen"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_front_ll_abdomen"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/front_ru_thigh"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_front_ru_thigh"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/front_lu_thigh"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_front_lu_thigh"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/front_rl_thigh"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_front_rl_thigh"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/front_ll_thigh"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_front_ll_thigh"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
     </FrameLayout>
 
@@ -147,56 +147,56 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_back_r_arm"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/back_l_arm"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_back_l_arm"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/back_r_buttock"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_back_r_buttock"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/back_l_buttock"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_back_l_buttock"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_ru_thigh"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_side_ru_thigh"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_lu_thigh"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_side_lu_thigh"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_rl_thigh"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:src="@drawable/woman_side_rl_thigh"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
         <app.aaps.core.ui.elements.VectorHitTestImageView
             android:id="@+id/side_ll_thigh"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:src="@drawable/woman_side_ll_thigh"
-            android:visibility="visible" />
+            android:visibility="gone" />
 
     </FrameLayout>
 

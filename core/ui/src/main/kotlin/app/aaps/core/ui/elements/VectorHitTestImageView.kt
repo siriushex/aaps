@@ -17,7 +17,7 @@ class VectorHitTestImageView @JvmOverloads constructor(
 ) : AppCompatImageView(context, attrs, defStyleAttr) {
 
     companion object {
-        private const val HIT_TEST_SIZE = 32 // Width of our invisible test bitmap
+        private const val HIT_TEST_SIZE = 64 // Width of our invisible test bitmap
     }
 
     // Hit test properties (completely separate from rendering)
@@ -88,11 +88,6 @@ class VectorHitTestImageView @JvmOverloads constructor(
             }
         }
         return super.onTouchEvent(event)
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        // Always draw original vector at full quality
-        super.onDraw(canvas)
     }
 
     override fun onDetachedFromWindow() {
