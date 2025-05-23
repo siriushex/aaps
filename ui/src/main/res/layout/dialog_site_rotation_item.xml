@@ -64,7 +64,7 @@
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="@android:color/holo_blue_light"
                 tools:ignore="RtlSymmetry"
-                android:text="Edit" />
+                android:text="@string/edit_site" />
 
             <ImageView
                 android:id="@+id/icon_arrow"

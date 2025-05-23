@@ -307,7 +307,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     }
 
     private fun loadDynamicContent(selectedLayout: Int) {
-        val previousSelectedLocation = filterLocation
         preferences.put(IntKey.SiteRotationUserProfile, selectedLayout)
         binding.siteLayout.removeAllViews()
         val bindLayout = when (selectedLayout) {
@@ -325,13 +324,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         binding.siteLayout.layoutParams = params
         binding.siteLayout.addView(siteBinding.root)
         setupSiteSelectionListeners()
-        // Restore selection if it exists
-        previousSelectedLocation?.let { location ->
-            siteBinding.listViews.firstOrNull { view -> view.tag == location }?.let { view ->
-                selectedSiteView = view
-                filterLocation = view.tag as TE.Location
-            }
-        }
         siteBinding.listViews.firstOrNull { view -> view.tag as TE.Location == filterLocation }?.let { selectedView ->
             selectedSiteView = selectedView
         }
@@ -411,7 +403,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             siteBinding.updateSiteColors(listTE, binding.pumpSiteVisible.isChecked, binding.cgmSiteVisible.isChecked)
         }
 
-        // Apply highlight using a color filter with SRC_ATOP
         selectedView?.setColorFilter(
             Color.argb(150, 0, 255, 0),
             PorterDuff.Mode.SRC_ATOP
@@ -436,19 +427,13 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     }
 
     private fun saveCheckedStates() {
-        aapsLogger.debug("XXXXX Save saveCheckedStates before Pump ${binding.pumpSiteManagement.isChecked} CGM: ${binding.cgmSiteManagement.isChecked}")
         preferences.put(BooleanKey.SiteRotationManagePump, binding.pumpSiteManagement.isChecked)
         preferences.put(BooleanKey.SiteRotationManageCgm, binding.cgmSiteManagement.isChecked)
-        aapsLogger.debug("XXXXX Save saveCheckedStates after Pump ${binding.pumpSiteManagement.isChecked} CGM: ${binding.cgmSiteManagement.isChecked}")
     }
 
     private fun loadCheckedStates() {
         binding.pumpSiteManagement.isChecked = preferences.get(BooleanKey.SiteRotationManagePump)
-        aapsLogger.debug("XXXXX Save loadCheckedStates Pump ${binding.pumpSiteManagement.isChecked} CGM: ${binding.cgmSiteManagement.isChecked}")
         binding.cgmSiteManagement.isChecked = preferences.get(BooleanKey.SiteRotationManageCgm)
-        aapsLogger.debug("XXXXX Save onChechedChanged Pump ${binding.pumpSiteManagement.isChecked} CGM: ${binding.cgmSiteManagement.isChecked}")
-
-        //binding.correctionPercent.isChecked = usePercentage
     }
 
 
@@ -465,7 +450,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             isOutsideTouchable = true
         }
 
-        // Liste de tous les IDs des ImageView dans le popup
         val arrowViewIds = listOf(
             R.id.ic_up_right, R.id.ic_up, R.id.ic_up_left, R.id.ic_right, R.id.ic_center,
             R.id.ic_left, R.id.ic_down_right, R.id.ic_down, R.id.ic_down_left, R.id.ic_none
@@ -507,7 +491,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             val therapyEvent = therapyList[position]
             with(holder.binding) {
                 location.text = translator.translate(therapyEvent.location)
-                update.text = "Edit"
                 update.tag = therapyEvent
                 time.text = dateUtil.dateStringShort(therapyEvent.timestamp)
                 notes.text = therapyEvent.note
@@ -519,6 +502,14 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                         app.aaps.core.objects.R.drawable.ic_cp_pump_cannula
                 )
                 iconArrow.setImageResource(therapyEvent.arrow?.directionToIcon() ?: TE.Arrow.NONE.directionToIcon())
+                root.setOnClickListener {
+                    siteBinding.listViews.firstOrNull { view -> view.tag as TE.Location == therapyEvent.location }?.let { selectedView ->
+                        selectedSiteView = selectedView
+                        filterLocation = therapyEvent.location
+                        highlightSelectedSite(selectedView)
+                        filterViews()
+                    }
+                }
             }
         }
 
