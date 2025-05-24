@@ -116,7 +116,6 @@ class SiteRotationViewAdapter(
                     view.setColorFilter(getSmoothColor(sensorFraction), PorterDuff.Mode.MULTIPLY)
                 }
             }
-            view.visibility = View.VISIBLE
         }
     }
 

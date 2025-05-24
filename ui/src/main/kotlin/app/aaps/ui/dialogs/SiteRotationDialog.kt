@@ -257,10 +257,10 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                     .observeOn(aapsSchedulers.main)
                     .subscribe { list -> listTE = list.filter { te -> te.type == TE.Type.CANNULA_CHANGE || te.type == TE.Type.SENSOR_CHANGE }
                         editView()
-                        filterViews()
                         selectedSiteView?.let { highlightSelectedSite(it) } ?:apply {
                             siteBinding.updateSiteColors(listTE, binding.pumpSiteVisible.isChecked, binding.cgmSiteVisible.isChecked)
                         }
+                        filterViews()
                     }
     }
 
