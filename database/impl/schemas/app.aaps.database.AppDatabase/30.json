@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 30,
-    "identityHash": "ae4f62ef58a982f3772e7d5337cc4fc2",
+    "identityHash": "aa6c5568699aaf1b97d77234e884d123",
     "entities": [
       {
         "tableName": "apsResults",
@@ -2102,7 +2102,7 @@
       },
       {
         "tableName": "therapyEvents",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `duration` INTEGER NOT NULL, `type` TEXT NOT NULL, `note` TEXT, `enteredBy` TEXT, `glucose` REAL, `glucoseType` TEXT, `glucoseUnit` TEXT NOT NULL, `location` TEXT, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `therapyEvents`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `duration` INTEGER NOT NULL, `type` TEXT NOT NULL, `note` TEXT, `enteredBy` TEXT, `glucose` REAL, `glucoseType` TEXT, `glucoseUnit` TEXT NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `therapyEvents`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
@@ -2182,11 +2182,6 @@
             "columnName": "glucoseUnit",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "location",
-            "columnName": "location",
-            "affinity": "TEXT"
           },
           {
             "fieldPath": "interfaceIDs_backing.nightscoutSystemId",
@@ -2995,8 +2990,8 @@
         ]
       },
       {
-        "tableName": "offlineEvents",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `reason` TEXT NOT NULL, `duration` INTEGER NOT NULL, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `offlineEvents`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "tableName": "runningModes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `version` INTEGER NOT NULL, `dateCreated` INTEGER NOT NULL, `isValid` INTEGER NOT NULL, `referenceId` INTEGER, `timestamp` INTEGER NOT NULL, `utcOffset` INTEGER NOT NULL, `mode` TEXT NOT NULL, `duration` INTEGER NOT NULL, `autoForced` INTEGER NOT NULL, `reasons` TEXT, `nightscoutSystemId` TEXT, `nightscoutId` TEXT, `pumpType` TEXT, `pumpSerial` TEXT, `temporaryId` INTEGER, `pumpId` INTEGER, `startId` INTEGER, `endId` INTEGER, FOREIGN KEY(`referenceId`) REFERENCES `runningModes`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
@@ -3040,8 +3035,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "reason",
-            "columnName": "reason",
+            "fieldPath": "mode",
+            "columnName": "mode",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -3050,6 +3045,17 @@
             "columnName": "duration",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "autoForced",
+            "columnName": "autoForced",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reasons",
+            "columnName": "reasons",
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "interfaceIDs_backing.nightscoutSystemId",
@@ -3100,54 +3106,45 @@
         },
         "indices": [
           {
-            "name": "index_offlineEvents_id",
+            "name": "index_runningModes_id",
             "unique": false,
             "columnNames": [
               "id"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_offlineEvents_id` ON `${TABLE_NAME}` (`id`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_runningModes_id` ON `${TABLE_NAME}` (`id`)"
           },
           {
-            "name": "index_offlineEvents_isValid",
-            "unique": false,
-            "columnNames": [
-              "isValid"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_offlineEvents_isValid` ON `${TABLE_NAME}` (`isValid`)"
-          },
-          {
-            "name": "index_offlineEvents_nightscoutId",
+            "name": "index_runningModes_nightscoutId",
             "unique": false,
             "columnNames": [
               "nightscoutId"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_offlineEvents_nightscoutId` ON `${TABLE_NAME}` (`nightscoutId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_runningModes_nightscoutId` ON `${TABLE_NAME}` (`nightscoutId`)"
           },
           {
-            "name": "index_offlineEvents_referenceId",
+            "name": "index_runningModes_referenceId",
             "unique": false,
             "columnNames": [
               "referenceId"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_offlineEvents_referenceId` ON `${TABLE_NAME}` (`referenceId`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_runningModes_referenceId` ON `${TABLE_NAME}` (`referenceId`)"
           },
           {
-            "name": "index_offlineEvents_timestamp",
+            "name": "index_runningModes_timestamp",
             "unique": false,
             "columnNames": [
               "timestamp"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_offlineEvents_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_runningModes_timestamp` ON `${TABLE_NAME}` (`timestamp`)"
           }
         ],
         "foreignKeys": [
           {
-            "table": "offlineEvents",
+            "table": "runningModes",
             "onDelete": "NO ACTION",
             "onUpdate": "NO ACTION",
             "columns": [
@@ -3454,7 +3451,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ae4f62ef58a982f3772e7d5337cc4fc2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'aa6c5568699aaf1b97d77234e884d123')"
     ]
   }
 }
