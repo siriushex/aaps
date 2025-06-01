@@ -84,7 +84,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private var filterLocation: TE.Location? = null
     private var selectedLocation = TE.Location.NONE
     private var selectedArrow = TE.Arrow.NONE
-    private var selectedSiteView: ImageView? = null
+    var selectedSiteView: ImageView? = null
 
     // This property is only valid between onCreateView and onDestroyView.
     val binding get() = _binding!!
@@ -121,7 +121,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
         setupProfileSelection()
         initializeViews()
-        setupTabLayout()
         setupRecyclerView()
 
         if (siteMode == UiInteraction.SiteMode.EDIT) {
@@ -138,7 +137,8 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 R.id.woman_layout_option -> loadDynamicContent(1)
                 R.id.child_layout_option -> loadDynamicContent(2)
             }
-            processVisibility(3)
+            siteBinding.updateSiteColors()
+            filterViews()
         }
         binding.layoutSelectorGroup.check(when (preferences.get(IntKey.SiteRotationUserProfile)) {
                                               0 -> R.id.man_layout_option
@@ -152,16 +152,28 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         loadDynamicContent(preferences.get(IntKey.SiteRotationUserProfile))
         loadCheckedStates()         //Should be before setupPreferenceHandlers
         setupPreferenceHandlers()
-    }
-
-    private fun setupTabLayout() {
+        binding.showPreferences.setOnClickListener { view ->
+            view.visibility = View.GONE
+            binding.hidePreferences.visibility = View.VISIBLE
+            binding.listLayout.visibility = View.GONE
+            binding.settings.visibility = View.VISIBLE
+            binding.siteVisibility.visibility = View.GONE
+        }
+        binding.hidePreferences.setOnClickListener { view ->
+            view.visibility = View.GONE
+            binding.showPreferences.visibility = View.VISIBLE
+            binding.listLayout.visibility = View.VISIBLE
+            binding.settings.visibility = View.GONE
+            binding.siteVisibility.visibility = View.VISIBLE
+            filterViews()
+            siteBinding.updateSiteColors()
+        }
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) { processVisibility(tab.position) }
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
-        binding.tabLayout.selectTab(binding.tabLayout.getTabAt(siteMode.ordinal))
-        processVisibility(siteMode.ordinal)
+        binding.settings.visibility = View.GONE
     }
 
     private fun setupRecyclerView() {
@@ -174,6 +186,8 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     }
 
     private fun setupEditMode() {
+        binding.tabLayout.visibility = View.VISIBLE
+        binding.showPreferences.visibility = View.GONE
         binding.headerIcon.setImageResource(
             when (siteType) {
                 TE.Type.CANNULA_CHANGE -> app.aaps.core.objects.R.drawable.ic_cp_pump_cannula
@@ -183,12 +197,15 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 }
             }
         )
+        processVisibility(0)
         binding.notesLayout.root.visibility = View.VISIBLE
         binding.editSite.visibility = View.VISIBLE
     }
 
     private fun setupViewMode() {
+        binding.tabLayout.visibility = View.GONE
         binding.editSite.visibility = View.GONE
+        binding.showPreferences.visibility = View.VISIBLE
     }
 
     private fun setupPreferenceHandlers() {
@@ -259,9 +276,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                     .observeOn(aapsSchedulers.main)
                     .subscribe { list -> listTE = list.filter { te -> te.type == TE.Type.CANNULA_CHANGE || te.type == TE.Type.SENSOR_CHANGE }
                         editView()
-                        selectedSiteView?.let { highlightSelectedSite(it) } ?:apply {
-                            siteBinding.updateSiteColors()
-                        }
+                        siteBinding.updateSiteColors()
                         filterViews()
                     }
     }
@@ -279,7 +294,6 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 selectedSiteView = selectedView
             }
         }
-        // Add click listener for icon selection
         binding.iconArrow.setOnClickListener { view ->
             showIconSelectionPopup(requireContext(), view) { selectedArrow ->
                 binding.iconArrow.setImageResource(selectedArrow.directionToIcon())
@@ -321,8 +335,8 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         _siteBinding = SiteRotationViewAdapter.getBinding(this, bindLayout)
         val params = binding.siteLayout.layoutParams as LinearLayout.LayoutParams
         params.weight = when(selectedLayout) {
-            2 -> 1.3f
-            else -> 2.5f
+            2 -> if (siteMode == UiInteraction.SiteMode.VIEW) 1.3f else 2.0f
+            else -> if (siteMode == UiInteraction.SiteMode.VIEW) 2.0f else 3.0f
         }
         binding.siteLayout.layoutParams = params
         binding.siteLayout.addView(siteBinding.root)
@@ -330,43 +344,30 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         siteBinding.listViews.firstOrNull { view -> view.tag as TE.Location == filterLocation }?.let { selectedView ->
             selectedSiteView = selectedView
         }
-        selectedSiteView?.let { highlightSelectedSite(it) } ?:apply {
-            siteBinding.updateSiteColors()
-        }
+        siteBinding.updateSiteColors()
     }
 
-    private fun processVisibility(position: Int) {
-        if (siteMode == UiInteraction.SiteMode.VIEW) {
-            binding.tabLayout.getTabAt(0)?.view?.visibility = View.VISIBLE
-            binding.tabLayout.getTabAt(1)?.view?.visibility = View.GONE
-            binding.tabLayout.getTabAt(2)?.view?.visibility = View.GONE
-        } else {
-            binding.tabLayout.getTabAt(0)?.view?.visibility = View.GONE
-            binding.tabLayout.getTabAt(1)?.view?.visibility = View.VISIBLE
-            binding.tabLayout.getTabAt(2)?.view?.visibility = View.VISIBLE
-        }
-        siteBinding.front.visibility = (position == 0 || position == 1).toVisibility()
-        siteBinding.back.visibility = (position == 0 || position == 2).toVisibility()
-        binding.listLayout.visibility = (position != 3).toVisibility()
-        binding.settings.visibility = (position == 3).toVisibility()
+    private fun processVisibility(position: Int = 0) {
         val paramsFront = siteBinding.front.layoutParams as ConstraintLayout.LayoutParams
         val paramsBack = siteBinding.back.layoutParams as ConstraintLayout.LayoutParams
-        when(position) {
-            0 -> {
-                paramsFront.matchConstraintPercentWidth = 0.45f
-                paramsBack.matchConstraintPercentWidth = 0.45f
-                siteBinding.front.layoutParams = paramsFront
-                siteBinding.back.layoutParams = paramsBack
-            }
-            else -> {
-                paramsFront.matchConstraintPercentWidth = 0.80f
-                paramsBack.matchConstraintPercentWidth = 0.80f
-                siteBinding.front.layoutParams = paramsFront
-                siteBinding.back.layoutParams = paramsBack
-            }
+        if (siteMode == UiInteraction.SiteMode.VIEW) {
+            siteBinding.front.visibility = View.VISIBLE
+            siteBinding.back.visibility = View.VISIBLE
+            paramsFront.matchConstraintPercentWidth = 0.45f
+            paramsBack.matchConstraintPercentWidth = 0.45f
+            siteBinding.front.layoutParams = paramsFront
+            siteBinding.back.layoutParams = paramsBack
+        } else {
+            siteBinding.front.visibility = (position == 0).toVisibility()
+            siteBinding.back.visibility = (position == 1).toVisibility()
+            paramsFront.matchConstraintPercentWidth = 0.80f
+            paramsBack.matchConstraintPercentWidth = 0.80f
+            siteBinding.front.layoutParams = paramsFront
+            siteBinding.back.layoutParams = paramsBack
         }
         siteBinding.front.requestLayout()
         siteBinding.back.requestLayout()
+
     }
 
     private fun setupSiteSelectionListeners() {
@@ -377,40 +378,24 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 therapyEdited?.location = filterLocation
                 binding.location.text = translator.translate(filterLocation)
                 selectedSiteView = view as ImageView
-                highlightSelectedSite(view)
+                siteBinding.updateSiteColors()
                 filterViews()
             }
         }
         siteBinding.frontBg?.setOnClickListener {
             selectedSiteView?.clearColorFilter()
+            selectedSiteView = null
             siteBinding.updateSiteColors()
-            //therapyEdited?.location = TE.Location.NONE
-            //binding.location.text = translator.translate(TE.Location.NONE)
             filterLocation = null
             filterViews()
         }
         siteBinding.backBg?.setOnClickListener {
             selectedSiteView?.clearColorFilter()
+            selectedSiteView = null
             siteBinding.updateSiteColors()
-            //therapyEdited?.location = TE.Location.NONE
-            //binding.location.text = translator.translate(TE.Location.NONE)
             filterLocation = null
             filterViews()
         }
-    }
-
-    private fun highlightSelectedSite(selectedView: ImageView?) {
-        // Restore previous view
-        selectedSiteView?.let { previousView ->
-            previousView.clearColorFilter()
-            siteBinding.updateSiteColors()
-        }
-
-        selectedView?.setColorFilter(
-            Color.argb(150, 0, 255, 0),
-            PorterDuff.Mode.SRC_ATOP
-        )
-        selectedSiteView = selectedView
     }
 
     private fun onCheckedChanged(buttonView: CompoundButton, @Suppress("unused") state: Boolean) {
@@ -509,7 +494,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                     siteBinding.listViews.firstOrNull { view -> view.tag as TE.Location == therapyEvent.location }?.let { selectedView ->
                         selectedSiteView = selectedView
                         filterLocation = therapyEvent.location
-                        highlightSelectedSite(selectedView)
+                        siteBinding.updateSiteColors()
                         filterViews()
                     }
                 }

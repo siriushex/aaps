@@ -121,6 +121,11 @@ class SiteRotationViewAdapter(
                 }
             }
         }
+        // highlight selected view
+        siteRotationDialog.selectedSiteView?.setColorFilter(
+            Color.argb(150, 0, 255, 0),
+            PorterDuff.Mode.SRC_ATOP
+        )
     }
 
     private fun interpolateColor(startColor: Int, endColor: Int, fraction: Float): Int {

@@ -22,8 +22,9 @@
 
             <ImageView
                 android:id="@+id/header_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="4dp"
                 android:importantForAccessibility="no"
                 app:srcCompat="@drawable/ic_site_rotation" />
 
@@ -37,6 +38,24 @@
                 android:text="@string/site_rotation"
                 android:textAlignment="center"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
+
+            <ImageView
+                android:id="@+id/show_preferences"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="4dp"
+                android:layout_alignParentRight="true"
+                android:importantForAccessibility="no"
+                app:srcCompat="@drawable/ic_settings" />
+
+            <ImageView
+                android:id="@+id/hide_preferences"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_alignParentRight="true"
+                android:importantForAccessibility="no"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_left" />
 
         </RelativeLayout>
 
@@ -99,6 +118,7 @@
             android:padding="5dp" />
 
         <LinearLayout
+            android:id="@+id/site_visibility"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -130,10 +150,12 @@
             android:layout_marginTop="-10dp"
             android:layout_marginBottom="-5dp">
 
+            <!--
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/site_synthesis" />
+                -->
 
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
@@ -144,11 +166,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/site_back" />
-
+            <!--
             <com.google.android.material.tabs.TabItem
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/settings" />
+                -->
 
         </com.google.android.material.tabs.TabLayout>
 
