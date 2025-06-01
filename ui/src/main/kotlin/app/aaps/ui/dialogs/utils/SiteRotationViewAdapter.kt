@@ -2,15 +2,16 @@ package app.aaps.ui.dialogs.utils
 
 import android.graphics.Color
 import android.graphics.PorterDuff
-import android.view.View
 import android.widget.ImageView
 import androidx.viewbinding.ViewBinding
 import app.aaps.core.data.model.TE
 import app.aaps.ui.databinding.DialogSiteRotationManBinding
 import app.aaps.ui.databinding.DialogSiteRotationWomanBinding
 import app.aaps.ui.databinding.DialogSiteRotationChildBinding
+import app.aaps.ui.dialogs.SiteRotationDialog
 
 class SiteRotationViewAdapter(
+    val siteRotationDialog: SiteRotationDialog,
     man: DialogSiteRotationManBinding? = null,
     woman: DialogSiteRotationWomanBinding? = null,
     child: DialogSiteRotationChildBinding? = null
@@ -61,7 +62,10 @@ class SiteRotationViewAdapter(
     val sideRlThigh = (man?.sideRlThigh ?: woman?.sideRlThigh)?.also { it.tag = TE.Location.SIDE_RIGHT_LOWER_THIGH; listViews.add(it) }
 
 
-    fun updateSiteColors(listTE: List<TE>, cannula: Boolean, sensor: Boolean) {
+    fun updateSiteColors() {
+        val listTE = siteRotationDialog.listTE
+        val cannula = siteRotationDialog.binding.pumpSiteVisible.isChecked
+        val sensor = siteRotationDialog.binding.cgmSiteVisible.isChecked
         // Get filtered and sorted lists
         val cannulaEvents = listTE
             .filter { it.type == TE.Type.CANNULA_CHANGE }
@@ -156,11 +160,11 @@ class SiteRotationViewAdapter(
 
     companion object {
 
-        fun getBinding(bindLayout: ViewBinding): SiteRotationViewAdapter {
+        fun getBinding(siteRotationDialog: SiteRotationDialog, bindLayout: ViewBinding): SiteRotationViewAdapter {
             return when (bindLayout) {
-                is DialogSiteRotationManBinding   -> SiteRotationViewAdapter(bindLayout)
-                is DialogSiteRotationWomanBinding -> SiteRotationViewAdapter(null, bindLayout)
-                is DialogSiteRotationChildBinding -> SiteRotationViewAdapter(null, null, bindLayout)
+                is DialogSiteRotationManBinding   -> SiteRotationViewAdapter(siteRotationDialog, bindLayout)
+                is DialogSiteRotationWomanBinding -> SiteRotationViewAdapter(siteRotationDialog, null, bindLayout)
+                is DialogSiteRotationChildBinding -> SiteRotationViewAdapter(siteRotationDialog, null, null, bindLayout)
                 else                              -> throw IllegalArgumentException("ViewBinding is not implement in WatchfaceViewAdapter")
             }
         }

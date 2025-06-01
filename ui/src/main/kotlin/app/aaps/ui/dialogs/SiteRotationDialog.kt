@@ -79,7 +79,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private var siteType: TE.Type? = null
     private var time: Long = 0
     private val millsToThePast = T.days(45).msecs()
-    private var listTE: List<TE> = ArrayList()
+    var listTE: List<TE> = ArrayList()
     private var therapyEdited: TE? = null
     private var filterLocation: TE.Location? = null
     private var selectedLocation = TE.Location.NONE
@@ -87,7 +87,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private var selectedSiteView: ImageView? = null
 
     // This property is only valid between onCreateView and onDestroyView.
-    private val binding get() = _binding!!
+    val binding get() = _binding!!
     private val siteBinding get() = _siteBinding!!
 
     override fun onSaveInstanceState(savedInstanceState: Bundle) {
@@ -234,14 +234,16 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                     if (note.isNotEmpty()) {
                         te.note = note
                         actions.add(rh.gs(R.string.record_site_note, te.note))
-                    }
-                    activity?.let { activity ->
-                        OKDialog.showConfirmation(activity, rh.gs(R.string.record_site_change), HtmlHelper.fromHtml(Joiner.on("<br/>").join(actions)), {
-                            disposable += persistenceLayer.insertOrUpdateTherapyEvent(
-                                therapyEvent = te
-                            ).subscribe()
-                        }, null)
-                    }
+                    } else
+                        te.note = null
+                    if (actions.isNotEmpty())
+                        activity?.let { activity ->
+                            OKDialog.showConfirmation(activity, rh.gs(R.string.record_site_change), HtmlHelper.fromHtml(Joiner.on("<br/>").join(actions)), {
+                                disposable += persistenceLayer.insertOrUpdateTherapyEvent(
+                                    therapyEvent = te
+                                ).subscribe()
+                            }, null)
+                        }
                 }
             }
         }
@@ -258,7 +260,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                     .subscribe { list -> listTE = list.filter { te -> te.type == TE.Type.CANNULA_CHANGE || te.type == TE.Type.SENSOR_CHANGE }
                         editView()
                         selectedSiteView?.let { highlightSelectedSite(it) } ?:apply {
-                            siteBinding.updateSiteColors(listTE, binding.pumpSiteVisible.isChecked, binding.cgmSiteVisible.isChecked)
+                            siteBinding.updateSiteColors()
                         }
                         filterViews()
                     }
@@ -282,6 +284,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             showIconSelectionPopup(requireContext(), view) { selectedArrow ->
                 binding.iconArrow.setImageResource(selectedArrow.directionToIcon())
                 therapyEdited?.arrow = selectedArrow
+                filterViews()
             }
         }
     }
@@ -315,7 +318,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             2 -> DialogSiteRotationChildBinding.inflate(layoutInflater)
             else -> DialogSiteRotationManBinding.inflate(layoutInflater)
         }
-        _siteBinding = SiteRotationViewAdapter.getBinding(bindLayout)
+        _siteBinding = SiteRotationViewAdapter.getBinding(this, bindLayout)
         val params = binding.siteLayout.layoutParams as LinearLayout.LayoutParams
         params.weight = when(selectedLayout) {
             2 -> 1.3f
@@ -328,7 +331,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             selectedSiteView = selectedView
         }
         selectedSiteView?.let { highlightSelectedSite(it) } ?:apply {
-            siteBinding.updateSiteColors(listTE, binding.pumpSiteVisible.isChecked, binding.cgmSiteVisible.isChecked)
+            siteBinding.updateSiteColors()
         }
     }
 
@@ -380,17 +383,17 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         }
         siteBinding.frontBg?.setOnClickListener {
             selectedSiteView?.clearColorFilter()
-            siteBinding.updateSiteColors(listTE, binding.pumpSiteVisible.isChecked, binding.cgmSiteVisible.isChecked)
-            therapyEdited?.location = TE.Location.NONE
-            binding.location.text = translator.translate(TE.Location.NONE)
+            siteBinding.updateSiteColors()
+            //therapyEdited?.location = TE.Location.NONE
+            //binding.location.text = translator.translate(TE.Location.NONE)
             filterLocation = null
             filterViews()
         }
         siteBinding.backBg?.setOnClickListener {
             selectedSiteView?.clearColorFilter()
-            siteBinding.updateSiteColors(listTE, binding.pumpSiteVisible.isChecked, binding.cgmSiteVisible.isChecked)
-            therapyEdited?.location = TE.Location.NONE
-            binding.location.text = translator.translate(TE.Location.NONE)
+            siteBinding.updateSiteColors()
+            //therapyEdited?.location = TE.Location.NONE
+            //binding.location.text = translator.translate(TE.Location.NONE)
             filterLocation = null
             filterViews()
         }
@@ -400,7 +403,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         // Restore previous view
         selectedSiteView?.let { previousView ->
             previousView.clearColorFilter()
-            siteBinding.updateSiteColors(listTE, binding.pumpSiteVisible.isChecked, binding.cgmSiteVisible.isChecked)
+            siteBinding.updateSiteColors()
         }
 
         selectedView?.setColorFilter(
@@ -423,7 +426,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 binding.cgmSiteManagement.isChecked = true
         }
         filterViews()
-        siteBinding.updateSiteColors(listTE, binding.pumpSiteVisible.isChecked, binding.cgmSiteVisible.isChecked)
+        siteBinding.updateSiteColors()
     }
 
     private fun saveCheckedStates() {
