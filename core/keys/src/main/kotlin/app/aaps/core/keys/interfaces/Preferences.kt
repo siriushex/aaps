@@ -101,7 +101,7 @@ interface Preferences {
      * @param key [app.aaps.core.keys.interfaces.PreferenceKey] enum
      * @param arguments arguments to compose final key using String::format
      */
-    fun remove(key: BooleanComposedNonPreferenceKey, vararg arguments: Any)
+    fun remove(key: ComposedKey, vararg arguments: Any)
 
     /* STRING */
 
@@ -166,14 +166,6 @@ interface Preferences {
      */
     fun put(key: StringComposedNonPreferenceKey, vararg arguments: Any, value: String)
 
-    /**
-     * Remove value from [android.content.SharedPreferences]
-     *
-     * @param key [app.aaps.core.keys.interfaces.PreferenceKey] enum
-     * @param arguments arguments to compose final key using String::format
-     */
-    fun remove(key: StringComposedNonPreferenceKey, vararg arguments: Any)
-
     /* DOUBLE */
 
     /**
@@ -229,15 +221,6 @@ interface Preferences {
      * @return value or null
      */
     fun getIfExists(key: DoubleComposedNonPreferenceKey, vararg arguments: Any): Double?
-
-
-    /**
-     * Remove value from [android.content.SharedPreferences]
-     *
-     * @param key [app.aaps.core.keys.interfaces.DoubleComposedNonPreferenceKey] enum
-     * @param arguments arguments to compose final key using String::format
-     */
-    fun remove(key: DoubleComposedNonPreferenceKey, vararg arguments: Any)
 
     /**
      * Update [String] value in [android.content.SharedPreferences]
@@ -412,14 +395,6 @@ interface Preferences {
      * @param value value
      */
     fun put(key: LongComposedNonPreferenceKey, vararg arguments: Any, value: Long)
-
-    /**
-     * Remove value from [android.content.SharedPreferences]
-     *
-     * @param key [app.aaps.core.keys.interfaces.LongComposedNonPreferenceKey] enum
-     * @param arguments arguments to compose final key using String::format
-     */
-    fun remove(key: LongComposedNonPreferenceKey, vararg arguments: Any)
 
     /* GENERAL */
 
