@@ -111,7 +111,7 @@ fun TE.MeterType.toDb(): TherapyEvent.MeterType = when (this) {
     TE.MeterType.MANUAL -> TherapyEvent.MeterType.MANUAL
 }
 
-fun TherapyEvent.Location.fromDb(): TE.Location? = when (this) {
+fun TherapyEvent.Location.fromDb(): TE.Location = when (this) {
     TherapyEvent.Location.FRONT_RIGHT_UPPER_CHEST   -> TE.Location.FRONT_RIGHT_UPPER_CHEST
     TherapyEvent.Location.FRONT_LEFT_UPPER_CHEST    -> TE.Location.FRONT_LEFT_UPPER_CHEST
     TherapyEvent.Location.SIDE_RIGHT_UPPER_ARM      -> TE.Location.SIDE_RIGHT_UPPER_ARM
@@ -167,7 +167,7 @@ fun TE.Location.toDb(): TherapyEvent.Location = when (this) {
     TE.Location.NONE                      -> TherapyEvent.Location.NONE
 }
 
-fun TherapyEvent.Arrow.fromDb(): TE.Arrow? = when (this) {
+fun TherapyEvent.Arrow.fromDb(): TE.Arrow = when (this) {
     TherapyEvent.Arrow.UP         -> TE.Arrow.UP
     TherapyEvent.Arrow.UP_RIGHT   -> TE.Arrow.UP_RIGHT
     TherapyEvent.Arrow.RIGHT      -> TE.Arrow.RIGHT

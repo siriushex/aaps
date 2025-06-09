@@ -2,8 +2,6 @@ package app.aaps.ui.dialogs
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -18,6 +16,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.time.T
+import app.aaps.core.data.ue.Action
+import app.aaps.core.data.ue.Sources
+import app.aaps.core.data.ue.ValueWithUnit
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.UserEntryLogger
@@ -36,7 +37,6 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.objects.extensions.directionToIcon
 import app.aaps.core.ui.dialogs.OKDialog
-import app.aaps.core.ui.elements.VectorHitTestImageView
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.utils.HtmlHelper
 import app.aaps.ui.R
@@ -85,6 +85,11 @@ class SiteRotationDialog : DialogFragmentWithDate() {
     private var selectedLocation = TE.Location.NONE
     private var selectedArrow = TE.Arrow.NONE
     var selectedSiteView: ImageView? = null
+    val action: Action
+        get() = when (siteType) {
+            TE.Type.CANNULA_CHANGE -> Action.SITE_LOCATION
+            else                   -> Action.SENSOR_LOCATION
+        }
 
     // This property is only valid between onCreateView and onDestroyView.
     val binding get() = _binding!!
@@ -256,6 +261,12 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                     if (actions.isNotEmpty())
                         activity?.let { activity ->
                             OKDialog.showConfirmation(activity, rh.gs(R.string.record_site_change), HtmlHelper.fromHtml(Joiner.on("<br/>").join(actions)), {
+                                uel.log(
+                                    action = action,
+                                    source = Sources.SiteRotationDialog,
+                                    note = te.note,
+                                    listOfNotNull(ValueWithUnit.Timestamp(te.timestamp),ValueWithUnit.TELocation(te.location ?: selectedLocation), ValueWithUnit.TEArrow(te.arrow ?: selectedArrow))
+                                )
                                 disposable += persistenceLayer.insertOrUpdateTherapyEvent(
                                     therapyEvent = te
                                 ).subscribe()
