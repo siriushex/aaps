@@ -95,6 +95,14 @@ interface Preferences {
      */
     fun put(key: BooleanComposedNonPreferenceKey, vararg arguments: Any, value: Boolean)
 
+    /**
+     * Remove value from [android.content.SharedPreferences]
+     *
+     * @param key [app.aaps.core.keys.interfaces.PreferenceKey] enum
+     * @param arguments arguments to compose final key using String::format
+     */
+    fun remove(key: BooleanComposedNonPreferenceKey, vararg arguments: Any)
+
     /* STRING */
 
     /**
@@ -221,6 +229,15 @@ interface Preferences {
      * @return value or null
      */
     fun getIfExists(key: DoubleComposedNonPreferenceKey, vararg arguments: Any): Double?
+
+
+    /**
+     * Remove value from [android.content.SharedPreferences]
+     *
+     * @param key [app.aaps.core.keys.interfaces.DoubleComposedNonPreferenceKey] enum
+     * @param arguments arguments to compose final key using String::format
+     */
+    fun remove(key: DoubleComposedNonPreferenceKey, vararg arguments: Any)
 
     /**
      * Update [String] value in [android.content.SharedPreferences]

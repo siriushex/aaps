@@ -216,11 +216,15 @@ class PreferencesImpl @Inject constructor(
     }
 
     override fun remove(key: LongComposedNonPreferenceKey, vararg arguments: Any) {
-        sp.remove(String.format(Locale.ENGLISH, key.key, arguments))
+        sp.remove(key.composeKey(*arguments))
     }
 
     override fun remove(key: StringComposedNonPreferenceKey, vararg arguments: Any) {
-        sp.remove(String.format(Locale.ENGLISH, key.key, arguments))
+        sp.remove(key.composeKey(*arguments))
+    }
+
+    override fun remove(key: DoubleComposedNonPreferenceKey, vararg arguments: Any) {
+        sp.remove(key.composeKey(*arguments))
     }
 
     override fun isUnitDependent(key: String): Boolean =
@@ -259,6 +263,10 @@ class PreferencesImpl @Inject constructor(
 
     override fun put(key: BooleanComposedNonPreferenceKey, vararg arguments: Any, value: Boolean) {
         sp.putBoolean(key.composeKey(*arguments), value)
+    }
+
+    override fun remove(key: BooleanComposedNonPreferenceKey, vararg arguments: Any) {
+        sp.remove(key.composeKey(*arguments))
     }
 
     override fun get(key: StringComposedNonPreferenceKey, vararg arguments: Any): String =
