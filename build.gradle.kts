@@ -4,8 +4,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
     repositories {
-        google()
         mavenCentral()
+        google()
     }
     dependencies {
         classpath(libs.com.android.tools.build)
@@ -25,13 +25,14 @@ plugins {
     alias(libs.plugins.klint)
     alias(libs.plugins.moduleDependencyGraph)
     alias(libs.plugins.ksp)
+    id(libs.plugins.android.test.get().pluginId) apply false
+    id(libs.plugins.kotlin.android.get().pluginId) apply false
 }
 
 allprojects {
     repositories {
-        google()
         mavenCentral()
-        maven("https://maven.google.com")
+        google()
         maven("https://jitpack.io")
     }
     tasks.withType<KotlinCompile>().configureEach {
