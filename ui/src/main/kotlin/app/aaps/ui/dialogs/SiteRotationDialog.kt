@@ -252,12 +252,14 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                         actions.add(rh.gs(R.string.record_site_location, translator.translate(te.location)))
                     if (te.arrow != selectedArrow)
                         actions.add(rh.gs(R.string.record_site_arrow, translator.translate(te.arrow)))
-                    val note = binding.notesLayout.notes.text.toString()
                     if (note.isNotEmpty()) {
                         te.note = note
                         actions.add(rh.gs(R.string.record_site_note, te.note))
-                    } else
+                    } else {
+                        if (!te.note.isNullOrEmpty())
+                            actions.add(rh.gs(R.string.delete_site_note))
                         te.note = null
+                    }
                     if (actions.isNotEmpty())
                         activity?.let { activity ->
                             OKDialog.showConfirmation(activity, rh.gs(R.string.record_site_change), HtmlHelper.fromHtml(Joiner.on("<br/>").join(actions)), {
@@ -493,7 +495,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 update.tag = therapyEvent
                 time.text = dateUtil.dateStringShort(therapyEvent.timestamp)
                 notes.text = therapyEvent.note
-                notes.visibility = (therapyEvent.note != "").toVisibility()
+                notes.visibility = (!therapyEvent.note.isNullOrEmpty()).toVisibility()
                 iconSource.setImageResource(
                     if (therapyEvent.type == TE.Type.SENSOR_CHANGE)
                         app.aaps.core.objects.R.drawable.ic_cp_cgm_insert
