@@ -1,6 +1,7 @@
 package app.aaps.ui.dialogs
 
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
@@ -104,6 +105,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
         }
     }
 
+    @Suppress("DEPRECATION")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -116,6 +118,8 @@ class SiteRotationDialog : DialogFragmentWithDate() {
                 time = bundle.getLong("time", 0)
             }
         }
+        retainInstance = true // prevent re-creation of Fragment when starting in landscape mode
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         onCreateViewGeneral()
         _binding = DialogSiteRotationBinding.inflate(inflater, container, false)
         return binding.root
@@ -225,6 +229,7 @@ class SiteRotationDialog : DialogFragmentWithDate() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         _binding = null
     }
 
@@ -538,5 +543,4 @@ class SiteRotationDialog : DialogFragmentWithDate() {
             }
         }
     }
-
 }
