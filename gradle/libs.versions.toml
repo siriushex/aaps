@@ -34,8 +34,8 @@ com-google-dagger-android = { group = "com.google.dagger", name = "dagger-androi
 com-google-dagger-android-processor = { group = "com.google.dagger", name = "dagger-android-processor", version.ref = "dagger" }
 com-google-dagger-android-support = { group = "com.google.dagger", name = "dagger-android-support", version.ref = "dagger" }
 
-com-google-firebase-gradle = { group = "com.google.firebase", name = "firebase-crashlytics-gradle", version = "3.0.4" }
-com-google-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version = "33.16.0" }
+com-google-firebase-gradle = { group = "com.google.firebase", name = "firebase-crashlytics-gradle", version = "3.0.5" }
+com-google-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version = "34.0.0" }
 com-google-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics" }
 com-google-firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics" }
 com-google-firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
@@ -150,7 +150,7 @@ io-socket-client = { group = "io.socket", name = "socket.io-client", version = "
 io-kotlintest-runner-junit5 = { group = "io.kotlintest", name = "kotlintest-runner-junit5", version = "3.4.2" }
 com-polidea-rxandroidble3 = { group = "com.polidea.rxandroidble3", name = "rxandroidble", version = "1.19.0" }
 com-jakewharton-rx3-replaying-share = { group = "com.jakewharton.rx3", name = "replaying-share", version = "3.0.0" }
-commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.18.0" }
+commons-codec = { group = "commons-codec", name = "commons-codec", version = "1.19.0" }
 com-github-guepardoapps-kulid = { group = "com.github.guepardoapps", name = "kulid", version = "2.0.0.0" }
 com-thoughtworks-xstream = { group = "com.thoughtworks.xstream", name = "xstream", version = "1.4.21" }
 com-garmin-connectiq = { group = "com.garmin.connectiq", name = "ciq-companion-app-sdk", version = "2.2.0" }
