@@ -92,7 +92,7 @@ class EquilManager @Inject constructor(
         loadPodState()
         initEquilError()
         equilBLE.init(this)
-        equilBLE.equilStatus
+        equilBLE.checkEquilStatus()
     }
 
     var listEvent: MutableList<PumpEvent> = ArrayList<PumpEvent>()
@@ -134,7 +134,7 @@ class EquilManager @Inject constructor(
     fun readStatus(): PumpEnactResult {
         val result = instantiator.providePumpEnactResult()
         try {
-            equilBLE.equilStatus
+            equilBLE.checkEquilStatus()
         } catch (ex: Exception) {
             result.success(false).enacted(false).comment(ex.message ?: "Exception")
         }
@@ -585,7 +585,7 @@ class EquilManager @Inject constructor(
         getTempBasal()?.let { equilTempBasalRecord ->
             val tempBasalStartTime = DateTime(equilTempBasalRecord.startTime)
             val tempBasalEndTime = tempBasalStartTime.plus(equilTempBasalRecord.duration.toLong())
-            return (time.isAfter(tempBasalStartTime) || time.isEqual(tempBasalStartTime)) && time.isBefore(tempBasalEndTime)
+            return (time!!.isAfter(tempBasalStartTime) || time.isEqual(tempBasalStartTime)) && time.isBefore(tempBasalEndTime)
         }
         return false
     }
