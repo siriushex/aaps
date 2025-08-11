@@ -220,6 +220,17 @@ class DateUtilImpl @Inject constructor(private val context: Context) : DateUtil 
         return if (abs(minutes) > 9999) "" else rh.gs(R.string.minago, minutes)
     }
 
+    override fun minOrSecAgo(rh: ResourceHelper, time: Long?): String {
+        if (time == null) return ""
+        //val minutes = ((now() - time) / 1000 / 60).toInt()
+        val seconds = (now() - time) / 1000
+        if (seconds > 99) {
+            return rh.gs(R.string.minago, (seconds / 60).toInt())
+        } else {
+            return rh.gs(R.string.secago, seconds.toInt())
+        }
+    }
+
     override fun minAgoShort(time: Long?): String {
         if (time == null) return ""
         val minutes = ((time - now()) / 1000 / 60).toInt()
