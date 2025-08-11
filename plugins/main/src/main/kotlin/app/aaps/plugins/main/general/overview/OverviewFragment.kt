@@ -448,14 +448,15 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                                 runOnUiThread {
                                     protectionCheck.queryProtection(activity, ProtectionCheck.Protection.BOLUS, UIRunnable {
                                         if (isAdded)
-                                            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.tempbasal_label), lastRun.constraintsProcessed?.resultAsSpanned()
-                                                ?: "".toSpanned(), {
-                                                                          uel.log(Action.ACCEPTS_TEMP_BASAL, Sources.Overview)
-                                                                          (context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?)?.cancel(Constants.notificationID)
-                                                                          rxBus.send(EventMobileToWear(EventData.CancelNotification(dateUtil.now())))
-                                                                          handler.post { loop.acceptChangeRequest() }
-                                                                          binding.buttonsLayout.acceptTempButton.visibility = View.GONE
-                                                                      })
+                                            OKDialog.showConfirmation(
+                                                activity, rh.gs(app.aaps.core.ui.R.string.tempbasal_label), lastRun.constraintsProcessed?.resultAsSpanned()
+                                                    ?: "".toSpanned(), {
+                                                    uel.log(Action.ACCEPTS_TEMP_BASAL, Sources.Overview)
+                                                    (context?.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?)?.cancel(Constants.notificationID)
+                                                    rxBus.send(EventMobileToWear(EventData.CancelNotification(dateUtil.now())))
+                                                    handler.post { loop.acceptChangeRequest() }
+                                                    binding.buttonsLayout.acceptTempButton.visibility = View.GONE
+                                                })
                                     })
                                 }
                             }
@@ -571,9 +572,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
             _binding ?: return@runOnUiThread
             if (showAcceptButton && pump.isInitialized() && !loop.runningMode.isSuspended() && (loop as PluginBase).isEnabled()) {
                 binding.buttonsLayout.acceptTempButton.visibility = View.VISIBLE
-                if (lastRun != null) {
-                    binding.buttonsLayout.acceptTempButton.text = "${rh.gs(R.string.set_basal_question)}\n${lastRun.constraintsProcessed?.resultAsString()}"
-                }
+                binding.buttonsLayout.acceptTempButton.text = "${rh.gs(R.string.set_basal_question)}\n${lastRun.constraintsProcessed?.resultAsString()}"
             } else {
                 binding.buttonsLayout.acceptTempButton.visibility = View.GONE
             }

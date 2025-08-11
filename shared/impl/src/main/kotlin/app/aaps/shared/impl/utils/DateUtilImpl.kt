@@ -7,6 +7,8 @@ import app.aaps.core.interfaces.R
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.SafeParse
+import app.aaps.core.utils.pump.ThreadUtil
+import org.apache.commons.lang3.ThreadUtils
 import org.apache.commons.lang3.time.DateUtils.isSameDay
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
@@ -405,7 +407,7 @@ class DateUtilImpl @Inject constructor(private val context: Context) : DateUtil 
         }
         val thisDf: DecimalFormat?
         // use singleton if on ui thread otherwise allocate new as DecimalFormat is not thread safe
-        if (Thread.currentThread().id == 1L) {
+        if (ThreadUtil.threadId() == 1L) {
             if (df == null) {
                 val localDf = DecimalFormat("#", dfs)
                 localDf.minimumIntegerDigits = 1
