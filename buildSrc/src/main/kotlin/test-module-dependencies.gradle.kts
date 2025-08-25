@@ -42,6 +42,7 @@ tasks.withType<Test> {
 }
 
 tasks.withType<Test>().configureEach {
+    failOnNoDiscoveredTests = false
     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
     forkEvery = 20
 }
