@@ -144,11 +144,11 @@ class PreferencesImpl @Inject constructor(
     }
 
     override fun get(key: UnitDoublePreferenceKey): Double =
-        if (simpleMode && key.defaultedBySM) key.defaultValue
+        if (simpleMode && key.defaultedBySM) profileUtil.get().valueInCurrentUnitsDetect(key.defaultValue)
         else profileUtil.get().valueInCurrentUnitsDetect(sp.getDouble(key.key, key.defaultValue))
 
     override fun getIfExists(key: UnitDoublePreferenceKey): Double? =
-        if (sp.contains(key.key)) sp.getDouble(key.key, key.defaultValue) else null
+        if (sp.contains(key.key)) profileUtil.get().valueInCurrentUnitsDetect(sp.getDouble(key.key, key.defaultValue)) else null
 
     override fun put(key: UnitDoublePreferenceKey, value: Double) {
         sp.putDouble(key.key, value)
@@ -215,12 +215,8 @@ class PreferencesImpl @Inject constructor(
         sp.putLong(key.composeKey(*arguments), value)
     }
 
-    override fun remove(key: LongComposedNonPreferenceKey, vararg arguments: Any) {
-        sp.remove(String.format(Locale.ENGLISH, key.key, arguments))
-    }
-
-    override fun remove(key: StringComposedNonPreferenceKey, vararg arguments: Any) {
-        sp.remove(String.format(Locale.ENGLISH, key.key, arguments))
+    override fun remove(key: ComposedKey, vararg arguments: Any) {
+        sp.remove(key.composeKey(*arguments))
     }
 
     override fun isUnitDependent(key: String): Boolean =

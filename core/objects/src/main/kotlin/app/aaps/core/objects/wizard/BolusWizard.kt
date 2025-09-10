@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.text.Spanned
 import app.aaps.core.data.model.BCR
-import app.aaps.core.data.model.OE
+import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.pump.defs.PumpDescription
@@ -481,13 +481,20 @@ class BolusWizard @Inject constructor(
     private fun commonProcessing(ctx: Context, quickWizardEntry: QuickWizardEntry? = null) {
         val profile = profileFunction.getProfile() ?: return
         val pump = activePlugin.activePump
+        val now = dateUtil.now()
 
         val confirmMessage = confirmMessageAfterConstraints(ctx, advisor = false, quickWizardEntry)
         OKDialog.showConfirmation(ctx, rh.gs(app.aaps.core.ui.R.string.boluswizard), confirmMessage, {
             if (insulinAfterConstraints > 0 || carbs > 0) {
                 if (useSuperBolus) {
-                    if (loop.isEnabled()) {
-                        loop.goToZeroTemp(2 * 60, profile, OE.Reason.SUPER_BOLUS, Action.SUPERBOLUS_TBR, Sources.WizardDialog, listOf())
+                    if (loop.allowedNextModes().contains(RM.Mode.SUPER_BOLUS)) {
+                        loop.handleRunningModeChange(
+                            durationInMinutes = 2 * 60,
+                            profile = profile,
+                            newRM = RM.Mode.SUPER_BOLUS,
+                            action = Action.SUPERBOLUS_TBR,
+                            source = Sources.WizardDialog
+                        )
                         rxBus.send(EventRefreshOverview("WizardDialog"))
                     }
 
@@ -516,7 +523,7 @@ class BolusWizard @Inject constructor(
                     context = ctx
                     mgdlGlucose = profileUtil.convertToMgdl(bg, profile.units)
                     glucoseType = TE.MeterType.MANUAL
-                    carbsTimestamp = dateUtil.now() + T.mins(this@BolusWizard.carbTime.toLong()).msecs()
+                    carbsTimestamp = now + T.mins(this@BolusWizard.carbTime.toLong()).msecs()
                     bolusCalculatorResult = createBolusCalculatorResult()
                     notes = this@BolusWizard.notes
                     if (insulin > 0 || carbs > 0) {
@@ -529,12 +536,12 @@ class BolusWizard @Inject constructor(
                             action = action,
                             source = if (quickWizard) Sources.QuickWizard else Sources.WizardDialog,
                             note = notes,
-                            listValues = listOf(
+                            listValues = listOfNotNull(
                                 ValueWithUnit.TEType(eventType),
                                 ValueWithUnit.Insulin(insulinAfterConstraints).takeIf { insulinAfterConstraints != 0.0 },
                                 ValueWithUnit.Gram(this@BolusWizard.carbs).takeIf { this@BolusWizard.carbs != 0 },
                                 ValueWithUnit.Minute(carbTime).takeIf { carbTime != 0 }
-                            ).filterNotNull()
+                            )
                         )
                         commandQueue.bolus(this, object : Callback() {
                             override fun run() {
@@ -577,12 +584,12 @@ class BolusWizard @Inject constructor(
                     action = Action.EXTENDED_CARBS,
                     source = Sources.QuickWizard,
                     note = quickWizardEntry.storage.get("buttonText").toString(),
-                    listValues = listOf(
+                    listValues = listOfNotNull(
                         ValueWithUnit.Timestamp(eventTime),
                         ValueWithUnit.Gram(carbs2),
                         ValueWithUnit.Minute(timeOffset).takeIf { timeOffset != 0 },
                         ValueWithUnit.Hour(duration).takeIf { duration != 0 }
-                    ).filterNotNull()
+                    )
                 )
                 commandQueue.bolus(detailedBolusInfo, object : Callback() {
                     override fun run() {
