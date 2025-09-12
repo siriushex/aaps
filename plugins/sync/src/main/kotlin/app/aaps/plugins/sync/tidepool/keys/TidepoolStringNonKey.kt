@@ -8,6 +8,7 @@ enum class TidepoolStringNonKey(
     override val exportable: Boolean = true
 ) : StringNonPreferenceKey {
 
+    SubscriptionId("tidepool_subscription_id", ""),
     AuthState("tidepool_auth_state", ""),
     ServiceConfiguration("tidepool_service_configuration", "")
 }

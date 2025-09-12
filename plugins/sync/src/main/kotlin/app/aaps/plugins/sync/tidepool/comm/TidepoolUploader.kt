@@ -15,6 +15,7 @@ import app.aaps.plugins.sync.nsclient.ReceiverDelegate
 import app.aaps.plugins.sync.tidepool.auth.AuthFlowOut
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolStatus
 import app.aaps.plugins.sync.tidepool.keys.TidepoolBooleanKey
+import app.aaps.plugins.sync.tidepool.keys.TidepoolStringNonKey
 import app.aaps.plugins.sync.tidepool.messages.AuthReplyMessage
 import app.aaps.plugins.sync.tidepool.messages.DatasetReplyMessage
 import app.aaps.plugins.sync.tidepool.messages.OpenDatasetRequestMessage
@@ -79,10 +80,10 @@ class TidepoolUploader @Inject constructor(
         return retrofit
     }
 
-    fun createSession(authHeader: String?): Session {
+    fun createSession(): Session {
         //aapsLogger.debug(LTag.TIDEPOOL, "createSession")
         val service = getRetrofitInstance()?.create(TidepoolApiService::class.java)
-        return Session(authHeader, SESSION_TOKEN_HEADER, service)
+        return Session(SESSION_TOKEN_HEADER, service)
     }
 
     fun resetInstance() {
@@ -117,12 +118,12 @@ class TidepoolUploader @Inject constructor(
                 authFlowOut.doTidePoolInitialLogin("handleTokenLoginAndStartSession Token exception")
             } else if (accessToken != null) {
                 authFlowOut.authState.lastTokenResponse?.let { lastResponse ->
-                    createSession(lastResponse.tokenType).also {
-                        it.authReply = AuthReplyMessage().apply { userid = idToken }
+                    val session = createSession().also {
+                        it.authReply = AuthReplyMessage().apply { userid = preferences.get(TidepoolStringNonKey.SubscriptionId) }
                         it.token = accessToken
-                        startSession(it, doUpload, from)
                     }
                     authFlowOut.saveAuthState()
+                    startSession(session, doUpload, from)
                 } ?: {
                     aapsLogger.error(LTag.TIDEPOOL, "Failing to get response / token type - trying initial login again")
                     authFlowOut.updateConnectionStatus(AuthFlowOut.ConnectionStatus.NOT_LOGGED_IN, "Failed to get token")
