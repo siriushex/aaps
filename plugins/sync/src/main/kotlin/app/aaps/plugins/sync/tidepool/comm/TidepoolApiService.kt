@@ -24,9 +24,7 @@ interface TidepoolApiService {
         "X-Tidepool-Client-Version: 0.2.0"
     )
 
-    @DELETE("/v1/users/{userId}/data")
-    fun deleteAllData(@Header(SESSION_TOKEN_HEADER) token: String, @Path("userId") id: String): Call<DatasetReplyMessage>
-
+    @Suppress("unused")
     @DELETE("/v1/datasets/{dataSetId}")
     fun deleteDataSet(@Header(SESSION_TOKEN_HEADER) token: String, @Path("dataSetId") id: String): Call<DatasetReplyMessage>
 

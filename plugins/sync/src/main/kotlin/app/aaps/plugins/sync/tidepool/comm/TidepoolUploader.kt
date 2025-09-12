@@ -257,53 +257,6 @@ class TidepoolUploader @Inject constructor(
         }
     }
 
-    fun deleteDataSet() {
-        if (session?.datasetReply?.id != null) {
-            extendWakeLock(60000)
-            val call = session!!.service?.deleteDataSet(session!!.token!!, session!!.datasetReply!!.id!!)
-            call?.enqueue(
-                TidepoolCallback(
-                    aapsLogger, rxBus, session!!, "Delete Dataset",
-                    {
-                        authFlowOut.updateConnectionStatus(message = "Dataset removed OK")
-                        releaseWakeLock()
-                    }, {
-                        authFlowOut.updateConnectionStatus(message = "Dataset remove FAILED")
-                        releaseWakeLock()
-                    })
-            )
-        } else {
-            aapsLogger.error("Got login response but cannot determine datasetId - cannot proceed")
-        }
-    }
-
-    @Suppress("unused")
-    fun deleteAllData() {
-        val session = this.session
-        val token = session?.token
-        val userId = session?.authReply?.userid
-        try {
-            requireNotNull(session)
-            requireNotNull(token)
-            requireNotNull(userId)
-            extendWakeLock(60000)
-            val call = session.service?.deleteAllData(token, userId)
-            call?.enqueue(
-                TidepoolCallback(
-                    aapsLogger, rxBus, session, "Delete all data",
-                    {
-                        authFlowOut.updateConnectionStatus(message = "All data removed OK")
-                        releaseWakeLock()
-                    }, {
-                        authFlowOut.updateConnectionStatus(message = "All data remove FAILED")
-                        releaseWakeLock()
-                    })
-            )
-        } catch (e: IllegalArgumentException) {
-            aapsLogger.error("Got login response but cannot determine userId - cannot proceed")
-        }
-    }
-
     @Synchronized
     private fun extendWakeLock(ms: Long) {
         if (wl == null) {

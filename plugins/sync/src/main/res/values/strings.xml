@@ -82,7 +82,6 @@
     <string name="tidepool">Tidepool</string>
     <string name="tidepool_shortname">TDP</string>
     <string name="description_tidepool">Uploads data to Tidepool</string>
-    <string name="remove_all">Remove all</string>
     <string name="upload_now">Upload now</string>
     <string name="not_connected">Not connected</string>
     <string name="read_only">Read only</string>

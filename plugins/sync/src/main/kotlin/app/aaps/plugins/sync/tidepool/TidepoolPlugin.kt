@@ -36,7 +36,6 @@ import app.aaps.plugins.sync.tidepool.auth.AuthFlowOut
 import app.aaps.plugins.sync.tidepool.comm.TidepoolUploader
 import app.aaps.plugins.sync.tidepool.comm.UploadChunk
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolDoUpload
-import app.aaps.plugins.sync.tidepool.events.EventTidepoolResetData
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolStatus
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolUpdateGUI
 import app.aaps.plugins.sync.tidepool.keys.TidepoolBooleanKey
@@ -98,18 +97,6 @@ class TidepoolPlugin @Inject constructor(
             .toObservable(EventTidepoolDoUpload::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({ doUpload(EventTidepoolDoUpload::class.simpleName) }, fabricPrivacy::logException)
-        disposable += rxBus
-            .toObservable(EventTidepoolResetData::class.java)
-            .observeOn(aapsSchedulers.io)
-            .subscribe({
-                           if (authFlowOut.connectionStatus != AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED) {
-                               aapsLogger.debug(LTag.TIDEPOOL, "Not connected for delete Dataset")
-                           } else {
-                               tidepoolUploader.deleteDataSet()
-                               preferences.put(TidepoolLongNonKey.LastEnd, 0)
-                               tidepoolUploader.doLogin(from = EventTidepoolResetData::class.simpleName)
-                           }
-                       }, fabricPrivacy::logException)
         disposable += rxBus
             .toObservable(EventTidepoolStatus::class.java)
             .observeOn(aapsSchedulers.io)

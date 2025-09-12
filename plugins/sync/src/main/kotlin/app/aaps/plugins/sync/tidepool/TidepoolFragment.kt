@@ -21,7 +21,6 @@ import app.aaps.plugins.sync.databinding.TidepoolFragmentBinding
 import app.aaps.plugins.sync.tidepool.auth.AuthFlowOut
 import app.aaps.plugins.sync.tidepool.comm.TidepoolUploader
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolDoUpload
-import app.aaps.plugins.sync.tidepool.events.EventTidepoolResetData
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolUpdateGUI
 import app.aaps.plugins.sync.tidepool.keys.TidepoolLongNonKey
 import dagger.android.support.DaggerFragment
@@ -45,7 +44,6 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
         const val ID_MENU_LOGIN = 530
         const val ID_MENU_LOGOUT = 531
         const val ID_MENU_SEND_NOW = 532
-        const val ID_MENU_REMOVE_ALL = 533
         const val ID_MENU_FULL_SYNC = 534
     }
 
@@ -67,7 +65,6 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
         menu.add(Menu.FIRST, ID_MENU_LOGIN, 0, rh.gs(app.aaps.core.ui.R.string.login)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(Menu.FIRST, ID_MENU_LOGOUT, 0, rh.gs(app.aaps.core.ui.R.string.logout)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(Menu.FIRST, ID_MENU_SEND_NOW, 0, rh.gs(R.string.upload_now)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
-        menu.add(Menu.FIRST, ID_MENU_REMOVE_ALL, 0, rh.gs(R.string.remove_all)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         menu.add(Menu.FIRST, ID_MENU_FULL_SYNC, 0, rh.gs(R.string.full_sync)).setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)
         MenuCompat.setGroupDividerEnabled(menu, true)
     }
@@ -87,11 +84,6 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
 
             ID_MENU_SEND_NOW   -> {
                 rxBus.send(EventTidepoolDoUpload())
-                true
-            }
-
-            ID_MENU_REMOVE_ALL -> {
-                rxBus.send(EventTidepoolResetData())
                 true
             }
 
