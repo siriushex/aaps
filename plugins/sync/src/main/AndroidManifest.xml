@@ -60,10 +60,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
+                <!--  Setting host bellow prevents callback because of missing /.well-known/assetlinks.json                  android:host=""-->
                 <data
-                    android:host="*.tidepool.org"
                     android:path="/callback/tidepool"
-                    android:scheme="aaps" />
+                    android:scheme="aaps"
+                    tools:ignore="AppLinkUrlError" />
             </intent-filter>
         </activity>
         <activity

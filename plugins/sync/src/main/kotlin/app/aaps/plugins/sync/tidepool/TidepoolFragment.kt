@@ -75,12 +75,13 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
     override fun onMenuItemSelected(item: MenuItem): Boolean =
         when (item.itemId) {
             ID_MENU_LOGIN      -> {
-                authFlowOut.doTidePoolInitialLogin()
+                authFlowOut.doTidePoolInitialLogin("menu")
                 true
             }
 
             ID_MENU_LOGOUT      -> {
                 authFlowOut.clearAllSavedData()
+                tidepoolUploader.resetInstance()
                 true
             }
 
@@ -115,7 +116,7 @@ class TidepoolFragment : DaggerFragment(), MenuProvider {
     private fun updateGui() {
         tidepoolPlugin.updateLog()
         _binding?.log?.text = tidepoolPlugin.textLog
-        _binding?.status?.text = tidepoolUploader.connectionStatus.name
+        _binding?.status?.text = authFlowOut.connectionStatus.name
         _binding?.log?.text = tidepoolPlugin.textLog
         _binding?.logScrollview?.fullScroll(ScrollView.FOCUS_DOWN)
     }

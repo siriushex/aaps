@@ -41,7 +41,6 @@ import app.aaps.plugins.sync.tidepool.events.EventTidepoolStatus
 import app.aaps.plugins.sync.tidepool.events.EventTidepoolUpdateGUI
 import app.aaps.plugins.sync.tidepool.keys.TidepoolBooleanKey
 import app.aaps.plugins.sync.tidepool.keys.TidepoolLongNonKey
-import app.aaps.plugins.sync.tidepool.keys.TidepoolStringKey
 import app.aaps.plugins.sync.tidepool.keys.TidepoolStringNonKey
 import app.aaps.plugins.sync.tidepool.utils.RateLimit
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -63,7 +62,7 @@ class TidepoolPlugin @Inject constructor(
     private val rateLimit: RateLimit,
     private val receiverDelegate: ReceiverDelegate,
     private val uiInteraction: UiInteraction,
-    private val authFlowOut: AuthFlowOut
+    private val authFlowOut: AuthFlowOut,
 ) : Sync, Tidepool, PluginBaseWithPreferences(
     PluginDescription()
         .mainType(PluginType.SYNC)
@@ -74,7 +73,7 @@ class TidepoolPlugin @Inject constructor(
         .description(R.string.description_tidepool),
     ownPreferences = listOf(
         TidepoolBooleanKey::class.java, TidepoolLongNonKey::class.java,
-        TidepoolStringKey::class.java, TidepoolStringNonKey::class.java
+        TidepoolStringNonKey::class.java
     ),
     aapsLogger, rh, preferences
 ) {
@@ -93,22 +92,22 @@ class TidepoolPlugin @Inject constructor(
             .subscribe({ ev ->
                            rxBus.send(EventNSClientNewLog("● CONNECTIVITY", ev.blockingReason))
                            tidepoolUploader.resetInstance()
-                           if (isAllowed) doUpload()
+                           if (isAllowed) doUpload(EventConnectivityOptionChanged::class.simpleName)
                        }, fabricPrivacy::logException)
         disposable += rxBus
             .toObservable(EventTidepoolDoUpload::class.java)
             .observeOn(aapsSchedulers.io)
-            .subscribe({ doUpload() }, fabricPrivacy::logException)
+            .subscribe({ doUpload(EventTidepoolDoUpload::class.simpleName) }, fabricPrivacy::logException)
         disposable += rxBus
             .toObservable(EventTidepoolResetData::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe({
-                           if (tidepoolUploader.connectionStatus != TidepoolUploader.ConnectionStatus.CONNECTED) {
+                           if (authFlowOut.connectionStatus != AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED) {
                                aapsLogger.debug(LTag.TIDEPOOL, "Not connected for delete Dataset")
                            } else {
                                tidepoolUploader.deleteDataSet()
                                preferences.put(TidepoolLongNonKey.LastEnd, 0)
-                               tidepoolUploader.doLogin()
+                               tidepoolUploader.doLogin(from = EventTidepoolResetData::class.simpleName)
                            }
                        }, fabricPrivacy::logException)
         disposable += rxBus
@@ -127,7 +126,7 @@ class TidepoolPlugin @Inject constructor(
                                if (bgReadingTimestamp < uploadChunk.getLastEnd())
                                    uploadChunk.setLastEnd(bgReadingTimestamp)
                                if (isAllowed && rateLimit.rateLimit("tidepool-new-data-upload", T.mins(4).secs().toInt()))
-                                   doUpload()
+                                   doUpload(EventNewBG::class.simpleName)
                            }
                        }, fabricPrivacy::logException)
         disposable += rxBus
@@ -139,6 +138,7 @@ class TidepoolPlugin @Inject constructor(
                                tidepoolUploader.resetInstance()
                            }
                        }, fabricPrivacy::logException)
+        authFlowOut.initAuthState()
     }
 
     override fun onStop() {
@@ -146,13 +146,17 @@ class TidepoolPlugin @Inject constructor(
         super.onStop()
     }
 
-    private fun doUpload() =
-        when (tidepoolUploader.connectionStatus) {
-            TidepoolUploader.ConnectionStatus.DISCONNECTED -> tidepoolUploader.doLogin(true)
-            TidepoolUploader.ConnectionStatus.CONNECTED    -> tidepoolUploader.doUpload()
+    private fun doUpload(from: String?) {
+        //aapsLogger.debug(LTag.TIDEPOOL, "doUpload from $from")
+        return when (authFlowOut.connectionStatus) {
+            AuthFlowOut.ConnectionStatus.NOT_LOGGED_IN       -> tidepoolUploader.doLogin(true, "doUpload $from NOT_LOGGED_IN")
+            AuthFlowOut.ConnectionStatus.FAILED              -> tidepoolUploader.doLogin(true, "doUpload $from FAILED")
+            AuthFlowOut.ConnectionStatus.NO_SESSION          -> tidepoolUploader.doLogin(true, "doUpload $from NO_SESSION")
+            AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED -> tidepoolUploader.doUpload(from)
 
-            else                                           -> {}
+            else                                             -> aapsLogger.debug(LTag.TIDEPOOL, "doUpload $from do nothing ${authFlowOut.connectionStatus}")
         }
+    }
 
     @Synchronized
     private fun addToLog(ev: EventTidepoolStatus) {
@@ -182,11 +186,11 @@ class TidepoolPlugin @Inject constructor(
     }
 
     override val status: String
-        get() = tidepoolUploader.connectionStatus.name
+        get() = authFlowOut.connectionStatus.name
     override val hasWritePermission: Boolean
-        get() = tidepoolUploader.connectionStatus == TidepoolUploader.ConnectionStatus.CONNECTED
+        get() = authFlowOut.connectionStatus == AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED
     override val connected: Boolean
-        get() = tidepoolUploader.connectionStatus == TidepoolUploader.ConnectionStatus.CONNECTED
+        get() = authFlowOut.connectionStatus == AuthFlowOut.ConnectionStatus.SESSION_ESTABLISHED
 
     override fun addPreferenceScreen(preferenceManager: PreferenceManager, parent: PreferenceScreen, context: Context, requiredKey: String?) {
         if (requiredKey != null && requiredKey != "tidepool_connection_options" && requiredKey != "tidepool_advanced") return
