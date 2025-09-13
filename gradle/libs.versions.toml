@@ -157,3 +157,4 @@ com-garmin-connectiq = { group = "com.garmin.connectiq", name = "ciq-companion-a
 androidx-annotation = { group = "androidx.annotation", name = "annotation", version.ref = "annotation" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version = "1.3.0" }
 androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version = "1.4.1" }
+net-openid-appauth = { group = "net.openid", name = "appauth", version = "0.11.1" }
