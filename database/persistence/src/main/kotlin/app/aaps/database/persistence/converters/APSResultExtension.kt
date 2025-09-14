@@ -22,7 +22,11 @@ fun app.aaps.database.entities.APSResult.fromDb(injector: HasAndroidInjector): A
         app.aaps.database.entities.APSResult.Algorithm.SMB      ->
             DetermineBasalResult(injector, Json.decodeFromString(this.resultJson)).also { result ->
                 result.date = this.timestamp
-                result.glucoseStatus = this.glucoseStatusJson?.let { Json.decodeFromString(it) }
+                result.glucoseStatus = try {
+                    this.glucoseStatusJson?.let { Json.decodeFromString(it) }
+                } catch (_: Exception) {
+                    null
+                }
                 result.currentTemp = this.currentTempJson?.let { Json.decodeFromString(it) }
                 result.iobData = this.iobDataJson?.let { Json.decodeFromString(it) }
                 result.oapsProfile = this.profileJson?.let { Json.decodeFromString(it) }
@@ -33,7 +37,11 @@ fun app.aaps.database.entities.APSResult.fromDb(injector: HasAndroidInjector): A
         app.aaps.database.entities.APSResult.Algorithm.AUTO_ISF ->
             DetermineBasalResult(injector, Json.decodeFromString(this.resultJson)).also { result ->
                 result.date = this.timestamp
-                result.glucoseStatus = this.glucoseStatusJson?.let { Json.decodeFromString(it) }
+                result.glucoseStatus = try {
+                    this.glucoseStatusJson?.let { Json.decodeFromString(it) }
+                } catch (_: Exception) {
+                    null
+                }
                 result.currentTemp = this.currentTempJson?.let { Json.decodeFromString(it) }
                 result.iobData = this.iobDataJson?.let { Json.decodeFromString(it) }
                 result.oapsProfileAutoIsf = this.profileJson?.let { Json.decodeFromString(it) }
