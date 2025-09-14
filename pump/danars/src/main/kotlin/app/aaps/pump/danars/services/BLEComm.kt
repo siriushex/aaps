@@ -653,7 +653,7 @@ class BLEComm @Inject internal constructor(
 
     // 2nd packet BLE5
     private fun sendBLE5PairingInformation() {
-        val params = ByteArray(4) { 0.toByte() }
+        val params = ByteArray(4)
         val bytes: ByteArray = bleEncryption.getEncryptedPacket(BleEncryption.DANAR_PACKET__OPCODE_ENCRYPTION__TIME_INFORMATION, params, null)
         aapsLogger.debug(LTag.PUMPBTCOMM, ">>>>> " + "ENCRYPTION__TIME_INFORMATION BLE5" + " " + DanaRSPacket.toHexString(bytes))
         writeCharacteristicNoResponse(uartWriteBTGattChar, bytes)

@@ -1,10 +1,10 @@
-package app.aaps.implementation.extensions
+package app.aaps.plugins.aps.openAPSAutoISF.extensions
 
-import app.aaps.core.interfaces.aps.GlucoseStatus
+import app.aaps.core.interfaces.aps.GlucoseStatusAutoIsf
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.Round
 
-fun GlucoseStatus.log(decimalFormatter: DecimalFormatter): String = "Glucose: " + decimalFormatter.to0Decimal(glucose) + " mg/dl " +
+fun GlucoseStatusAutoIsf.log(decimalFormatter: DecimalFormatter): String = "Glucose: " + decimalFormatter.to0Decimal(glucose) + " mg/dl " +
     "Noise: " + decimalFormatter.to0Decimal(noise) + " " +
     "Delta: " + decimalFormatter.to0Decimal(delta) + " mg/dl" +
     "Short avg. delta: " + " " + decimalFormatter.to2Decimal(shortAvgDelta) + " mg/dl " +
@@ -17,7 +17,7 @@ fun GlucoseStatus.log(decimalFormatter: DecimalFormatter): String = "Glucose: " 
     "Parabola fit a1: " + decimalFormatter.to2Decimal(a1) + " mg/dl/5m " +
     "Parabola fit a2: " + decimalFormatter.to2Decimal(a2) + " mg/dl/(5m)^2"
 
-fun GlucoseStatus.asRounded() = copy(
+fun GlucoseStatusAutoIsf.asRounded() = copy(
     glucose = Round.roundTo(glucose, 0.1),
     noise = Round.roundTo(noise, 0.01),
     delta = Round.roundTo(delta, 0.01),
