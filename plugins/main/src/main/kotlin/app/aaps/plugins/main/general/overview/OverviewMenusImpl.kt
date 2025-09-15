@@ -26,7 +26,6 @@ import app.aaps.core.interfaces.aps.Loop
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.overview.OverviewMenus
-import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
@@ -57,7 +56,7 @@ class OverviewMenusImpl @Inject constructor(
         val secondary: Boolean,
         @StringRes val shortnameId: Int,
         val enabledByDefault: Boolean = false,
-        var visibility: Boolean = true
+        var visibility: () -> Boolean = { true }
     ) {
 
         PRE(R.string.overview_show_predictions, app.aaps.core.ui.R.attr.predictionColor, app.aaps.core.ui.R.attr.menuTextColor, primary = true, secondary = false, shortnameId = R.string.prediction_shortname, enabledByDefault = true),
@@ -77,8 +76,15 @@ class OverviewMenusImpl @Inject constructor(
     }
 
     init {
-        CharTypeData.DEVSLOPE.visibility = config.isDev()
-        CharTypeData.VAR_SENS.visibility = preferences.get(BooleanKey.ApsUseDynamicSensitivity)
+        CharTypeData.PRE.visibility = {
+            when {
+                config.APS        -> loop.lastRun?.request?.hasPredictions == true
+                config.AAPSCLIENT -> true
+                else              -> false
+            }
+        }
+        CharTypeData.DEVSLOPE.visibility = { config.isDev() }
+        CharTypeData.VAR_SENS.visibility = { preferences.get(BooleanKey.ApsUseDynamicSensitivity) }
     }
 
     companion object {
@@ -152,11 +158,6 @@ class OverviewMenusImpl @Inject constructor(
         )
         chartButton.setOnClickListener { v: View ->
             var itemRow = 0
-            val predictionsAvailable: Boolean = when {
-                config.APS        -> loop.lastRun?.request?.hasPredictions == true
-                config.AAPSCLIENT -> true
-                else              -> false
-            }
             val popup = PopupWindow(v.context)
             popup.setBackgroundDrawable(rh.gac(chartButton.context, app.aaps.core.ui.R.attr.popupWindowBackground).toDrawable())
             val scrollView = ScrollView(v.context)                        // required to be able to scroll menu on low res screen
@@ -171,9 +172,7 @@ class OverviewMenusImpl @Inject constructor(
 
             // insert primary items
             CharTypeData.entries.forEach { m ->
-                var insert = true
-                if (m == CharTypeData.PRE) insert = predictionsAvailable
-                if (insert && m.primary) {
+                if (m.visibility.invoke() && m.primary) {
                     createCustomMenuItemView(v.context, m, itemRow, layout, true)
                     itemRow++
                 }
@@ -200,7 +199,7 @@ class OverviewMenusImpl @Inject constructor(
 
             // insert secondary items
             CharTypeData.entries.forEach { m ->
-                if (m.visibility && m.secondary) {
+                if (m.visibility.invoke() && m.secondary) {
                     createCustomMenuItemView(v.context, m, itemRow, layout, false)
                     itemRow++
                 }
