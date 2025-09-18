@@ -139,4 +139,5 @@
     <string name="triggerStepsCountLabel">Количество шагов</string>
     <string name="triggerStepsCountDesc">Количество шагов за %1$s минут %2$s %3$.0f</string>
     <string name="triggerStepsCountDropdownLabel">Продолжительность измерения</string>
+    <!--    SMB mode-->
 </resources>
