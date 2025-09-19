@@ -197,3 +197,7 @@ own file, and if you have "utility" composables, those can be grouped together i
 
 To enable compose demo, you will need to set composeTestEnabled to true in VirtualPumpFragment.
 
+At the moment we don't have project wide theme defined, so we have this "replacement" theme
+that needs to be defined in each project, this is what is in folder composeui/theme. At some point
+we would need to create app-wide theme, to use instead of that.
+
