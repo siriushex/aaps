@@ -224,7 +224,7 @@ class ImportExportPrefsImpl @Inject constructor(
         // Ask for entering password and store when successfully entered
         TwoMessagesAlertDialog.showAlert(
             activity, rh.gs(app.aaps.core.ui.R.string.nav_export),
-            rh.gs(R.string.export_to) + " " + fileToExport.name + " ?",
+            rh.gs(R.string.export_to) + " " + fileToExport.name + "?",
             rh.gs(R.string.password_preferences_encrypt_prompt), {
                 askForMasterPassIfNeeded(activity, R.string.preferences_export_canceled)
                 { password ->
@@ -238,7 +238,7 @@ class ImportExportPrefsImpl @Inject constructor(
         if (!assureMasterPasswordSet(activity, R.string.import_setting)) return
         TwoMessagesAlertDialog.showAlert(
             activity, rh.gs(R.string.import_setting),
-            rh.gs(R.string.import_from) + " " + fileToImport.name + " ?",
+            rh.gs(R.string.import_from) + " " + fileToImport.name + "?",
             rh.gs(app.aaps.core.ui.R.string.password_preferences_decrypt_prompt), {
                 askForMasterPass(activity, R.string.preferences_import_canceled, then)
             }, null, R.drawable.ic_header_import
