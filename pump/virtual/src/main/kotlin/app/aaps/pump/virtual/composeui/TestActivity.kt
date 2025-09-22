@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
@@ -27,7 +26,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import app.aaps.core.interfaces.logging.AAPSLogger
-import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.ui.compose.ComposeUiProvider
 import app.aaps.core.interfaces.ui.compose.DaggerComponentActivity
 import app.aaps.core.keys.StringKey
@@ -124,11 +122,9 @@ class TestActivity : DaggerComponentActivity() {
 
 }
 
-// HACK: subpages should have the same label as an item appearing in the nav
-// so that item appears as selected when it is navigated to within the app
-enum class ActionsLandingSection(val label: String, val icon: ImageVector) {
 
-    TEST_1("Test 1", Icons.Filled.Create)
+enum class ActionsLandingSection(val label: String) {
+    TEST_1("Test 1")
     ;
 }
 
@@ -144,14 +140,7 @@ fun ActionsActivity_Preview() {
                 innerPadding = PaddingValues(0.dp),
                 name = "Virtual Pump Preview"
             )
-
         }
-        // Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        //     HelloWorld(
-        //         innerPadding = PaddingValues(0.dp),
-        //         name = "Virtual Pump Preview"
-        //     )
-//        }
     }
 
 }
