@@ -115,6 +115,7 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import javax.inject.Provider
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -156,6 +157,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     @Inject lateinit var bgQualityCheck: BgQualityCheck
     @Inject lateinit var uiInteraction: UiInteraction
     @Inject lateinit var decimalFormatter: DecimalFormatter
+    @Inject lateinit var graphDataProvider: Provider<GraphData>
 
     private val disposable = CompositeDisposable()
 
@@ -1037,7 +1039,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     private fun updateGraph() {
         _binding ?: return
         val pump = activePlugin.activePump
-        val graphData = GraphData(injector, binding.graphsLayout.bgGraph, overviewData)
+        val graphData = graphDataProvider.get().with(binding.graphsLayout.bgGraph, overviewData)
         val menuChartSettings = overviewMenus.setting
         if (menuChartSettings.isEmpty()) return
         graphData.addInRangeArea(
@@ -1071,7 +1073,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
         val now = System.currentTimeMillis()
         for (g in 0 until min(secondaryGraphs.size, menuChartSettings.size - 1)) {
-            val secondGraphData = GraphData(injector, secondaryGraphs[g], overviewData)
+            val secondGraphData = graphDataProvider.get().with(secondaryGraphs[g], overviewData)
             var useABSForScale = false
             var useIobForScale = false
             var useCobForScale = false

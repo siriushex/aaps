@@ -41,6 +41,7 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import java.util.Calendar
 import java.util.GregorianCalendar
 import javax.inject.Inject
+import javax.inject.Provider
 import kotlin.math.min
 
 class HistoryBrowseActivity : TranslatedDaggerAppCompatActivity() {
@@ -60,6 +61,7 @@ class HistoryBrowseActivity : TranslatedDaggerAppCompatActivity() {
     @Inject lateinit var rh: ResourceHelper
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var profileUtil: ProfileUtil
+    @Inject lateinit var graphDataProvider: Provider<GraphData>
 
     private val disposable = CompositeDisposable()
 
@@ -304,7 +306,7 @@ class HistoryBrowseActivity : TranslatedDaggerAppCompatActivity() {
         updateDate()
         binding.scaleButton.text = overviewMenus.scaleString(rangeToDisplay)
         val pump = activePlugin.activePump
-        val graphData = GraphData(injector, binding.bgGraph, historyBrowserData.overviewData)
+        val graphData = graphDataProvider.get().with(binding.bgGraph, historyBrowserData.overviewData)
         val menuChartSettings = overviewMenus.setting
         graphData.addInRangeArea(
             historyBrowserData.overviewData.fromTime, historyBrowserData.overviewData.endTime,
@@ -337,7 +339,7 @@ class HistoryBrowseActivity : TranslatedDaggerAppCompatActivity() {
 
         val now = System.currentTimeMillis()
         for (g in 0 until min(secondaryGraphs.size, menuChartSettings.size + 1)) {
-            val secondGraphData = GraphData(injector, secondaryGraphs[g], historyBrowserData.overviewData)
+            val secondGraphData = graphDataProvider.get().with(secondaryGraphs[g], historyBrowserData.overviewData)
             var useABSForScale = false
             var useIobForScale = false
             var useCobForScale = false
