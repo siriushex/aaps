@@ -283,6 +283,7 @@ class GraphData @Inject constructor(
 
         // draw it
         graph.onDataChanged(false, false)
+        series.clear()
     }
 
     fun addHeartRate(useForScale: Boolean, scale: Double) {

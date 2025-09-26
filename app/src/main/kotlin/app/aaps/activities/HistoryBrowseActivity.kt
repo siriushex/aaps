@@ -1,7 +1,6 @@
 package app.aaps.activities
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Bundle
 import android.view.ViewGroup
 import android.widget.LinearLayout
@@ -35,7 +34,6 @@ import app.aaps.databinding.ActivityHistorybrowseBinding
 import app.aaps.plugins.main.general.overview.graphData.GraphData
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.jjoe64.graphview.GraphView
-import dagger.android.HasAndroidInjector
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import java.util.Calendar
@@ -47,7 +45,6 @@ import kotlin.math.min
 class HistoryBrowseActivity : TranslatedDaggerAppCompatActivity() {
 
     @Inject lateinit var historyBrowserData: HistoryBrowserData
-    @Inject lateinit var injector: HasAndroidInjector
     @Inject lateinit var aapsSchedulers: AapsSchedulers
     @Inject lateinit var preferences: Preferences
     @Inject lateinit var activePlugin: ActivePlugin
@@ -55,7 +52,6 @@ class HistoryBrowseActivity : TranslatedDaggerAppCompatActivity() {
     @Inject lateinit var fabricPrivacy: FabricPrivacy
     @Inject lateinit var overviewMenus: OverviewMenus
     @Inject lateinit var dateUtil: DateUtil
-    @Inject lateinit var context: Context
     @Inject lateinit var calculationWorkflow: CalculationWorkflow
     @Inject lateinit var rxBus: RxBus
     @Inject lateinit var rh: ResourceHelper
@@ -162,6 +158,8 @@ class HistoryBrowseActivity : TranslatedDaggerAppCompatActivity() {
     @Synchronized
     override fun onDestroy() {
         destroyed = true
+        secondaryGraphs.clear()
+        secondaryGraphsLabel.clear()
         super.onDestroy()
     }
 
@@ -313,10 +311,10 @@ class HistoryBrowseActivity : TranslatedDaggerAppCompatActivity() {
             preferences.get(UnitDoubleKey.OverviewLowMark),
             preferences.get(UnitDoubleKey.OverviewHighMark)
         )
-        graphData.addBgReadings(menuChartSettings[0][OverviewMenus.CharType.PRE.ordinal], context)
+        graphData.addBgReadings(menuChartSettings[0][OverviewMenus.CharType.PRE.ordinal], this)
         graphData.addBucketedData()
-        graphData.addTreatments(context)
-        graphData.addEps(context, 0.95)
+        graphData.addTreatments(this)
+        graphData.addEps(this, 0.95)
         if (menuChartSettings[0][OverviewMenus.CharType.TREAT.ordinal])
             graphData.addTherapyEvents()
         if (menuChartSettings[0][OverviewMenus.CharType.ACT.ordinal])
