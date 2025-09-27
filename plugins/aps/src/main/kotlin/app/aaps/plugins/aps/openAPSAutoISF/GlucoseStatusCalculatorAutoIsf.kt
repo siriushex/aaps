@@ -221,6 +221,6 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
     }
 
     companion object {
-        //
+        //this will be useful in the next step when I replace magic numbers with vals
     }
 }
