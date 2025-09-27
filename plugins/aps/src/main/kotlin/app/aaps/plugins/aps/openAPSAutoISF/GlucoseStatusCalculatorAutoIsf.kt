@@ -60,7 +60,7 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
             ).asRounded()
         }
 
-        val deltaResult = deltaCalculator.calculateDeltas(data) ?: error("DeltaCalculation is null")
+        val deltaResult = deltaCalculator.calculateDeltas(data)
 
         // calculate 2 variables for 5% range; still using 5 minute data
         val bw = 0.05
@@ -221,14 +221,6 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
     }
 
     companion object {
-
-        fun average(array: ArrayList<Double>): Double {
-            var sum = 0.0
-            if (array.isEmpty()) return 0.0
-            for (value in array) {
-                sum += value
-            }
-            return sum / array.size
-        }
+        //
     }
 }

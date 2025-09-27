@@ -41,7 +41,6 @@ class GlucoseStatusCalculatorSMB @Inject constructor(
         }
         val now = data[0]
         val nowDate = now.timestamp
-        var change: Double
         if (sizeRecords == 1) {
             aapsLogger.debug(LTag.GLUCOSE, "sizeRecords==1")
             return GlucoseStatusSMB(
@@ -67,14 +66,5 @@ class GlucoseStatusCalculatorSMB @Inject constructor(
     }
 
     companion object {
-
-        fun average(array: ArrayList<Double>): Double {
-            var sum = 0.0
-            if (array.isEmpty()) return 0.0
-            for (value in array) {
-                sum += value
-            }
-            return sum / array.size
-        }
     }
 }
