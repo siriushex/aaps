@@ -522,10 +522,6 @@ class EquilPumpPlugin @Inject constructor(
         return equilManager.bolus(detailedBolusInfo, bolusProfile)
     }
 
-    fun showToast(s: String) {
-        ToastUtils.showToastInUiThread(context, s)
-    }
-
     fun resetData() {
         preferences.put(EquilBooleanKey.AlarmBattery10, false)
         preferences.put(EquilBooleanKey.AlarmInsulin10, false)

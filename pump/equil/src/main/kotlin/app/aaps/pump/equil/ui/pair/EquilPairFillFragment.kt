@@ -37,19 +37,19 @@ class EquilPairFillFragment : EquilPairFragmentBase() {
     }
 
     var auto: Boolean = false
-    private lateinit var buttonNext: Button
-    lateinit var buttonFill: Button
-    lateinit var lytAction: View
+    var buttonFill: Button? = null
+    var lytAction: View? = null
     var intStep = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        buttonNext = view.findViewById(R.id.button_next)
         buttonFill = view.findViewById(R.id.button_fill)
         lytAction = view.findViewById(R.id.lyt_action)
-        buttonNext.alpha = 0.3f
-        buttonNext.isClickable = false
-        buttonFill.setOnClickListener {
+        view.findViewById<Button>(R.id.button_next)?.let { buttonNext ->
+            buttonNext.alpha = 0.3f
+            buttonNext.isClickable = false
+        }
+        buttonFill?.setOnClickListener {
             context?.let {
                 auto = true
                 showAutoDlg()
@@ -76,18 +76,18 @@ class EquilPairFillFragment : EquilPairFragmentBase() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        lytAction = null
+        buttonFill = null
+    }
+
     private fun showAutoDlg() {
         val dialogFragment = EquilAutoDressingDlg()
         dialogFragment.setDialogResultListener {
-            // binding.tvLimitReservoir.text = result.toString()
-            // changeInsulin()
             auto = false
-            // equilPumpPlugin.equilManager.closeBle();
         }
         dialogFragment.show(childFragmentManager, "autoDlg")
-
-        // EquilAutoDressingDlg().also { dialog ->
-        // }.show(supportFragmentManager, "autoDlg")
     }
 
     private fun dismissAutoDlg() {
@@ -106,18 +106,13 @@ class EquilPairFillFragment : EquilPairFragmentBase() {
         commandQueue.customCommand(CmdStepSet(false, EquilConst.EQUIL_STEP_FILL, aapsLogger, preferences, equilManager), object : Callback() {
             override fun run() {
                 if (activity == null) return
-
                 aapsLogger.debug(LTag.PUMPCOMM, "result====" + result.success)
                 if (result.success) {
-                    // SystemClock.sleep(EquilConst.EQUIL_BLE_NEXT_CMD)
                     intStep += EquilConst.EQUIL_STEP_FILL
                     readStatus()
                 } else {
-                    if (auto) {
-                        dismissAutoDlg()
-                    } else {
-                        dismissLoading()
-                    }
+                    if (auto) dismissAutoDlg()
+                    else dismissLoading()
                 }
             }
         })
@@ -147,25 +142,18 @@ class EquilPairFillFragment : EquilPairFragmentBase() {
                         } else {
                             if (auto) {
                                 runOnUiThread {
-                                    buttonFill.visibility = View.GONE
-                                    lytAction.visibility = View.VISIBLE
+                                    buttonFill?.visibility = View.GONE
+                                    lytAction?.visibility = View.VISIBLE
                                 }
                                 dismissAutoDlg()
-                            } else {
-                                dismissLoading()
-                            }
+                            } else dismissLoading()
                         }
                     } else {
-                        if (auto) {
-                            dismissAutoDlg()
-                        } else {
-                            dismissLoading()
-                        }
-
+                        if (auto) dismissAutoDlg()
+                        else dismissLoading()
                     }
                 }
             }
         )
     }
-
 }
