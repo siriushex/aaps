@@ -15,8 +15,9 @@ import app.aaps.core.objects.profile.ProfileSealed
 import app.aaps.core.utils.JsonHelper
 import org.json.JSONException
 import org.json.JSONObject
+import javax.inject.Inject
 
-class ProfileStoreObject(
+class ProfileStoreObject @Inject constructor(
     private val aapsLogger: AAPSLogger,
     private val activePlugin: ActivePlugin,
     private val config: Config,

@@ -18,13 +18,9 @@ import javax.inject.Inject
 @Reusable
 class InstantiatorImpl @Inject constructor(
     private val injector: HasAndroidInjector,
-    private val dateUtil: DateUtil,
     private val rh: ResourceHelper,
-    private val aapsLogger: AAPSLogger,
-    private val preferences: Preferences
 ) : Instantiator {
 
     override fun provideAPSResultObject(rt: RT): DetermineBasalResult = DetermineBasalResult(injector, rt)
-    override fun provideAutosensDataObject(): AutosensData = AutosensDataObject(aapsLogger, preferences, dateUtil)
     override fun providePumpEnactResult(): PumpEnactResult = PumpEnactResultObject(rh)
 }

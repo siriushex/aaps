@@ -1,10 +1,9 @@
 package app.aaps.implementation.di
 
 import app.aaps.core.interfaces.alerts.LocalAlertUtils
-import app.aaps.core.interfaces.configuration.Config
+import app.aaps.core.interfaces.aps.AutosensData
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LoggerUtils
 import app.aaps.core.interfaces.logging.UserEntryLogger
 import app.aaps.core.interfaces.notifications.NotificationHolder
@@ -26,14 +25,12 @@ import app.aaps.core.interfaces.pump.WarnColors
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.receivers.ReceiverStatusStore
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.stats.DexcomTirCalculator
 import app.aaps.core.interfaces.stats.TddCalculator
 import app.aaps.core.interfaces.stats.TirCalculator
 import app.aaps.core.interfaces.storage.Storage
 import app.aaps.core.interfaces.ui.IconsProvider
 import app.aaps.core.interfaces.userEntry.UserEntryPresentationHelper
-import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.interfaces.utils.Translator
@@ -80,13 +77,11 @@ import app.aaps.implementation.utils.TrendCalculatorImpl
 import app.aaps.implementation.utils.fabric.FabricPrivacyImpl
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 
 @Module(
     includes = [
         ImplementationModule.Bindings::class,
-        ImplementationModule.Provide::class,
         CommandQueueModule::class
     ]
 )
@@ -137,20 +132,7 @@ class ImplementationModule {
         @Binds fun bindsUserEntryPresentationHelper(userEntryPresentationHelperImpl: UserEntryPresentationHelperImpl): UserEntryPresentationHelper
         @Binds fun bindsGlucoseStatusProvider(glucoseStatusProviderImpl: GlucoseStatusProviderImpl): GlucoseStatusProvider
         @Binds fun bindsDecimalFormatter(decimalFormatterImpl: DecimalFormatterImpl): DecimalFormatter
-    }
-
-    @Module
-    class Provide {
-
-        @Provides
-        fun providesProfileStore(
-            aapsLogger: AAPSLogger,
-            activePlugin: ActivePlugin,
-            config: Config,
-            rh: ResourceHelper,
-            rxBus: RxBus,
-            hardLimits: HardLimits,
-            dateUtil: DateUtil
-        ): ProfileStore = ProfileStoreObject(aapsLogger, activePlugin, config, rh, rxBus, hardLimits, dateUtil)
+        @Binds fun bindsProfileStore(profileStoreObject: ProfileStoreObject): ProfileStore
+        @Binds fun bindsAutosensData(autosensDataObject: AutosensDataObject): AutosensData
     }
 }
