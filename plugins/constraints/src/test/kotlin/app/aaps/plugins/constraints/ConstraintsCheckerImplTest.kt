@@ -127,7 +127,7 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
         constraintChecker = ConstraintsCheckerImpl(activePlugin, aapsLogger)
 
         insightDbHelper = InsightDbHelper(insightDatabaseDao)
-        danaPump = DanaPump(aapsLogger, preferences, dateUtil, instantiator, decimalFormatter)
+        danaPump = DanaPump(aapsLogger, preferences, dateUtil, decimalFormatter, profileStoreProvider)
         objectivesPlugin = ObjectivesPlugin(injector, aapsLogger, rh, preferences)
         objectivesPlugin.onStart()
         danaRPlugin = DanaRPlugin(
