@@ -574,7 +574,8 @@ public class AapsOmnipodErosManager {
                 System.currentTimeMillis(),
                 pumpId,
                 PumpType.OMNIPOD_EROS,
-                serialNumber()
+                serialNumber(),
+                false
         );
 
         sendEvent(new EventDismissNotification(Notification.OMNIPOD_TBR_ALERTS));
@@ -778,7 +779,8 @@ public class AapsOmnipodErosManager {
                     System.currentTimeMillis(),
                     pumpId,
                     PumpType.OMNIPOD_EROS,
-                    serialNumber()
+                    serialNumber(),
+                    false
             );
         }
     }
@@ -805,7 +807,8 @@ public class AapsOmnipodErosManager {
                 time,
                 pumpId,
                 PumpType.OMNIPOD_EROS,
-                serialNumber()
+                serialNumber(),
+                false
         );
 
         sendEvent(new EventRefreshOverview("AapsOmnipodManager.reportCancelledTbr()", false));

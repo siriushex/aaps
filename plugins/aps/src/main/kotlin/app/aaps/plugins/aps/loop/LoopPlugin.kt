@@ -84,7 +84,6 @@ import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.core.validators.preferences.AdaptiveIntPreference
 import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.loop.events.EventLoopSetLastRunGui
-import app.aaps.plugins.aps.loop.extensions.json
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import org.json.JSONObject
@@ -243,8 +242,8 @@ class LoopPlugin @Inject constructor(
             return false
         }
         // Preconditions (hardcoded logic)
-        if (newRM.mustBeTemporary() == true) assert(durationInMinutes > 0)
-        if (newRM.isLoopRunning() == true) assert(durationInMinutes == 0)
+        if (newRM.mustBeTemporary()) assert(durationInMinutes > 0)
+        if (newRM.isLoopRunning()) assert(durationInMinutes == 0)
         if (newRM == RM.Mode.RESUME) assert(currentRM.isTemporary())
 
         // Change running mode
@@ -270,7 +269,7 @@ class LoopPlugin @Inject constructor(
                     listValues = listValues
                 ).blockingGet()
                 if (newRM == RM.Mode.DISABLED_LOOP) {
-                    commandQueue.cancelTempBasal(true, object : Callback() {
+                    commandQueue.cancelTempBasal(enforceNew = true, callback = object : Callback() {
                         override fun run() {
                             if (!result.success) {
                                 ToastUtils.errorToast(context, rh.gs(app.aaps.core.ui.R.string.temp_basal_delivery_error))
@@ -303,7 +302,7 @@ class LoopPlugin @Inject constructor(
                     source = source
                 ).blockingGet()
                 rxBus.send(EventRefreshOverview("handleRunningModeChange"))
-                commandQueue.cancelTempBasal(true, object : Callback() {
+                commandQueue.cancelTempBasal(enforceNew = true, callback = object : Callback() {
                     override fun run() {
                         if (!result.success) {
                             uiInteraction.runAlarm(result.comment, rh.gs(app.aaps.core.ui.R.string.temp_basal_delivery_error), app.aaps.core.ui.R.raw.boluserror)
@@ -452,7 +451,7 @@ class LoopPlugin @Inject constructor(
     override fun invoke(initiator: String, allowNotification: Boolean, tempBasalFallback: Boolean) {
         try {
             aapsLogger.debug(LTag.APS, "invoke from $initiator")
-            var currentMode = runningModeRecord
+            val currentMode = runningModeRecord
             if (runningMode == RM.Mode.DISABLED_LOOP) {
                 val message = rh.gs(app.aaps.core.ui.R.string.loop_disabled) + "\n" + currentMode.reasons
                 aapsLogger.debug(LTag.APS, message)
@@ -786,7 +785,7 @@ class LoopPlugin @Inject constructor(
             if (activeTemp != null) {
                 aapsLogger.debug(LTag.APS, "applyAPSRequest: cancelTempBasal()")
                 uel.log(Action.CANCEL_TEMP_BASAL, Sources.Loop)
-                commandQueue.cancelTempBasal(false, callback)
+                commandQueue.cancelTempBasal(enforceNew = false, callback = callback)
             } else {
                 aapsLogger.debug(LTag.APS, "applyAPSRequest: Basal set correctly")
                 callback?.result(
@@ -799,7 +798,7 @@ class LoopPlugin @Inject constructor(
                 if (activeTemp != null) {
                     aapsLogger.debug(LTag.APS, "applyAPSRequest: cancelTempBasal()")
                     uel.log(Action.CANCEL_TEMP_BASAL, Sources.Loop)
-                    commandQueue.cancelTempBasal(false, callback)
+                    commandQueue.cancelTempBasal(enforceNew = false, callback = callback)
                 } else {
                     aapsLogger.debug(LTag.APS, "applyAPSRequest: Basal set correctly")
                     callback?.result(
@@ -958,7 +957,7 @@ class LoopPlugin @Inject constructor(
             note = note,
             listValues = listValues
         ).blockingGet()
-        commandQueue.cancelTempBasal(true, object : Callback() {
+        commandQueue.cancelTempBasal(enforceNew = false, autoForced = autoForced, callback = object : Callback() {
             override fun run() {
                 if (!result.success) {
                     uiInteraction.runAlarm(result.comment, rh.gs(app.aaps.core.ui.R.string.temp_basal_delivery_error), app.aaps.core.ui.R.raw.boluserror)

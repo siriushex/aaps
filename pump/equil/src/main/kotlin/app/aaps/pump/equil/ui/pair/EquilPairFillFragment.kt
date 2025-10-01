@@ -19,7 +19,6 @@ import app.aaps.pump.equil.manager.command.CmdStepSet
 import app.aaps.pump.equil.ui.dlg.EquilAutoDressingDlg
 import javax.inject.Inject
 
-// IMPORTANT: This activity needs to be called from RileyLinkSelectPreference (see pref_medtronic.xml as example)
 class EquilPairFillFragment : EquilPairFragmentBase() {
 
     @Inject lateinit var profileFunction: ProfileFunction

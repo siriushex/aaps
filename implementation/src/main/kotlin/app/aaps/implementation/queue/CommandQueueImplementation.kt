@@ -416,7 +416,7 @@ class CommandQueueImplementation @Inject constructor(
     }
 
     // returns true if command is queued
-    override fun cancelTempBasal(enforceNew: Boolean, callback: Callback?): Boolean {
+    override fun cancelTempBasal(enforceNew: Boolean, autoForced: Boolean, callback: Callback?): Boolean {
         if (!enforceNew && isRunning(CommandType.TEMPBASAL)) {
             callback?.result(executingNowError())?.run()
             return false
@@ -424,7 +424,7 @@ class CommandQueueImplementation @Inject constructor(
         // remove all unfinished
         removeAll(CommandType.TEMPBASAL)
         // add new command to queue
-        add(CommandCancelTempBasal(injector, enforceNew, callback))
+        add(CommandCancelTempBasal(injector, enforceNew, autoForced = autoForced, callback))
         notifyAboutNewCommand()
         return true
     }

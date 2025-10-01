@@ -48,7 +48,6 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import java.util.regex.Pattern
 
-// IMPORTANT: This activity needs to be called from RileyLinkSelectPreference (see pref_medtronic.xml as example)
 class EquilPairSerialNumberFragment : EquilPairFragmentBase() {
 
     private val bluetoothAdapter: BluetoothAdapter? get() = (context?.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?)?.adapter

@@ -288,7 +288,7 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
         assertThat(commandQueue.size()).isEqualTo(1)
 
         // cancel tempbasal it should replace previous TEMPBASAL
-        commandQueue.cancelTempBasal(false, null)
+        commandQueue.cancelTempBasal(enforceNew = false, autoForced = false, callback = null)
         assertThat(commandQueue.size()).isEqualTo(1)
 
         // add extended bolus

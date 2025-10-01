@@ -29,7 +29,6 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
 import javax.inject.Inject
 
-// IMPORTANT: This activity needs to be called from RileyLinkSelectPreference (see pref_medtronic.xml as example)
 class EquilUnPairDetachActivity : TranslatedDaggerAppCompatActivity() {
 
     @Inject lateinit var preferences: Preferences

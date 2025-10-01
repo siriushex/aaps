@@ -104,11 +104,11 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
         )
         smsCommunicatorPlugin.setPluginEnabled(PluginType.GENERAL, true)
         Mockito.doAnswer { invocation: InvocationOnMock ->
-            val callback = invocation.getArgument<Callback>(1)
+            val callback = invocation.getArgument<Callback>(2)
             callback.result = instantiator.providePumpEnactResult().success(true)
             callback.run()
             null
-        }.`when`(commandQueue).cancelTempBasal(ArgumentMatchers.anyBoolean(), ArgumentMatchers.any(Callback::class.java))
+        }.`when`(commandQueue).cancelTempBasal(ArgumentMatchers.anyBoolean(), ArgumentMatchers.anyBoolean(), ArgumentMatchers.any(Callback::class.java))
         Mockito.doAnswer { invocation: InvocationOnMock ->
             val callback = invocation.getArgument<Callback>(0)
             callback.result = instantiator.providePumpEnactResult().success(true)
