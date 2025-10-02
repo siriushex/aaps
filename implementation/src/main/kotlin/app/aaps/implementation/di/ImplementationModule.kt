@@ -20,6 +20,7 @@ import app.aaps.core.interfaces.protection.ProtectionCheck
 import app.aaps.core.interfaces.protection.SecureEncrypt
 import app.aaps.core.interfaces.pump.BlePreCheck
 import app.aaps.core.interfaces.pump.DetailedBolusInfoStorage
+import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.pump.TemporaryBasalStorage
 import app.aaps.core.interfaces.pump.WarnColors
@@ -38,9 +39,9 @@ import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.interfaces.utils.TrendCalculator
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.implementation.aps.DetermineBasalResult
 import app.aaps.implementation.alerts.LocalAlertUtilsImpl
 import app.aaps.implementation.androidNotification.NotificationHolderImpl
+import app.aaps.implementation.aps.DetermineBasalResult
 import app.aaps.implementation.db.ProcessedTbrEbDataImpl
 import app.aaps.implementation.iob.AutosensDataObject
 import app.aaps.implementation.iob.GlucoseStatusProviderImpl
@@ -58,6 +59,7 @@ import app.aaps.implementation.protection.ProtectionCheckImpl
 import app.aaps.implementation.protection.SecureEncryptImpl
 import app.aaps.implementation.pump.BlePreCheckImpl
 import app.aaps.implementation.pump.DetailedBolusInfoStorageImpl
+import app.aaps.implementation.pump.PumpEnactResultObject
 import app.aaps.implementation.pump.PumpSyncImplementation
 import app.aaps.implementation.pump.TemporaryBasalStorageImpl
 import app.aaps.implementation.pump.WarnColorsImpl
@@ -135,5 +137,6 @@ class ImplementationModule {
         @Binds fun bindsProfileStore(profileStoreObject: ProfileStoreObject): ProfileStore
         @Binds fun bindsAutosensData(autosensDataObject: AutosensDataObject): AutosensData
         @Binds fun bindsAPSResult(determineBasalResult: DetermineBasalResult): APSResult
+        @Binds fun bindsPumpEnactResult(pumpEnactResultObject: PumpEnactResultObject): PumpEnactResult
     }
 }

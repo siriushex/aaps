@@ -13,11 +13,11 @@ import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
 import app.aaps.core.interfaces.iob.IobCobCalculator
-import app.aaps.core.interfaces.objects.Instantiator
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileStore
 import app.aaps.core.interfaces.profile.ProfileUtil
+import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
@@ -25,7 +25,6 @@ import app.aaps.core.interfaces.utils.HardLimits
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.StringKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.implementation.aps.DetermineBasalResult
 import app.aaps.core.objects.extensions.pureProfileFromJson
 import app.aaps.core.objects.profile.ProfileSealed
 import app.aaps.core.ui.R
@@ -38,9 +37,10 @@ import app.aaps.core.validators.preferences.AdaptiveListPreference
 import app.aaps.core.validators.preferences.AdaptiveStringPreference
 import app.aaps.core.validators.preferences.AdaptiveSwitchPreference
 import app.aaps.core.validators.preferences.AdaptiveUnitPreference
-import app.aaps.implementation.instantiator.InstantiatorImpl
+import app.aaps.implementation.aps.DetermineBasalResult
 import app.aaps.implementation.profile.ProfileStoreObject
 import app.aaps.implementation.profile.ProfileUtilImpl
+import app.aaps.implementation.pump.PumpEnactResultObject
 import app.aaps.implementation.utils.DecimalFormatterImpl
 import app.aaps.plugins.aps.openAPS.DeltaCalculator
 import app.aaps.plugins.aps.openAPSSMB.GlucoseStatusCalculatorSMB
@@ -79,7 +79,7 @@ open class TestBaseWithProfile : TestBase() {
     lateinit var profileUtil: ProfileUtil
     lateinit var decimalFormatter: DecimalFormatter
     lateinit var hardLimits: HardLimits
-    lateinit var instantiator: Instantiator
+    lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
     lateinit var profileStoreProvider: Provider<ProfileStore>
     lateinit var glucoseStatusCalculatorSMB: GlucoseStatusCalculatorSMB
     lateinit var deltaCalculator: DeltaCalculator
@@ -287,7 +287,7 @@ open class TestBaseWithProfile : TestBase() {
             val arg3 = invocation.getArgument<String?>(3)
             String.format(rh.gs(string), arg1, arg2, arg3)
         }.`when`(rh).gs(anyInt(), anyString(), anyInt(), anyString())
-        instantiator = InstantiatorImpl(rh)
+        pumpEnactResultProvider = Provider { PumpEnactResultObject(rh) }
         profileStoreProvider = Provider { ProfileStoreObject(aapsLogger, activePlugin, config, rh, rxBus, hardLimits, dateUtil) }
         glucoseStatusCalculatorSMB = GlucoseStatusCalculatorSMB(aapsLogger, iobCobCalculator, dateUtil, decimalFormatter, DeltaCalculator(aapsLogger))
     }

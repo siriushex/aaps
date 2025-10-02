@@ -41,7 +41,7 @@ class DanaRKoreanPluginTest : TestBaseWithProfile() {
         danaPump = DanaPump(aapsLogger, preferences, dateUtil, decimalFormatter, profileStoreProvider)
         danaRPlugin = DanaRKoreanPlugin(
             aapsLogger, aapsSchedulers, rxBus, context, rh, constraintChecker, activePlugin, commandQueue, danaPump, dateUtil, fabricPrivacy,
-            pumpSync, preferences, uiInteraction, danaHistoryDatabase, decimalFormatter, instantiator
+            pumpSync, preferences, uiInteraction, danaHistoryDatabase, decimalFormatter, pumpEnactResultProvider
         )
     }
 
