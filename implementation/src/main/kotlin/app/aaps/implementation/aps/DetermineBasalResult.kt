@@ -1,4 +1,4 @@
-package app.aaps.core.objects.aps
+package app.aaps.implementation.aps
 
 import android.text.Spanned
 import app.aaps.core.data.model.GV

@@ -55,7 +55,6 @@ import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.IntentKey
 import app.aaps.core.keys.UnitDoubleKey
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.objects.aps.DetermineBasalResult
 import app.aaps.core.objects.constraints.ConstraintObject
 import app.aaps.core.objects.extensions.convertedToAbsolute
 import app.aaps.core.objects.extensions.getPassedDurationToTimeInMinutes
@@ -123,7 +122,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
     // last values
     override var lastAPSRun: Long = 0
     override val algorithm = APSResult.Algorithm.AUTO_ISF
-    override var lastAPSResult: DetermineBasalResult? = null
+    override var lastAPSResult: APSResult? = null
     private var consoleError = mutableListOf<String>()
     private var consoleLog = mutableListOf<String>()
     val autoIsfVersion = "3.0.1"
@@ -462,7 +461,7 @@ open class OpenAPSAutoISFPlugin @Inject constructor(
             determineBasalResult.currentTemp = currentTemp
             determineBasalResult.oapsProfileAutoIsf = oapsProfile
             determineBasalResult.mealData = mealData
-            lastAPSResult = determineBasalResult as DetermineBasalResult
+            lastAPSResult = determineBasalResult
             lastAPSRun = now
             aapsLogger.debug(LTag.APS, "Result: $it")
             rxBus.send(EventAPSCalculationFinished())

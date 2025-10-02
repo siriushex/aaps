@@ -38,7 +38,7 @@ import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.interfaces.utils.TrendCalculator
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.objects.aps.DetermineBasalResult
+import app.aaps.implementation.aps.DetermineBasalResult
 import app.aaps.implementation.alerts.LocalAlertUtilsImpl
 import app.aaps.implementation.androidNotification.NotificationHolderImpl
 import app.aaps.implementation.db.ProcessedTbrEbDataImpl
