@@ -168,7 +168,7 @@
     <string name="pump_disconnected">Pump đã ngắt kết nối</string>
     <!--    autoISF -->
     <string name="half_basal_exercise_target_title">Mục tiêu tập luyện với 50% basal</string>
-    <string name="half_basal_exercise_target_summary">Đặt thành một số, ví dụ 160, có nghĩa là khi mục tiêu tạm thời (temp target) là 160 mg/dL và tùy chọn \'High temptarget raises sensitivity=true\' được bật, Aaps sẽ chạy 50% basal ở mức này (120 = 75%; 140 = 60%).</string>
+    <string name="half_basal_exercise_target_summary">Đặt thành một số, ví dụ 160, có nghĩa là khi mục tiêu tạm thời (temp target) là 160 mg/dL và tùy chọn \'High temptarget raises sensitivity=true\' được bật, Aaps sẽ chạy 50%% basal ở mức này (120 = 75%%; 140 = 60%%).</string>
     <string name="autoISF_settings_title">Cài đặt AutoISF</string>
     <string name="autoISF_settings_summary">AutoISF cho phép điều chỉnh Hệ số độ nhạy insulin (ISF) trong nhiều tình huống thay đổi đường huyết. \n\nNó cũng có thể điều chỉnh cài đặt phân phối SMB</string>
     <string name="smb_delivery_settings_title">Cài đặt phân phối SMB</string>
