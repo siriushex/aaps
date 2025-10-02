@@ -6,6 +6,7 @@ import androidx.preference.PreferenceManager
 import app.aaps.core.data.model.EPS
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.ICfg
+import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
@@ -41,6 +42,7 @@ import app.aaps.implementation.instantiator.InstantiatorImpl
 import app.aaps.implementation.profile.ProfileStoreObject
 import app.aaps.implementation.profile.ProfileUtilImpl
 import app.aaps.implementation.utils.DecimalFormatterImpl
+import app.aaps.plugins.aps.openAPS.DeltaCalculator
 import app.aaps.plugins.aps.openAPSSMB.GlucoseStatusCalculatorSMB
 import app.aaps.shared.impl.utils.DateUtilImpl
 import dagger.android.AndroidInjector
@@ -80,6 +82,8 @@ open class TestBaseWithProfile : TestBase() {
     lateinit var instantiator: Instantiator
     lateinit var profileStoreProvider: Provider<ProfileStore>
     lateinit var glucoseStatusCalculatorSMB: GlucoseStatusCalculatorSMB
+    lateinit var deltaCalculator: DeltaCalculator
+    lateinit var apsResultProvider: Provider<APSResult>
 
     val smbGlucoseStatusProvider = object : GlucoseStatusProvider {
         override val glucoseStatusData: GlucoseStatus?
@@ -96,16 +100,6 @@ open class TestBaseWithProfile : TestBase() {
 
     val injector = HasAndroidInjector {
         AndroidInjector {
-            if (it is DetermineBasalResult) {
-                it.aapsLogger = aapsLogger
-                it.constraintChecker = constraintsChecker
-                it.preferences = preferences
-                it.activePlugin = activePlugin
-                it.processedTbrEbData = processedTbrEbData
-                it.profileFunction = profileFunction
-                it.rh = rh
-                it.decimalFormatter = decimalFormatter
-            }
             if (it is AdaptiveDoublePreference) {
                 it.profileUtil = profileUtil
                 it.preferences = preferences
@@ -173,6 +167,8 @@ open class TestBaseWithProfile : TestBase() {
         Mockito.`when`(dateUtil.now()).thenReturn(now)
         Mockito.`when`(activePlugin.activePump).thenReturn(testPumpPlugin)
         Mockito.`when`(preferences.get(StringKey.GeneralUnits)).thenReturn(GlucoseUnit.MGDL.asText)
+        deltaCalculator = DeltaCalculator(aapsLogger)
+        apsResultProvider = Provider { DetermineBasalResult(aapsLogger, constraintsChecker, preferences, activePlugin, processedTbrEbData, profileFunction, rh, decimalFormatter, dateUtil, apsResultProvider) }
         hardLimits = HardLimitsMock(preferences, rh)
         validProfile = ProfileSealed.Pure(pureProfileFromJson(JSONObject(validProfileJSON), dateUtil)!!, activePlugin)
         effectiveProfileSwitch = EPS(
@@ -291,9 +287,9 @@ open class TestBaseWithProfile : TestBase() {
             val arg3 = invocation.getArgument<String?>(3)
             String.format(rh.gs(string), arg1, arg2, arg3)
         }.`when`(rh).gs(anyInt(), anyString(), anyInt(), anyString())
-        instantiator = InstantiatorImpl(injector, rh)
+        instantiator = InstantiatorImpl(rh)
         profileStoreProvider = Provider { ProfileStoreObject(aapsLogger, activePlugin, config, rh, rxBus, hardLimits, dateUtil) }
-        glucoseStatusCalculatorSMB = GlucoseStatusCalculatorSMB(aapsLogger, iobCobCalculator, dateUtil, decimalFormatter)
+        glucoseStatusCalculatorSMB = GlucoseStatusCalculatorSMB(aapsLogger, iobCobCalculator, dateUtil, decimalFormatter, DeltaCalculator(aapsLogger))
     }
 
     fun getValidProfileStore(): ProfileStore {

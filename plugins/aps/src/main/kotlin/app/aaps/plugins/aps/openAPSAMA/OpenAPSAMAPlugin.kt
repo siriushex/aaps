@@ -55,16 +55,15 @@ import app.aaps.plugins.aps.R
 import app.aaps.plugins.aps.events.EventOpenAPSUpdateGui
 import app.aaps.plugins.aps.events.EventResetOpenAPSGui
 import app.aaps.plugins.aps.openAPSSMB.GlucoseStatusCalculatorSMB
-import dagger.android.HasAndroidInjector
 import org.json.JSONObject
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.math.floor
 import kotlin.math.min
 
 @Singleton
 class OpenAPSAMAPlugin @Inject constructor(
-    private val injector: HasAndroidInjector,
     aapsLogger: AAPSLogger,
     private val rxBus: RxBus,
     private val constraintsChecker: ConstraintsChecker,
@@ -80,8 +79,8 @@ class OpenAPSAMAPlugin @Inject constructor(
     private val glucoseStatusProvider: GlucoseStatusProvider,
     private val preferences: Preferences,
     private val determineBasalAMA: DetermineBasalAMA,
-    private val glucoseStatusCalculatorSMB: GlucoseStatusCalculatorSMB
-
+    private val glucoseStatusCalculatorSMB: GlucoseStatusCalculatorSMB,
+    private val apsResultProvider: Provider<APSResult>
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.APS)
@@ -251,7 +250,7 @@ class OpenAPSAMAPlugin @Inject constructor(
             meal_data = mealData,
             currentTime = now
         ).also {
-            val determineBasalResult = DetermineBasalResult(injector, it)
+            val determineBasalResult = apsResultProvider.get().with(it)
             // Preserve input data
             determineBasalResult.inputConstraints = inputConstraints
             determineBasalResult.autosensResult = autosensResult
@@ -260,7 +259,7 @@ class OpenAPSAMAPlugin @Inject constructor(
             determineBasalResult.currentTemp = currentTemp
             determineBasalResult.oapsProfile = oapsProfile
             determineBasalResult.mealData = mealData
-            lastAPSResult = determineBasalResult
+            lastAPSResult = determineBasalResult as DetermineBasalResult
             lastAPSRun = now
             aapsLogger.debug(LTag.APS, "Result: $it")
             rxBus.send(EventAPSCalculationFinished())

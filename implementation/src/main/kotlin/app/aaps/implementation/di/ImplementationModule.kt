@@ -1,6 +1,7 @@
 package app.aaps.implementation.di
 
 import app.aaps.core.interfaces.alerts.LocalAlertUtils
+import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.AutosensData
 import app.aaps.core.interfaces.db.ProcessedTbrEbData
 import app.aaps.core.interfaces.iob.GlucoseStatusProvider
@@ -37,6 +38,7 @@ import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.interfaces.utils.TrendCalculator
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.objects.aps.DetermineBasalResult
 import app.aaps.implementation.alerts.LocalAlertUtilsImpl
 import app.aaps.implementation.androidNotification.NotificationHolderImpl
 import app.aaps.implementation.db.ProcessedTbrEbDataImpl
@@ -92,9 +94,7 @@ class ImplementationModule {
     @Module
     interface Bindings {
 
-        @ContributesAndroidInjector fun profileStoreInjector(): ProfileStoreObject
         @ContributesAndroidInjector fun contributesNetworkChangeReceiver(): NetworkChangeReceiver
-        @ContributesAndroidInjector fun autosensDataObjectInjector(): AutosensDataObject
 
         @Binds fun bindPreferences(preferencesImpl: PreferencesImpl): Preferences
         @Binds fun bindFabricPrivacy(fabricPrivacyImpl: FabricPrivacyImpl): FabricPrivacy
@@ -134,5 +134,6 @@ class ImplementationModule {
         @Binds fun bindsDecimalFormatter(decimalFormatterImpl: DecimalFormatterImpl): DecimalFormatter
         @Binds fun bindsProfileStore(profileStoreObject: ProfileStoreObject): ProfileStore
         @Binds fun bindsAutosensData(autosensDataObject: AutosensDataObject): AutosensData
+        @Binds fun bindsAPSResult(determineBasalResult: DetermineBasalResult): APSResult
     }
 }
