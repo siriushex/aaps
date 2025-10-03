@@ -6,6 +6,7 @@ import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
+import app.aaps.plugins.aps.openAPS.DeltaCalculator
 import app.aaps.plugins.aps.openAPSAutoISF.extensions.asRounded
 import app.aaps.plugins.aps.openAPSAutoISF.extensions.log
 import dagger.Reusable
@@ -20,6 +21,7 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
     private val iobCobCalculator: IobCobCalculator,
     private val dateUtil: DateUtil,
     private val decimalFormatter: DecimalFormatter,
+    private val deltaCalculator: DeltaCalculator,
 ) {
 
     fun getGlucoseStatusData(allowOldData: Boolean): GlucoseStatusAutoIsf? {
@@ -36,7 +38,6 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
         }
         val now = data[0]
         val nowDate = now.timestamp
-        var change: Double
         if (sizeRecords == 1) {
             aapsLogger.debug(LTag.GLUCOSE, "sizeRecords==1")
             return GlucoseStatusAutoIsf(
@@ -58,56 +59,14 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
                 corrSqu = 0.0
             ).asRounded()
         }
-        val lastDeltas = ArrayList<Double>()
-        val shortDeltas = ArrayList<Double>()
-        val longDeltas = ArrayList<Double>()
 
-        // Use the latest sgv value in the now calculations
-        for (i in 1 until sizeRecords) {
-            if (data[i].recalculated > 39) {
-                val then = data[i]
-                val thenDate = then.timestamp
-
-                val minutesAgo = ((nowDate - thenDate) / (1000.0 * 60)).roundToLong()
-                // multiply by 5 to get the same units as delta, i.e. mg/dL/5m
-                change = now.recalculated - then.recalculated
-                val avgDel = change / minutesAgo * 5
-                aapsLogger.debug(LTag.GLUCOSE, "$then minutesAgo=$minutesAgo avgDelta=$avgDel")
-
-                // use the average of all data points in the last 2.5m for all further "now" calculations
-                // if (0 < minutesAgo && minutesAgo < 2.5) {
-                //     // Keep and average all values within the last 2.5 minutes
-                //     nowValueList.add(then.recalculated)
-                //     now.value = average(nowValueList)
-                //     // short_deltas are calculated from everything ~5-15 minutes ago
-                // } else
-                if (2.5 < minutesAgo && minutesAgo < 17.5) {
-                    shortDeltas.add(avgDel)
-                    // last_deltas are calculated from everything ~5 minutes ago
-                    if (2.5 < minutesAgo && minutesAgo < 7.5) {
-                        lastDeltas.add(avgDel)
-                    }
-                    // long_deltas are calculated from everything ~20-40 minutes ago
-                } else if (17.5 < minutesAgo && minutesAgo < 42.5) {
-                    longDeltas.add(avgDel)
-                } else {
-                    // Do not process any more records after >= 42.5 minutes
-                    break
-                }
-            }
-        }
-        val shortAverageDelta = average(shortDeltas)
-        val delta = if (lastDeltas.isEmpty()) {
-            shortAverageDelta
-        } else {
-            average(lastDeltas)
-        }
+        val deltaResult = deltaCalculator.calculateDeltas(data)
 
         // calculate 2 variables for 5% range; still using 5 minute data
         val bw = 0.05
         var sumBG: Double = now.recalculated
-        var oldavg: Double = sumBG
-        var minutesdur = 0L
+        var oldAvg: Double = sumBG
+        var minutesDur = 0L
         var n = 1
         for (i in 1 until sizeRecords) {
             if (data[i].value > 39 && !data[i].filledGap) {
@@ -116,13 +75,13 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
                 val thenDate: Long = then.timestamp
                 //  stop the series if there was a CGM gap greater than 13 minutes, i.e. 2 regular readings
                 //  needs shorter gap for Libre?
-                if (((nowDate - thenDate) / (1000.0 * 60)).roundToInt() - minutesdur > 13) {
+                if (((nowDate - thenDate) / (1000.0 * 60)).roundToInt() - minutesDur > 13) {
                     break
                 }
-                if (then.recalculated > oldavg * (1 - bw) && then.recalculated < oldavg * (1 + bw)) {
+                if (then.recalculated > oldAvg * (1 - bw) && then.recalculated < oldAvg * (1 + bw)) {
                     sumBG += then.recalculated
-                    oldavg = sumBG / n  // was: (i + 1)
-                    minutesdur = ((nowDate - thenDate) / (1000.0 * 60)).roundToInt().toLong()
+                    oldAvg = sumBG / n  // was: (i + 1)
+                    minutesDur = ((nowDate - thenDate) / (1000.0 * 60)).roundToLong()
                 } else {
                     break
                 }
@@ -134,6 +93,7 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
         //
         //  y = a2*x^2 + a1*x + a0      or
         //  y = a*x^2  + b*x  + c       respectively
+        @Suppress("SpellCheckingInspection")
         var duraP = 0.0
         var deltaPl = 0.0
         var deltaPn = 0.0
@@ -159,7 +119,7 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
             val scaleBg = 50.0 // TIR range is now 1.4 - 3.6
 
             // if (data[i].recalculated > 38) {  } // not checked in past 1.5 years
-            n = 0
+            var n = 0
             for (i in 0 until sizeRecords) {
                 val noGap = !data[i].filledGap
                 if (data[i].recalculated > 39 && noGap) {
@@ -244,11 +204,11 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
             glucose = now.recalculated,
             date = nowDate,
             noise = 0.0, //for now set to nothing as not all CGMs report noise
-            shortAvgDelta = shortAverageDelta,
-            delta = delta,
-            longAvgDelta = average(longDeltas),
-            duraISFminutes = minutesdur.toDouble(),
-            duraISFaverage = oldavg,
+            shortAvgDelta = deltaResult.shortAvgDelta,
+            delta = deltaResult.delta,
+            longAvgDelta = deltaResult.longAvgDelta,
+            duraISFminutes = minutesDur.toDouble(),
+            duraISFaverage = oldAvg,
             parabolaMinutes = duraP,
             deltaPl = deltaPl,
             deltaPn = deltaPn,
@@ -260,98 +220,7 @@ class GlucoseStatusCalculatorAutoIsf @Inject constructor(
         ).also { aapsLogger.debug(LTag.GLUCOSE, it.log(decimalFormatter)) }.asRounded()
     }
 
-    /* Real BG (previous) version
-           override fun getGlucoseStatusData(allowOldData: Boolean): GlucoseStatus? {
-            val data = iobCobCalculator.ads.getBgReadingsDataTableCopy()
-            val sizeRecords = data.size
-            if (sizeRecords == 0) {
-                aapsLogger.debug(LTag.GLUCOSE, "sizeRecords==0")
-                return null
-            }
-            if (data[0].timestamp < dateUtil.now() - 7 * 60 * 1000L && !allowOldData) {
-                aapsLogger.debug(LTag.GLUCOSE, "oldData")
-                return null
-            }
-            val now = data[0]
-            val nowDate = now.timestamp
-            var change: Double
-            if (sizeRecords == 1) {
-                aapsLogger.debug(LTag.GLUCOSE, "sizeRecords==1")
-                return GlucoseStatus(
-                    glucose = now.value,
-                    noise = 0.0,
-                    delta = 0.0,
-                    shortAvgDelta = 0.0,
-                    longAvgDelta = 0.0,
-                    date = nowDate
-                ).asRounded()
-            }
-            val nowValueList = ArrayList<Double>()
-            val lastDeltas = ArrayList<Double>()
-            val shortDeltas = ArrayList<Double>()
-            val longDeltas = ArrayList<Double>()
-
-            // Use the latest sgv value in the now calculations
-            nowValueList.add(now.value)
-            for (i in 1 until sizeRecords) {
-                if (data[i].value > 38) {
-                    val then = data[i]
-                    val thenDate = then.timestamp
-
-                    val minutesAgo = ((nowDate - thenDate) / (1000.0 * 60)).roundToLong()
-                    // multiply by 5 to get the same units as delta, i.e. mg/dL/5m
-                    change = now.value - then.value
-                    val avgDel = change / minutesAgo * 5
-                    aapsLogger.debug(LTag.GLUCOSE, "$then minutesAgo=$minutesAgo avgDelta=$avgDel")
-
-                    // use the average of all data points in the last 2.5m for all further "now" calculations
-                    if (0 < minutesAgo && minutesAgo < 2.5) {
-                        // Keep and average all values within the last 2.5 minutes
-                        nowValueList.add(then.value)
-                        now.value = average(nowValueList)
-                        // short_deltas are calculated from everything ~5-15 minutes ago
-                    } else if (2.5 < minutesAgo && minutesAgo < 17.5) {
-                        //console.error(minutesAgo, avgDelta);
-                        shortDeltas.add(avgDel)
-                        // last_deltas are calculated from everything ~5 minutes ago
-                        if (2.5 < minutesAgo && minutesAgo < 7.5) {
-                            lastDeltas.add(avgDel)
-                        }
-                        // long_deltas are calculated from everything ~20-40 minutes ago
-                    } else if (17.5 < minutesAgo && minutesAgo < 42.5) {
-                        longDeltas.add(avgDel)
-                    } else {
-                        // Do not process any more records after >= 42.5 minutes
-                        break
-                    }
-                }
-            }
-            val shortAverageDelta = average(shortDeltas)
-            val delta = if (lastDeltas.isEmpty()) {
-                shortAverageDelta
-            } else {
-                average(lastDeltas)
-            }
-            return GlucoseStatus(
-                glucose = now.value,
-                date = nowDate,
-                noise = 0.0, //for now set to nothing as not all CGMs report noise
-                shortAvgDelta = shortAverageDelta,
-                delta = delta,
-                longAvgDelta = average(longDeltas),
-            ).also { aapsLogger.debug(LTag.GLUCOSE, it.log()) }.asRounded()
-        }
-
-    */
     companion object {
-
-        fun average(array: ArrayList<Double>): Double {
-            var sum = 0.0
-            if (array.isEmpty()) return 0.0
-            for (value in array) {
-                sum += value
-            }
-            return sum / array.size
-        }
+        //this will be useful in the next step when I replace magic numbers with vals
     }
 }
