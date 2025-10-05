@@ -50,7 +50,7 @@ import app.aaps.pump.danars.comm.DanaRSPacketEtcKeepConnection
 import app.aaps.pump.danars.encryption.EncryptionType
 import app.aaps.pump.danars.events.EventDanaRSPairingSuccess
 import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.danars.encryption.BleEncryption
+import app.aaps.pump.danars.encryption.BleEncryption
 import java.util.UUID
 import java.util.concurrent.ScheduledFuture
 import javax.inject.Inject
