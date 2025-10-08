@@ -5,6 +5,7 @@ import app.aaps.pump.danars.DanaRSTestBase
 import dagger.android.AndroidInjector
 import dagger.android.HasAndroidInjector
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
@@ -34,9 +35,18 @@ class DanaRsMessageHashTableTest : DanaRSTestBase() {
     }
 
     @Test
-    fun runTest() {
+    fun findMessage() {
         val danaRSMessageHashTable = DanaRSMessageHashTable(packetList)
         val command = DanaRSPacketNotifyMissedBolusAlarm(packetInjector).command
         Assertions.assertTrue(danaRSMessageHashTable.findMessage(command) is DanaRSPacketNotifyMissedBolusAlarm)
+    }
+
+    @Test
+    fun throwErrorForUnknownMessage() {
+        val danaRSMessageHashTable = DanaRSMessageHashTable(packetList)
+        val command = DanaRSPacket(packetInjector).command
+        assertThrows(Exception::class.java) {
+            danaRSMessageHashTable.findMessage(command)
+        }
     }
 }
