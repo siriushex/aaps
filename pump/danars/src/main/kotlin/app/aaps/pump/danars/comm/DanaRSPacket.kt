@@ -83,7 +83,7 @@ open class DanaRSPacket(protected var injector: HasAndroidInjector) {
                 intFromBuff(buff, offset + 4, 1),
                 intFromBuff(buff, offset + 5, 1)
             ).millis
-        } catch (e: IllegalInstantException) {
+        } catch (_: IllegalInstantException) {
             // expect
             // org.joda.time.IllegalInstantException: Illegal instant due to time zone offset transition (daylight savings time 'gap')
             // add 1 hour
@@ -168,7 +168,6 @@ open class DanaRSPacket(protected var injector: HasAndroidInjector) {
     }
 
     init {
-        @Suppress("LeakingThis")
         injector.androidInjector().inject(this)
     }
 }
