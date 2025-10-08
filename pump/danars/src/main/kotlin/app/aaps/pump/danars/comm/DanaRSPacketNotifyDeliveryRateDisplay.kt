@@ -5,18 +5,17 @@ import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
 import app.aaps.pump.dana.DanaPump
-import dagger.android.HasAndroidInjector
 import app.aaps.pump.danars.encryption.BleEncryption
+import dagger.android.HasAndroidInjector
 import javax.inject.Inject
 import kotlin.math.min
 
-class DanaRSPacketNotifyDeliveryRateDisplay(
-    injector: HasAndroidInjector
+class DanaRSPacketNotifyDeliveryRateDisplay @Inject constructor(
+    injector: HasAndroidInjector,
+    private val rh: ResourceHelper,
+    private val rxBus: RxBus,
+    private val danaPump: DanaPump
 ) : DanaRSPacket(injector) {
-
-    @Inject lateinit var rxBus: RxBus
-    @Inject lateinit var rh: ResourceHelper
-    @Inject lateinit var danaPump: DanaPump
 
     init {
         type = BleEncryption.DANAR_PACKET__TYPE_NOTIFY

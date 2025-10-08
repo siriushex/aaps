@@ -33,9 +33,6 @@ class DanaRsPacketNotifyDeliveryRateDisplayTest : DanaRSTestBase() {
         AndroidInjector {
             if (it is DanaRSPacketNotifyDeliveryRateDisplay) {
                 it.aapsLogger = aapsLogger
-                it.rxBus = rxBus
-                it.rh = rh
-                it.danaPump = danaPump
             }
         }
     }
@@ -43,7 +40,7 @@ class DanaRsPacketNotifyDeliveryRateDisplayTest : DanaRSTestBase() {
     @Test fun runTest() {
         `when`(rh.gs(ArgumentMatchers.anyInt(), anyObject())).thenReturn("SomeString")
         // val packet = DanaRS_Packet_Notify_Delivery_Rate_Display(1.0, Treatment(treatmentInjector))
-        val packet = DanaRSPacketNotifyDeliveryRateDisplay(packetInjector)
+        val packet = DanaRSPacketNotifyDeliveryRateDisplay(packetInjector, rh, rxBus, danaPump)
         // test params
         Assertions.assertEquals(0, packet.getRequestParams().size)
         // test message decoding

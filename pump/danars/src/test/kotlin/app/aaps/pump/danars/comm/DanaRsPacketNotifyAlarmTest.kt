@@ -16,17 +16,13 @@ class DanaRsPacketNotifyAlarmTest : DanaRSTestBase() {
         AndroidInjector {
             if (it is DanaRSPacketNotifyAlarm) {
                 it.aapsLogger = aapsLogger
-                it.rxBus = rxBus
-                it.rh = rh
-                it.pumpSync = pumpSync
-                it.danaPump = danaPump
                 it.uiInteraction = uiInteraction
             }
         }
     }
 
     @Test fun runTest() {
-        val packet = DanaRSPacketNotifyAlarm(packetInjector)
+        val packet = DanaRSPacketNotifyAlarm(packetInjector, rh, pumpSync, danaPump)
         // test params
         Assertions.assertEquals(0, packet.getRequestParams().size)
         // test message decoding

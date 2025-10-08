@@ -4,20 +4,17 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.notifications.Notification
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.pump.dana.DanaPump
-import dagger.android.HasAndroidInjector
 import app.aaps.pump.danars.encryption.BleEncryption
+import dagger.android.HasAndroidInjector
 import javax.inject.Inject
 
-class DanaRSPacketNotifyAlarm(
-    injector: HasAndroidInjector
+class DanaRSPacketNotifyAlarm @Inject constructor(
+    injector: HasAndroidInjector,
+    private val rh: ResourceHelper,
+    private val pumpSync: PumpSync,
+    private val danaPump: DanaPump
 ) : DanaRSPacket(injector) {
-
-    @Inject lateinit var rxBus: RxBus
-    @Inject lateinit var rh: ResourceHelper
-    @Inject lateinit var pumpSync: PumpSync
-    @Inject lateinit var danaPump: DanaPump
 
     init {
         type = BleEncryption.DANAR_PACKET__TYPE_NOTIFY

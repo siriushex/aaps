@@ -1,10 +1,11 @@
 package app.aaps.pump.danars.comm
 
 import app.aaps.core.interfaces.logging.LTag
-import dagger.android.HasAndroidInjector
 import app.aaps.pump.danars.encryption.BleEncryption
+import dagger.android.HasAndroidInjector
+import javax.inject.Inject
 
-class DanaRSPacketNotifyMissedBolusAlarm(
+class DanaRSPacketNotifyMissedBolusAlarm @Inject constructor(
     injector: HasAndroidInjector
 ) : DanaRSPacket(injector) {
 
