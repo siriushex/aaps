@@ -8,15 +8,13 @@ import dagger.Provides
     includes = [
         DanaRSCommModule::class,
         DanaRSActivitiesModule::class,
-        DanaRSServicesModule::class,
-        DanaRSCommandsModule::class
+        DanaRSServicesModule::class
     ]
 )
 open class DanaRSModule {
 
     @Provides
     fun providesCommands(
-        @DanaRSCommandsModule.DanaRSCommand rsCommands: Set<@JvmSuppressWildcards DanaRSPacket>,
-    )
-        : Set<@JvmSuppressWildcards DanaRSPacket> = rsCommands
+        @DanaRSCommModule.DanaRSCommand rsCommands: Set<@JvmSuppressWildcards DanaRSPacket>,
+    ): Set<@JvmSuppressWildcards DanaRSPacket> = rsCommands
 }

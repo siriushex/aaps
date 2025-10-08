@@ -1,13 +1,13 @@
 package app.aaps.pump.danars.comm
 
+import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.pump.danars.encryption.BleEncryption
-import dagger.android.HasAndroidInjector
 import javax.inject.Inject
 
 class DanaRSPacketNotifyMissedBolusAlarm @Inject constructor(
-    injector: HasAndroidInjector
-) : DanaRSPacket(injector) {
+    private val aapsLogger: AAPSLogger,
+) : DanaRSPacket() {
 
     init {
         type = BleEncryption.DANAR_PACKET__TYPE_NOTIFY

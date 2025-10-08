@@ -25,7 +25,6 @@ import app.aaps.pump.danars.comm.DanaRSPacketGeneralGetPumpCheck
 import app.aaps.pump.danars.comm.DanaRSPacketGeneralGetShippingInformation
 import app.aaps.pump.danars.comm.DanaRSPacketGeneralInitialScreenInformation
 import app.aaps.pump.danars.comm.DanaRSPacketGeneralSetHistoryUploadMode
-import app.aaps.pump.danars.comm.DanaRSPacketHistory
 import app.aaps.pump.danars.comm.DanaRSPacketHistoryAlarm
 import app.aaps.pump.danars.comm.DanaRSPacketHistoryBasal
 import app.aaps.pump.danars.comm.DanaRSPacketHistoryBloodGlucose
@@ -45,67 +44,82 @@ import app.aaps.pump.danars.comm.DanaRSPacketOptionGetUserOption
 import app.aaps.pump.danars.comm.DanaRSPacketOptionSetPumpTime
 import app.aaps.pump.danars.comm.DanaRSPacketOptionSetPumpUTCAndTimeZone
 import app.aaps.pump.danars.comm.DanaRSPacketOptionSetUserOption
+import dagger.Binds
 import dagger.Module
-import dagger.android.ContributesAndroidInjector
+import dagger.multibindings.IntoSet
+import javax.inject.Qualifier
 
 @Module
 @Suppress("unused")
-abstract class DanaRSCommModule {
+interface DanaRSCommModule {
 
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacket(): DanaRSPacket
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBasalSetCancelTemporaryBasal(): DanaRSPacketBasalSetCancelTemporaryBasal
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBasalGetBasalRate(): DanaRSPacketBasalGetBasalRate
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBasalGetProfileNumber(): DanaRSPacketBasalGetProfileNumber
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBasalSetProfileBasalRate(): DanaRSPacketBasalSetProfileBasalRate
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBasalSetProfileNumber(): DanaRSPacketBasalSetProfileNumber
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketBasalSetSuspendOff(): DanaRSPacketBasalSetSuspendOff
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketBasalSetSuspendOn(): DanaRSPacketBasalSetSuspendOn
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBasalSetTemporaryBasal(): DanaRSPacketBasalSetTemporaryBasal
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusGetBolusOption(): DanaRSPacketBolusGetBolusOption
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusGetCalculationInformation(): DanaRSPacketBolusGetCalculationInformation
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusGetCIRCFArray(): DanaRSPacketBolusGetCIRCFArray
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusGetStepBolusInformation(): DanaRSPacketBolusGetStepBolusInformation
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusSetBolusOption(): DanaRSPacketBolusSetBolusOption
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusGet24CIRCFArray(): DanaRSPacketBolusGet24CIRCFArray
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusSet24CIRCFArray(): DanaRSPacketBolusSet24CIRCFArray
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusSetExtendedBolus(): DanaRSPacketBolusSetExtendedBolus
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusSetExtendedBolusCancel(): DanaRSPacketBolusSetExtendedBolusCancel
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusSetStepBolusStart(): DanaRSPacketBolusSetStepBolusStart
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketBolusSetStepBolusStop(): DanaRSPacketBolusSetStepBolusStop
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketEtcKeepConnection(): DanaRSPacketEtcKeepConnection
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketEtcSetHistorySave(): DanaRSPacketEtcSetHistorySave
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketGeneralInitialScreenInformation(): DanaRSPacketGeneralInitialScreenInformation
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketNotifyDeliveryRateDisplay(): DanaRSPacketNotifyDeliveryRateDisplay
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketNotifyAlarm(): DanaRSPacketNotifyAlarm
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketNotifyDeliveryComplete(): DanaRSPacketNotifyDeliveryComplete
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketNotifyMissedBolusAlarm(): DanaRSPacketNotifyMissedBolusAlarm
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketOptionGetPumpTime(): DanaRSPacketOptionGetPumpTime
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketOptionGetUserOption(): DanaRSPacketOptionGetUserOption
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketOptionSetPumpTime(): DanaRSPacketOptionSetPumpTime
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketOptionSetUserOption(): DanaRSPacketOptionSetUserOption
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistory(): DanaRSPacketHistory
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryAlarm(): DanaRSPacketHistoryAlarm
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryAllHistory(): DanaRSPacketHistoryAllHistory
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryBasal(): DanaRSPacketHistoryBasal
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryBloodGlucose(): DanaRSPacketHistoryBloodGlucose
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryBolus(): DanaRSPacketHistoryBolus
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketReviewBolusAvg(): DanaRSPacketReviewBolusAvg
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryCarbohydrate(): DanaRSPacketHistoryCarbohydrate
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryDaily(): DanaRSPacketHistoryDaily
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketGeneralGetPumpCheck(): DanaRSPacketGeneralGetPumpCheck
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketGeneralGetShippingInformation(): DanaRSPacketGeneralGetShippingInformation
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketGeneralGetUserTimeChangeFlag(): DanaRSPacketGeneralGetUserTimeChangeFlag
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryPrime(): DanaRSPacketHistoryPrime
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryRefill(): DanaRSPacketHistoryRefill
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketGeneralSetHistoryUploadMode(): DanaRSPacketGeneralSetHistoryUploadMode
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketGeneralSetUserTimeChangeFlagClear(): DanaRSPacketGeneralSetUserTimeChangeFlagClear
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketHistorySuspend(): DanaRSPacketHistorySuspend
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketHistoryTemporary(): DanaRSPacketHistoryTemporary
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketAPSBasalSetTemporaryBasal(): DanaRSPacketAPSBasalSetTemporaryBasal
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketAPSHistoryEvents(): DanaRSPacketAPSHistoryEvents
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketAPSSetEventHistory(): DanaRSPacketAPSSetEventHistory
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketGeneralGetShippingVersion(): DanaRSPacketGeneralGetShippingVersion
-    //@ContributesAndroidInjector abstract fun contributesDanaRSPacketReviewGetPumpDecRatio(): DanaRSPacketReviewGetPumpDecRatio
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketOptionGetPumpUTCAndTimeZone(): DanaRSPacketOptionGetPumpUTCAndTimeZone
-    @ContributesAndroidInjector abstract fun contributesDanaRSPacketOptionSetPumpUTCAndTimeZone(): DanaRSPacketOptionSetPumpUTCAndTimeZone
+    /*
+     * Only packets which are not respond to sent packet must be listed
+     */
+    @Binds
+    @DanaRSCommand
+    @IntoSet
+    fun bindDanaRSPacketNotifyAlarm(packet: DanaRSPacketNotifyAlarm): DanaRSPacket
+
+    @Binds
+    @DanaRSCommand
+    @IntoSet
+    fun bindDanaRSPacketNotifyDeliveryComplete(packet: DanaRSPacketNotifyDeliveryComplete): DanaRSPacket
+
+    @Binds
+    @DanaRSCommand
+    @IntoSet
+    fun bindDanaRSPacketNotifyDeliveryRateDisplay(packet: DanaRSPacketNotifyDeliveryRateDisplay): DanaRSPacket
+
+    @Binds
+    @DanaRSCommand
+    @IntoSet
+    fun bindDanaRSPacketNotifyMissedBolusAlarm(packet: DanaRSPacketNotifyMissedBolusAlarm): DanaRSPacket
+
+    @Qualifier
+    annotation class DanaRSCommand
+
+    /*
+     * The rest only bind
+     */
+    @Binds fun bindsDanaRSPacket(packet: DanaRSPacket): DanaRSPacket
+    @Binds fun bindsDanaRSPacketAPSBasalSetTemporaryBasal(packet: DanaRSPacketAPSBasalSetTemporaryBasal): DanaRSPacket
+    @Binds fun bindsDanaRSPacketAPSHistoryEvents(packet: DanaRSPacketAPSHistoryEvents): DanaRSPacket
+    @Binds fun bindsDanaRSPacketAPSSetEventHistory(packet: DanaRSPacketAPSSetEventHistory): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBasalGetBasalRate(packet: DanaRSPacketBasalGetBasalRate): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBasalGetProfileNumber(packet: DanaRSPacketBasalGetProfileNumber): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBasalSetCancelTemporaryBasal(packet: DanaRSPacketBasalSetCancelTemporaryBasal): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBasalSetProfileBasalRate(packet: DanaRSPacketBasalSetProfileBasalRate): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBasalSetProfileNumber(packet: DanaRSPacketBasalSetProfileNumber): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBasalSetTemporaryBasal(packet: DanaRSPacketBasalSetTemporaryBasal): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusGet24CIRCFArray(packet: DanaRSPacketBolusGet24CIRCFArray): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusGetBolusOption(packet: DanaRSPacketBolusGetBolusOption): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusGetCalculationInformation(packet: DanaRSPacketBolusGetCalculationInformation): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusGetCIRCFArray(packet: DanaRSPacketBolusGetCIRCFArray): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusGetStepBolusInformation(packet: DanaRSPacketBolusGetStepBolusInformation): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusSet24CIRCFArray(packet: DanaRSPacketBolusSet24CIRCFArray): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusSetExtendedBolus(packet: DanaRSPacketBolusSetExtendedBolus): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusSetExtendedBolusCancel(packet: DanaRSPacketBolusSetExtendedBolusCancel): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusSetStepBolusStart(packet: DanaRSPacketBolusSetStepBolusStart): DanaRSPacket
+    @Binds fun bindsDanaRSPacketBolusSetStepBolusStop(packet: DanaRSPacketBolusSetStepBolusStop): DanaRSPacket
+    @Binds fun bindsDanaRSPacketEtcKeepConnection(packet: DanaRSPacketEtcKeepConnection): DanaRSPacket
+    @Binds fun bindsDanaRSPacketGeneralGetPumpCheck(packet: DanaRSPacketGeneralGetPumpCheck): DanaRSPacket
+    @Binds fun bindsDanaRSPacketGeneralGetShippingInformation(packet: DanaRSPacketGeneralGetShippingInformation): DanaRSPacket
+    @Binds fun bindsDanaRSPacketGeneralInitialScreenInformation(packet: DanaRSPacketGeneralInitialScreenInformation): DanaRSPacket
+    @Binds fun bindsDanaRSPacketGeneralSetHistoryUploadMode(packet: DanaRSPacketGeneralSetHistoryUploadMode): DanaRSPacket
+    @Binds fun bindsDanaRSPacketOptionGetPumpTime(packet: DanaRSPacketOptionGetPumpTime): DanaRSPacket
+    @Binds fun bindsDanaRSPacketOptionGetUserOption(packet: DanaRSPacketOptionGetUserOption): DanaRSPacket
+    @Binds fun bindsDanaRSPacketOptionSetPumpTime(packet: DanaRSPacketOptionSetPumpTime): DanaRSPacket
+    @Binds fun bindsDanaRSPacketOptionSetUserOption(packet: DanaRSPacketOptionSetUserOption): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistoryAlarm(packet: DanaRSPacketHistoryAlarm): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistoryBasal(packet: DanaRSPacketHistoryBasal): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistoryBloodGlucose(packet: DanaRSPacketHistoryBloodGlucose): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistoryBolus(packet: DanaRSPacketHistoryBolus): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistoryCarbohydrate(packet: DanaRSPacketHistoryCarbohydrate): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistoryDaily(packet: DanaRSPacketHistoryDaily): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistoryPrime(packet: DanaRSPacketHistoryPrime): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistoryRefill(packet: DanaRSPacketHistoryRefill): DanaRSPacket
+    @Binds fun bindsDanaRSPacketHistorySuspend(packet: DanaRSPacketHistorySuspend): DanaRSPacket
+    @Binds fun bindsDanaRSPacketOptionGetPumpUTCAndTimeZone(packet: DanaRSPacketOptionGetPumpUTCAndTimeZone): DanaRSPacket
+    @Binds fun bindsDanaRSPacketOptionSetPumpUTCAndTimeZone(packet: DanaRSPacketOptionSetPumpUTCAndTimeZone): DanaRSPacket
 }
