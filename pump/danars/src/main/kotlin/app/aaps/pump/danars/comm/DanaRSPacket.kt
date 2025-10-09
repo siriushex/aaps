@@ -1,20 +1,11 @@
 package app.aaps.pump.danars.comm
 
-import app.aaps.core.interfaces.logging.AAPSLogger
-import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.interfaces.utils.DateUtil
-import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.danars.encryption.BleEncryption
+import app.aaps.pump.danars.encryption.BleEncryption
 import org.joda.time.DateTime
 import org.joda.time.IllegalInstantException
 import java.nio.charset.StandardCharsets
-import javax.inject.Inject
 
-open class DanaRSPacket(protected var injector: HasAndroidInjector) {
-
-    @Inject lateinit var aapsLogger: AAPSLogger
-    @Inject lateinit var dateUtil: DateUtil
-    @Inject lateinit var uiInteraction: UiInteraction
+open class DanaRSPacket() {
 
     var isReceived = false
         private set
@@ -165,9 +156,5 @@ open class DanaRSPacket(protected var injector: HasAndroidInjector) {
             }
             return data
         }
-    }
-
-    init {
-        injector.androidInjector().inject(this)
     }
 }
