@@ -1,5 +1,3 @@
-import kotlin.math.min
-
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
@@ -12,7 +10,7 @@ plugins {
 android {
     namespace = "app.aaps.shared.tests"
     defaultConfig {
-        minSdk = min(Versions.minSdk, Versions.wearMinSdk)
+        minSdk = Versions.minSdk
     }
 }
 
