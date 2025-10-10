@@ -1,7 +1,7 @@
 # libs.versions.toml
 [versions]
 gradlePlugin = "8.13.0"
-googleServices = "4.4.3"
+googleServices = "4.4.4"
 kotlin = "2.2.20"
 wearable = "2.9.0"
 room = "2.8.2"
