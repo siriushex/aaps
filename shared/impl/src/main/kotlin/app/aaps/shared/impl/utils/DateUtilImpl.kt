@@ -226,7 +226,7 @@ class DateUtilImpl @Inject constructor(private val context: Context) : DateUtil 
         if (time == null) return ""
         //val minutes = ((now() - time) / 1000 / 60).toInt()
         val seconds = (now() - time) / 1000
-        if (seconds > 99) {
+        if (seconds > 119) {
             return rh.gs(R.string.minago, (seconds / 60).toInt())
         } else {
             return rh.gs(R.string.secago, seconds.toInt())
