@@ -27,7 +27,7 @@ abstract class Objective(
         get() = preferences.get(ObjectivesLongComposedKey.Started, spName)
         set(value) {
             field = value
-            preferences.put(ObjectivesLongComposedKey.Started, spName, value = startedOn)
+            preferences.put(ObjectivesLongComposedKey.Started, spName, value = value)
         }
     var accomplishedOn: Long = 0
         get() {
