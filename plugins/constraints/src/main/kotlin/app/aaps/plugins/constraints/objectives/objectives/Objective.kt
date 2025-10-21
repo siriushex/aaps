@@ -31,10 +31,11 @@ abstract class Objective(
         }
     var accomplishedOn: Long = 0
         get() {
-            val value = preferences.get(ObjectivesLongComposedKey.Accomplished, spName)
+            var value = preferences.get(ObjectivesLongComposedKey.Accomplished, spName)
             if (value - dateUtil.now() > T.hours(3).msecs() || startedOn - dateUtil.now() > T.hours(3).msecs()) { // more than 3 hours in the future
                 startedOn = 0
                 accomplishedOn = 0
+                value = 0
             }
             return value
         }
