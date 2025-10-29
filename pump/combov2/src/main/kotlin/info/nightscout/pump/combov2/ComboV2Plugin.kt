@@ -99,7 +99,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.joda.time.DateTime
-import org.json.JSONException
 import org.json.JSONObject
 import java.util.Locale
 import javax.inject.Inject
@@ -930,8 +929,11 @@ class ComboV2Plugin @Inject constructor(
         return (activeBasalProfile == profile.toComboCtlBasalProfile())
     }
 
-    override fun lastDataTime(): Long = lastConnectionTimestamp
+    override val lastDataTime: Long get() = lastConnectionTimestamp
 
+    @OptIn(ExperimentalTime::class)
+    override val lastBolusTime: Long? get() = lastBolusUIFlow.value?.timestamp?.toEpochMilliseconds()
+    override val lastBolusAmount: Double? get() = lastBolusUIFlow.value?.bolusAmount?.cctlBolusToIU()
     override val baseBasalRate: Double
         get() {
             val currentHour = DateTime().hourOfDay().get()
@@ -1311,103 +1313,16 @@ class ComboV2Plugin @Inject constructor(
     override fun cancelExtendedBolus(): PumpEnactResult =
         createFailurePumpEnactResult(R.string.combov2_extended_bolus_not_supported)
 
-    @OptIn(ExperimentalTime::class)
-    override fun getJSONStatus(profile: Profile, profileName: String, version: String): JSONObject {
-        if (!isInitialized())
-            return JSONObject()
+    override fun updateExtendedJsonStatus(extendedStatus: JSONObject) {
+        when (val alert = lastComboAlert) {
+            is AlertScreenContent.Warning ->
+                extendedStatus.put("WarningCode", alert.code)
 
-        val now = dateUtil.now()
-        if ((lastConnectionTimestamp != 0L) && ((now - lastConnectionTimestamp) > 60 * 60 * 1000)) {
-            return JSONObject()
+            is AlertScreenContent.Error   ->
+                extendedStatus.put("ErrorCode", alert.code)
+
+            else                          -> Unit
         }
-        val pumpJson = JSONObject()
-
-        try {
-            pumpJson.apply {
-                put("clock", dateUtil.toISOString(now))
-                // NOTE: This is called "status" because this is what the
-                // Nightscout pump plugin API schema expects. It is not to
-                // be confused with the "status" in the ComboCtl Pump class.
-                // Also not to be confused with the "status" field inside
-                // this "status" JSON object.
-                // See the Nightscout /devicestatus/ API docs for more.
-                put("status", JSONObject().apply {
-                    val driverState = driverStateFlow.value
-                    val suspended = isSuspended()
-                    val bolusing = (driverState is DriverState.ExecutingCommand) &&
-                        (driverState.description is ComboCtlPump.DeliveringBolusCommandDesc)
-                    // The value of the "status" string isn't well defined.
-                    // Commonly used ones seem to be "normal", "suspended",
-                    // and "bolusing". The latter two are already enforced
-                    // by the corresponding boolean flags, but we set them
-                    // in this string anyway. It may be a legacy feature
-                    // from older Nightscout iterations. Furthermore, we do
-                    // set this to "error" in case of pump errors to alert
-                    // users of Nightscout to possible problems with the pump.
-                    val statusLabel = if (bolusing)
-                        "bolusing"
-                    else if (suspended)
-                        "suspended"
-                    else if (driverState == DriverState.Error)
-                        "error"
-                    else
-                        "normal"
-                    put("status", statusLabel)
-                    put("suspended", suspended)
-                    put("bolusing", bolusing)
-                    put("timestamp", dateUtil.toISOString(lastConnectionTimestamp))
-                })
-                pumpStatus?.let {
-                    // Battery level is set inside this let-block as well. Even though
-                    // batteryLevel is not a direct pumpStatus member, it is a property
-                    // that *does* access pumpStatus (with null check).
-                    put("battery", JSONObject().apply {
-                        put("percent", batteryLevel)
-                    })
-                    put("reservoir", it.availableUnitsInReservoir)
-                } ?: aapsLogger.info(
-                    LTag.PUMP,
-                    "Cannot include reservoir level in JSON status " +
-                        "since no such level is currently known"
-                )
-                put("extended", JSONObject().apply {
-                    put("Version", version)
-                    lastBolusUIFlow.value?.let {
-                        put("LastBolus", dateUtil.dateAndTimeString(it.timestamp.toEpochMilliseconds()))
-                        put("LastBolusAmount", it.bolusAmount.cctlBolusToIU())
-                    }
-                    val tb = pumpSync.expectedPumpState().temporaryBasal
-                    tb?.let {
-                        put("TempBasalAbsoluteRate", tb.convertedToAbsolute(now, profile))
-                        put("TempBasalStart", dateUtil.dateAndTimeString(tb.timestamp))
-                        put("TempBasalRemaining", tb.plannedRemainingMinutes)
-                    }
-                    if (activeBasalProfile != null)
-                        put("BaseBasalRate", baseBasalRate)
-                    else
-                        aapsLogger.info(
-                            LTag.PUMP,
-                            "Cannot include base basal rate in JSON status " +
-                                "since no basal profile is currently active"
-                        )
-                    put("ActiveProfile", profileName)
-                    when (val alert = lastComboAlert) {
-                        is AlertScreenContent.Warning ->
-                            put("WarningCode", alert.code)
-
-                        is AlertScreenContent.Error   ->
-                            put("ErrorCode", alert.code)
-
-                        else                          -> Unit
-                    }
-                })
-            }
-        } catch (e: JSONException) {
-            aapsLogger.error(LTag.PUMP, "Unhandled JSON exception", e)
-        }
-        aapsLogger.info(LTag.PUMP, "Produced pump JSON status: $pumpJson")
-
-        return pumpJson
     }
 
     override fun manufacturer() = ManufacturerType.Roche

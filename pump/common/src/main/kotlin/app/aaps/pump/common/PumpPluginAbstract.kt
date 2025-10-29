@@ -38,7 +38,6 @@ import app.aaps.pump.common.sync.PumpSyncStorage
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Provider
 
@@ -173,10 +172,7 @@ abstract class PumpPluginAbstract protected constructor(
         return true
     }
 
-    override fun lastDataTime(): Long {
-        aapsLogger.debug(LTag.PUMP, "lastDataTime [PumpPluginAbstract].")
-        return pumpStatusData.lastConnection
-    }
+    override val lastDataTime: Long get() = pumpStatusData.lastConnection
 
     // base basal rate, not temp basal
     override val baseBasalRate: Double
@@ -235,47 +231,6 @@ abstract class PumpPluginAbstract protected constructor(
     override fun loadTDDs(): PumpEnactResult {
         aapsLogger.debug(LTag.PUMP, "loadTDDs [PumpPluginAbstract] - Not implemented.")
         return getOperationNotSupportedWithCustomText(R.string.pump_operation_not_supported_by_pump_driver)
-    }
-
-    override fun getJSONStatus(profile: Profile, profileName: String, version: String): JSONObject {
-        if (pumpStatusData.lastConnection + 60 * 60 * 1000L < System.currentTimeMillis()) {
-            return JSONObject()
-        }
-        val now = System.currentTimeMillis()
-        val pump = JSONObject()
-        val battery = JSONObject()
-        val status = JSONObject()
-        val extended = JSONObject()
-        try {
-            battery.put("percent", pumpStatusData.batteryRemaining)
-            status.put("status", pumpStatusData.pumpRunningState.status)
-            extended.put("Version", version)
-            try {
-                extended.put("ActiveProfile", profileName)
-            } catch (_: Exception) {
-            }
-            val tb = pumpSync.expectedPumpState().temporaryBasal
-            if (tb != null) {
-                extended.put("TempBasalAbsoluteRate", tb.convertedToAbsolute(now, profile))
-                extended.put("TempBasalStart", dateUtil.dateAndTimeString(tb.timestamp))
-                extended.put("TempBasalRemaining", tb.plannedRemainingMinutes)
-            }
-            val eb = pumpSync.expectedPumpState().extendedBolus
-            if (eb != null) {
-                extended.put("ExtendedBolusAbsoluteRate", eb.rate)
-                extended.put("ExtendedBolusStart", dateUtil.dateAndTimeString(eb.timestamp))
-                extended.put("ExtendedBolusRemaining", eb.plannedRemainingMinutes)
-            }
-            status.put("timestamp", dateUtil.toISOString(dateUtil.now()))
-            pump.put("battery", battery)
-            pump.put("status", status)
-            pump.put("extended", extended)
-            pump.put("reservoir", pumpStatusData.reservoirRemainingUnits)
-            pump.put("clock", dateUtil.toISOString(dateUtil.now()))
-        } catch (e: JSONException) {
-            aapsLogger.error("Unhandled exception", e)
-        }
-        return pump
     }
 
     // FIXME i18n, null checks: iob, TDD

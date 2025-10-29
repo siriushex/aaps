@@ -96,9 +96,19 @@ interface Pump {
     fun isThisProfileSet(profile: Profile): Boolean
 
     /**
-     * @return timestamp of last connection to the pump in milliseconds
+     * timestamp of last connection to the pump in milliseconds
      */
-    fun lastDataTime(): Long
+    val lastDataTime: Long
+
+    /**
+     * timestamp of last bolus delivered in milliseconds
+     */
+    val lastBolusTime: Long?
+
+    /**
+     * amount of last bolus delivered in units of insulin
+     */
+    val lastBolusAmount: Double?
 
     /**
      * Currently running base basal rate [U/h]
@@ -183,13 +193,12 @@ interface Pump {
     fun cancelExtendedBolus(): PumpEnactResult
 
     /**
-     * Status to be passed to NS
+     * Status to be passed to NS.
      *
-     * This info is displayed when user hover over pump pill in NS
-     *
-     * @return                      JSON with information
+     * This info is displayed when user hover over pump pill in NS.
+     * Except common information every driver can add own info here.
      */
-    fun getJSONStatus(profile: Profile, profileName: String, version: String): JSONObject
+    fun updateExtendedJsonStatus(extendedStatus: JSONObject) {}
 
     /**
      *  Manufacturer type. Usually defined by used plugin

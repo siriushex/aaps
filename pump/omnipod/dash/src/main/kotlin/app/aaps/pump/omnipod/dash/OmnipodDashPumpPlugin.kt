@@ -536,10 +536,9 @@ class OmnipodDashPumpPlugin @Inject constructor(
         return equal
     }
 
-    override fun lastDataTime(): Long {
-        return podStateManager.lastUpdatedSystem
-    }
-
+    override val lastBolusTime: Long? get() = podStateManager.lastBolus?.startTime
+    override val lastBolusAmount: Double? get() = podStateManager.lastBolus?.requestedUnits
+    override val lastDataTime: Long get() = podStateManager.lastUpdatedSystem
     override val baseBasalRate: Double
         get() {
             val date = System.currentTimeMillis()
@@ -985,66 +984,10 @@ class OmnipodDashPumpPlugin @Inject constructor(
             .comment("Omnipod Dash driver does not support extended boluses")
     }
 
-    override fun getJSONStatus(profile: Profile, profileName: String, version: String): JSONObject {
-        val now = System.currentTimeMillis()
-        if (podStateManager.lastUpdatedSystem + 60 * 60 * 1000L < now) {
-            return JSONObject()
-        }
-        val pumpJson = JSONObject()
-        val status = JSONObject()
-        val extended = JSONObject()
-        try {
-            val podStatus = when {
-                podStateManager.isPodRunning && podStateManager.isSuspended -> rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_pod_status_suspended).lowercase()
-                podStateManager.isPodRunning                                -> rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_pod_status_normal).lowercase()
-                else                                                        -> rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_pod_status_no_active_pod)
-                    .lowercase()
-            }
-            status.put("status", podStatus)
-            status.put("timestamp", dateUtil.toISOString(podStateManager.lastUpdatedSystem))
-
-            extended.put("Version", version)
-            try {
-                extended.put("ActiveProfile", profileName)
-            } catch (_: Exception) {
-            }
-            val tb = pumpSync.expectedPumpState().temporaryBasal
-            tb?.run {
-                extended.put("TempBasalAbsoluteRate", this.convertedToAbsolute(now, profile))
-                extended.put("TempBasalStart", dateUtil.dateAndTimeString(this.timestamp))
-                extended.put("TempBasalRemaining", this.plannedRemainingMinutes)
-            }
-            podStateManager.lastBolus?.run {
-                extended.put("LastBolus", dateUtil.dateAndTimeString(this.startTime))
-                extended.put("LastBolusAmount", this.deliveredUnits() ?: this.requestedUnits)
-            }
-            extended.put("BaseBasalRate", baseBasalRate)
-
-            pumpJson.put("status", status)
-            pumpJson.put("extended", extended)
-            if (podStateManager.pulsesRemaining == null) {
-                pumpJson.put("reservoir_display_override", "50+")
-            }
-            pumpJson.put("reservoir", reservoirLevel.toInt())
-            pumpJson.put("clock", dateUtil.toISOString(now))
-        } catch (e: Exception) {
-            aapsLogger.error(LTag.PUMP, "Unhandled exception: $e")
-        }
-        return pumpJson
-    }
-
     override val pumpDescription: PumpDescription = Companion.pumpDescription
-
-    override fun manufacturer(): ManufacturerType {
-        return ManufacturerType.Insulet
-    }
-
-    override fun model(): PumpType {
-        return pumpDescription.pumpType
-    }
-
-    override fun serialNumber(): String =
-        podStateManager.uniqueId?.toString() ?: Constants.PUMP_SERIAL_FOR_FAKE_TBR
+    override fun manufacturer(): ManufacturerType = ManufacturerType.Insulet
+    override fun model(): PumpType = pumpDescription.pumpType
+    override fun serialNumber(): String = podStateManager.uniqueId?.toString() ?: Constants.PUMP_SERIAL_FOR_FAKE_TBR
 
     override fun shortStatus(veryShort: Boolean): String {
         if (!podStateManager.isActivationCompleted) {
@@ -1557,8 +1500,8 @@ class OmnipodDashPumpPlugin @Inject constructor(
             return@defer observeNoActiveTempBasal()
                 .concatWith(
                     podStateManager.updateActiveCommand()
-                                .map { handleCommandConfirmation(it) }
-                                .ignoreElement())
+                        .map { handleCommandConfirmation(it) }
+                        .ignoreElement())
         }
 
         return@defer Completable.complete()

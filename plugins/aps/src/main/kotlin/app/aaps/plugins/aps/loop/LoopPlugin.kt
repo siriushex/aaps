@@ -68,6 +68,7 @@ import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.HardLimits
+import app.aaps.core.interfaces.utils.Translator
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
@@ -80,6 +81,7 @@ import app.aaps.core.objects.extensions.convertedToAbsolute
 import app.aaps.core.objects.extensions.convertedToPercent
 import app.aaps.core.objects.extensions.json
 import app.aaps.core.objects.extensions.plannedRemainingMinutes
+import app.aaps.core.objects.extensions.putIfThereIsValue
 import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.core.validators.preferences.AdaptiveIntPreference
 import app.aaps.plugins.aps.R
@@ -118,7 +120,9 @@ class LoopPlugin @Inject constructor(
     private val runningConfiguration: RunningConfiguration,
     private val uiInteraction: UiInteraction,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>,
-    private val processedDeviceStatusData: ProcessedDeviceStatusData
+    private val processedDeviceStatusData: ProcessedDeviceStatusData,
+    private val pumpSync: PumpSync,
+    private val translator: Translator
 ) : PluginBase(
     PluginDescription()
         .mainType(PluginType.LOOP)
@@ -240,14 +244,14 @@ class LoopPlugin @Inject constructor(
         // Change running mode
         when (newRM) {
             // Modes with zero temping
-            RM.Mode.SUPER_BOLUS, RM.Mode.DISCONNECTED_PUMP -> {
+            RM.Mode.SUPER_BOLUS, RM.Mode.DISCONNECTED_PUMP      -> {
                 goToZeroTemp(durationInMinutes = durationInMinutes, profile = profile, mode = newRM, action = action, source = source, listValues = listValues)
                 return true
             }
 
-            RM.Mode.SUSPENDED_BY_PUMP                      -> {} // handled in runningModePreCheck()
+            RM.Mode.SUSPENDED_BY_PUMP                           -> {} // handled in runningModePreCheck()
             RM.Mode.DISABLED_LOOP, RM.Mode.CLOSED_LOOP, RM.Mode.OPEN_LOOP,
-            RM.Mode.CLOSED_LOOP_LGS                        -> {
+            RM.Mode.CLOSED_LOOP_LGS                             -> {
                 val inserted = persistenceLayer.insertOrUpdateRunningMode(
                     runningMode = RM(
                         timestamp = now,
@@ -285,7 +289,7 @@ class LoopPlugin @Inject constructor(
                 return true
             }
 
-            RM.Mode.RESUME                                 -> {
+            RM.Mode.RESUME                                      -> {
                 // Cancel temporary mode if really temporary
                 val updated = persistenceLayer.cancelCurrentRunningMode(
                     timestamp = now,
@@ -974,9 +978,7 @@ class LoopPlugin @Inject constructor(
 
     fun buildAndStoreDeviceStatus(reason: String) {
         aapsLogger.debug(LTag.NSCLIENT, "Building DeviceStatus for $reason")
-        val version = config.VERSION_NAME + "-" + config.BUILD_VERSION
         val profile = profileFunction.getProfile() ?: return
-        val profileName = profileFunction.getProfileName()
 
         var apsResult: JSONObject? = null
         var iob: JSONObject? = null
@@ -1020,12 +1022,53 @@ class LoopPlugin @Inject constructor(
                 iob = iob?.toString(),
                 enacted = enacted?.toString(),
                 device = "openaps://" + Build.MANUFACTURER + " " + Build.MODEL,
-                pump = activePlugin.activePump.getJSONStatus(profile, profileName, version).toString(),
+                pump = generatePumpJsonStatus().toString(),
                 uploaderBattery = receiverStatusStore.batteryLevel,
                 isCharging = receiverStatusStore.isCharging,
                 configuration = runningConfiguration.configuration().toString()
             )
         )
+    }
+
+    /**
+     * Generate JSON status of pump sent to the NS
+     */
+    fun generatePumpJsonStatus(): JSONObject {
+        val pump = activePlugin.activePump
+        // do not send data older than 60 minutes
+        if (dateUtil.isOlderThan(date = pump.lastDataTime, minutes = 60)) return JSONObject()
+        // Do not send any info if there is no running profile
+        val profile = profileFunction.getProfile() ?: return JSONObject()
+        val expectedPumpState = pumpSync.expectedPumpState()
+        val now = System.currentTimeMillis()
+        val runningMode = persistenceLayer.getRunningModeActiveAt(now)
+
+        val pumpJson = JSONObject()
+            .put("reservoir", pump.reservoirLevel.toInt())
+            .put("clock", dateUtil.toISOString(now))
+        val battery = JSONObject().put("percent", pump.batteryLevel)
+        val status = JSONObject()
+            .put("status", translator.translate(runningMode.mode))
+            .put("timestamp", dateUtil.toISOString(pump.lastDataTime))
+        val extended = JSONObject()
+            .put("Version", config.VERSION_NAME + "-" + config.BUILD_VERSION)
+            .putIfThereIsValue("LastBolus", dateUtil.dateAndTimeStringNullable(pump.lastBolusTime))
+            .putIfThereIsValue("LastBolusAmount", pump.lastBolusAmount)
+            .putIfThereIsValue("TempBasalAbsoluteRate", expectedPumpState.temporaryBasal?.convertedToAbsolute(now, profile))
+            .putIfThereIsValue("TempBasalStart", dateUtil.dateAndTimeStringNullable(expectedPumpState.temporaryBasal?.timestamp))
+            .putIfThereIsValue("TempBasalRemaining", expectedPumpState.temporaryBasal?.plannedRemainingMinutes)
+            .putIfThereIsValue("ExtendedBolusAbsoluteRate", expectedPumpState.extendedBolus?.rate)
+            .putIfThereIsValue("ExtendedBolusStart", dateUtil.dateAndTimeStringNullable(expectedPumpState.extendedBolus?.timestamp))
+            .putIfThereIsValue("ExtendedBolusRemaining", expectedPumpState.extendedBolus?.plannedRemainingMinutes)
+            .putIfThereIsValue("BaseBasalRate", pump.baseBasalRate)
+            .put("ActiveProfile", profileFunction.getProfileName())
+
+        // grab more values from pump if provided
+        pump.updateExtendedJsonStatus(extended)
+        return pumpJson
+            .put("battery", battery)
+            .put("status", status)
+            .put("extended", extended)
     }
 
     override fun addPreferenceScreen(preferenceManager: PreferenceManager, parent: PreferenceScreen, context: Context, requiredKey: String?) {

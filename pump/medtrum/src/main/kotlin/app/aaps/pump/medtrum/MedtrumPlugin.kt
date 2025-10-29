@@ -72,7 +72,6 @@ import app.aaps.pump.medtrum.ui.MedtrumOverviewFragment
 import app.aaps.pump.medtrum.util.MedtrumSnUtil
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
-import org.json.JSONException
 import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Provider
@@ -80,7 +79,8 @@ import javax.inject.Singleton
 import kotlin.math.abs
 import kotlin.math.min
 
-@Singleton class MedtrumPlugin @Inject constructor(
+@Singleton
+class MedtrumPlugin @Inject constructor(
     aapsLogger: AAPSLogger,
     rh: ResourceHelper,
     preferences: Preferences,
@@ -316,15 +316,12 @@ import kotlin.math.min
         return result
     }
 
-    override fun lastDataTime(): Long = medtrumPump.lastConnection
-    override val baseBasalRate: Double
-        get() = medtrumPump.baseBasalRate
-
-    override val reservoirLevel: Double
-        get() = medtrumPump.reservoir
-
-    override val batteryLevel: Int
-        get() = 0 // We cannot determine battery level (yet)
+    override val lastDataTime: Long = medtrumPump.lastConnection
+    override val lastBolusTime: Long? get() = medtrumPump.lastBolusTime
+    override val lastBolusAmount: Double? get() = medtrumPump.lastBolusAmount
+    override val baseBasalRate: Double get() = medtrumPump.baseBasalRate
+    override val reservoirLevel: Double get() = medtrumPump.reservoir
+    override val batteryLevel: Int get() = 0 // We cannot determine battery level (yet)
 
     @Synchronized
     override fun deliverTreatment(detailedBolusInfo: DetailedBolusInfo): PumpEnactResult {
@@ -409,62 +406,10 @@ import kotlin.math.min
         return pumpEnactResultProvider.get()
     }
 
-    override fun getJSONStatus(profile: Profile, profileName: String, version: String): JSONObject {
-        val now = System.currentTimeMillis()
-        if (medtrumPump.lastConnection + 60 * 60 * 1000L < System.currentTimeMillis()) {
-            return JSONObject()
-        }
-        val pumpJson = JSONObject()
-        val status = JSONObject()
-        val extended = JSONObject()
-        try {
-            status.put(
-                "status", if (!isSuspended()) "normal"
-                else if (isInitialized() && isSuspended()) "suspended"
-                else "no active patch"
-            )
-            status.put("timestamp", dateUtil.toISOString(medtrumPump.lastConnection))
-            if (medtrumPump.lastBolusTime != 0L) {
-                extended.put("lastBolus", dateUtil.dateAndTimeString(medtrumPump.lastBolusTime))
-                extended.put("lastBolusAmount", medtrumPump.lastBolusAmount)
-            }
-            val tb = pumpSync.expectedPumpState().temporaryBasal
-            if (tb != null) {
-                extended.put("TempBasalAbsoluteRate", tb.convertedToAbsolute(now, profile))
-                extended.put("TempBasalStart", dateUtil.dateAndTimeString(tb.timestamp))
-                extended.put("TempBasalRemaining", tb.plannedRemainingMinutes)
-            }
-            extended.put("BaseBasalRate", baseBasalRate)
-            try {
-                extended.put("ActiveProfile", profileName)
-            } catch (_: Exception) {
-                // Ignore
-            }
-            pumpJson.put("status", status)
-            pumpJson.put("extended", extended)
-            pumpJson.put("reservoir", medtrumPump.reservoir.toInt())
-            pumpJson.put("clock", dateUtil.toISOString(now))
-        } catch (e: JSONException) {
-            aapsLogger.error(LTag.PUMP, "Unhandled exception: $e")
-        }
-        return pumpJson
-    }
-
-    override fun manufacturer(): ManufacturerType {
-        return ManufacturerType.Medtrum
-    }
-
-    override fun model(): PumpType {
-        return medtrumPump.pumpType()
-    }
-
-    override fun serialNumber(): String {
-        // Load from preferences here, because this value will be get before pump is initialized
-        return medtrumPump.pumpSNFromSP.toString(radix = 16)
-    }
-
-    override val pumpDescription: PumpDescription
-        get() = PumpDescription().fillFor(medtrumPump.pumpType())
+    override fun manufacturer(): ManufacturerType = ManufacturerType.Medtrum
+    override fun model(): PumpType = medtrumPump.pumpType()
+    override fun serialNumber(): String = medtrumPump.pumpSNFromSP.toString(radix = 16)
+    override val pumpDescription: PumpDescription get() = PumpDescription().fillFor(medtrumPump.pumpType())
 
     override fun shortStatus(veryShort: Boolean): String {
         var ret = ""

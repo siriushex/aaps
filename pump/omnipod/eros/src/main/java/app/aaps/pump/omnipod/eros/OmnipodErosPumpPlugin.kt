@@ -111,7 +111,6 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
-import org.json.JSONException
 import org.json.JSONObject
 import java.util.Optional
 import java.util.function.Supplier
@@ -517,7 +516,9 @@ class OmnipodErosPumpPlugin @Inject constructor(
             true
         } else podStateManager.basalSchedule == AapsOmnipodErosManager.mapProfileToBasalSchedule(profile)
 
-    override fun lastDataTime(): Long = if (podStateManager.isPodInitialized) podStateManager.lastSuccessfulCommunication.millis else 0
+    override val lastBolusTime: Long? get() = null
+    override val lastBolusAmount: Double? get() = null
+    override val lastDataTime: Long get() = if (podStateManager.isPodInitialized) podStateManager.lastSuccessfulCommunication.millis else 0
 
     override val baseBasalRate: Double
         get() =
@@ -596,67 +597,8 @@ class OmnipodErosPumpPlugin @Inject constructor(
         return executeCommand<PumpEnactResult?>(OmnipodCommandType.CANCEL_TEMPORARY_BASAL) { aapsOmnipodErosManager.cancelTemporaryBasal() }!!
     }
 
-    // TODO improve (i8n and more)
-    override fun getJSONStatus(profile: Profile, profileName: String, version: String): JSONObject {
-        if (!podStateManager.isPodActivationCompleted || lastConnectionTimeMillis + 60 * 60 * 1000L < System.currentTimeMillis()) {
-            return JSONObject()
-        }
-
-        val now = System.currentTimeMillis()
-        val pump = JSONObject()
-        val battery = JSONObject()
-        val status = JSONObject()
-        val extended = JSONObject()
-        try {
-            status.put("status", if (podStateManager.isPodRunning) (if (podStateManager.isSuspended) "suspended" else "normal") else "no active Pod")
-            status.put("timestamp", dateUtil.toISOString(dateUtil.now()))
-
-            battery.put("percent", batteryLevel)
-
-            extended.put("Version", version)
-            extended.put("ActiveProfile", profileName)
-
-            val tb = pumpSync.expectedPumpState().temporaryBasal
-            if (tb != null) {
-                extended.put("TempBasalAbsoluteRate", tb.convertedToAbsolute(now, profile))
-                extended.put("TempBasalStart", dateUtil.dateAndTimeString(tb.timestamp))
-                extended.put("TempBasalRemaining", tb.plannedRemainingMinutes)
-            }
-            val eb = pumpSync.expectedPumpState().extendedBolus
-            if (eb != null) {
-                extended.put("ExtendedBolusAbsoluteRate", eb.rate)
-                extended.put("ExtendedBolusStart", dateUtil.dateAndTimeString(eb.timestamp))
-                extended.put("ExtendedBolusRemaining", eb.plannedRemainingMinutes)
-            }
-
-            status.put("timestamp", dateUtil.toISOString(dateUtil.now()))
-
-            if (isUseRileyLinkBatteryLevel()) {
-                pump.put("battery", battery)
-            }
-
-            pump.put("status", status)
-            pump.put("extended", extended)
-
-            val reservoirLevel = reservoirLevel
-            if (reservoirLevel > OmnipodConstants.MAX_RESERVOIR_READING) {
-                pump.put("reservoir_display_override", "50+")
-                pump.put("reservoir", OmnipodConstants.MAX_RESERVOIR_READING)
-            } else {
-                pump.put("reservoir", reservoirLevel)
-            }
-
-            pump.put("clock", dateUtil.toISOString(podStateManager.getTime().millis))
-        } catch (e: JSONException) {
-            aapsLogger.error(LTag.PUMP, "Unhandled exception", e)
-        }
-        return pump
-    }
-
     override fun manufacturer(): ManufacturerType = pumpType.manufacturer()
-
     override fun model(): PumpType = pumpType
-
     override fun serialNumber(): String = if (podStateManager.isPodInitialized) podStateManager.address.toString() else "-"
 
     override fun shortStatus(veryShort: Boolean): String {

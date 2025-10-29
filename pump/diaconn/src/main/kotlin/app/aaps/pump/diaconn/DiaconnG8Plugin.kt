@@ -23,7 +23,6 @@ import app.aaps.core.interfaces.notifications.Notification
 import app.aaps.core.interfaces.plugin.OwnDatabasePlugin
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.Profile
-import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.BolusProgressData
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.DetailedBolusInfoStorage
@@ -65,7 +64,7 @@ import app.aaps.pump.diaconn.keys.DiaconnIntentKey
 import app.aaps.pump.diaconn.keys.DiaconnStringNonKey
 import app.aaps.pump.diaconn.service.DiaconnG8Service
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import org.json.JSONException
+import io.reactivex.rxjava3.kotlin.plusAssign
 import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Provider
@@ -82,7 +81,6 @@ class DiaconnG8Plugin @Inject constructor(
     private val rxBus: RxBus,
     private val context: Context,
     private val constraintChecker: ConstraintsChecker,
-    private val profileFunction: ProfileFunction,
     private val diaconnG8Pump: DiaconnG8Pump,
     private val pumpSync: PumpSync,
     private val detailedBolusInfoStorage: DetailedBolusInfoStorage,
@@ -120,24 +118,19 @@ class DiaconnG8Plugin @Inject constructor(
         super.onStart()
         val intent = Intent(context, DiaconnG8Service::class.java)
         context.bindService(intent, mConnection, Context.BIND_AUTO_CREATE)
-        disposable.add(
-            rxBus
-                           .toObservable(EventAppExit::class.java)
-                           .observeOn(aapsSchedulers.io)
-                           .subscribe({ context.unbindService(mConnection) }) { fabricPrivacy.logException(it) }
-        )
-        disposable.add(
-            rxBus
-                .toObservable(EventConfigBuilderChange::class.java)
-                .observeOn(aapsSchedulers.io)
-                .subscribe { diaconnG8Pump.reset() }
-        )
-        disposable.add(
-            rxBus
-                           .toObservable(EventDiaconnG8DeviceChange::class.java)
-                           .observeOn(aapsSchedulers.io)
-                           .subscribe({ changePump() }) { fabricPrivacy.logException(it) }
-        )
+        disposable += rxBus
+            .toObservable(EventAppExit::class.java)
+            .observeOn(aapsSchedulers.io)
+            .subscribe({ context.unbindService(mConnection) }) { fabricPrivacy.logException(it) }
+
+        disposable += rxBus
+            .toObservable(EventConfigBuilderChange::class.java)
+            .observeOn(aapsSchedulers.io)
+            .subscribe { diaconnG8Pump.reset() }
+        disposable += rxBus
+            .toObservable(EventDiaconnG8DeviceChange::class.java)
+            .observeOn(aapsSchedulers.io)
+            .subscribe({ changePump() }) { fabricPrivacy.logException(it) }
         changePump() // load device name
     }
 
@@ -278,14 +271,12 @@ class DiaconnG8Plugin @Inject constructor(
         return true
     }
 
-    override fun lastDataTime(): Long = diaconnG8Pump.lastConnection
-
-    override val baseBasalRate: Double
-        get() = diaconnG8Pump.baseAmount
-    override val reservoirLevel: Double
-        get() = diaconnG8Pump.systemRemainInsulin
-    override val batteryLevel: Int
-        get() = diaconnG8Pump.systemRemainBattery
+    override val lastBolusTime: Long? get() = diaconnG8Pump.lastBolusTime
+    override val lastBolusAmount: Double? get() = diaconnG8Pump.lastBolusAmount
+    override val lastDataTime: Long get() = diaconnG8Pump.lastConnection
+    override val baseBasalRate: Double get() = diaconnG8Pump.baseAmount
+    override val reservoirLevel: Double get() = diaconnG8Pump.systemRemainInsulin
+    override val batteryLevel: Int get() = diaconnG8Pump.systemRemainBattery
 
     @Synchronized
     override fun deliverTreatment(detailedBolusInfo: DetailedBolusInfo): PumpEnactResult {
@@ -481,64 +472,9 @@ class DiaconnG8Plugin @Inject constructor(
         return result
     }
 
-    override fun getJSONStatus(profile: Profile, profileName: String, version: String): JSONObject {
-        val now = System.currentTimeMillis()
-        if (diaconnG8Pump.lastConnection + 60 * 60 * 1000L < System.currentTimeMillis()) {
-            return JSONObject()
-        }
-        val pumpJson = JSONObject()
-        val battery = JSONObject()
-        val status = JSONObject()
-        val extended = JSONObject()
-        try {
-            battery.put("percent", diaconnG8Pump.systemRemainBattery)
-            status.put("status", if (diaconnG8Pump.pumpSuspended) "suspended" else "normal")
-            status.put("timestamp", dateUtil.toISOString(diaconnG8Pump.lastConnection))
-            extended.put("Version", version)
-            if (diaconnG8Pump.lastBolusTime != 0L) {
-                extended.put("LastBolus", dateUtil.dateAndTimeString(diaconnG8Pump.lastBolusTime))
-                extended.put("LastBolusAmount", diaconnG8Pump.lastBolusAmount)
-            }
-            val tb = pumpSync.expectedPumpState().temporaryBasal
-            if (tb != null) {
-                extended.put("TempBasalAbsoluteRate", tb.convertedToAbsolute(now, profile))
-                extended.put("TempBasalStart", dateUtil.dateAndTimeString(tb.timestamp))
-                extended.put("TempBasalRemaining", tb.plannedRemainingMinutes)
-            }
-            val eb = pumpSync.expectedPumpState().extendedBolus
-            if (eb != null) {
-                extended.put("ExtendedBolusAbsoluteRate", eb.rate)
-                extended.put("ExtendedBolusStart", dateUtil.dateAndTimeString(eb.timestamp))
-                extended.put("ExtendedBolusRemaining", eb.plannedRemainingMinutes)
-            }
-            extended.put("BaseBasalRate", baseBasalRate)
-            try {
-                extended.put("ActiveProfile", profileFunction.getProfileName())
-            } catch (e: Exception) {
-                aapsLogger.error("Unhandled exception", e)
-            }
-            pumpJson.put("battery", battery)
-            pumpJson.put("status", status)
-            pumpJson.put("extended", extended)
-            pumpJson.put("reservoir", diaconnG8Pump.systemRemainInsulin.toInt())
-            pumpJson.put("clock", dateUtil.toISOString(now))
-        } catch (e: JSONException) {
-            aapsLogger.error("Unhandled exception", e)
-        }
-        return pumpJson
-    }
-
-    override fun manufacturer(): ManufacturerType {
-        return ManufacturerType.G2e
-    }
-
-    override fun model(): PumpType {
-        return PumpType.DIACONN_G8
-    }
-
-    override fun serialNumber(): String {
-        return diaconnG8Pump.serialNo.toString()
-    }
+    override fun manufacturer(): ManufacturerType = ManufacturerType.G2e
+    override fun model(): PumpType = PumpType.DIACONN_G8
+    override fun serialNumber(): String = diaconnG8Pump.serialNo.toString()
 
     override fun shortStatus(veryShort: Boolean): String {
         var ret = ""
