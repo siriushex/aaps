@@ -3,14 +3,12 @@ package app.aaps.pump.common
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.text.format.DateFormat
 import app.aaps.core.data.pump.defs.ManufacturerType
 import app.aaps.core.data.pump.defs.PumpDescription
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.interfaces.constraints.PluginConstraints
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
@@ -26,8 +24,6 @@ import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAppExit
 import app.aaps.core.interfaces.rx.events.EventCustomActionsChanged
-import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.NonPreferenceKey
 import app.aaps.core.keys.interfaces.Preferences
@@ -38,7 +34,6 @@ import app.aaps.pump.common.sync.PumpSyncStorage
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import org.json.JSONObject
 import javax.inject.Provider
 
 /**
@@ -54,14 +49,11 @@ abstract class PumpPluginAbstract protected constructor(
     preferences: Preferences,
     commandQueue: CommandQueue,
     var rxBus: RxBus,
-    var activePlugin: ActivePlugin,
     var context: Context,
     var fabricPrivacy: FabricPrivacy,
-    var dateUtil: DateUtil,
     var aapsSchedulers: AapsSchedulers,
     var pumpSync: PumpSync,
     var pumpSyncStorage: PumpSyncStorage,
-    var decimalFormatter: DecimalFormatter,
     protected val pumpEnactResultProvider: Provider<PumpEnactResult>
 ) : PumpPluginBase(pluginDescription, ownPreferences, aapsLogger, rh, preferences, commandQueue), Pump, PluginConstraints, PumpSyncEntriesCreator {
 
@@ -231,30 +223,6 @@ abstract class PumpPluginAbstract protected constructor(
     override fun loadTDDs(): PumpEnactResult {
         aapsLogger.debug(LTag.PUMP, "loadTDDs [PumpPluginAbstract] - Not implemented.")
         return getOperationNotSupportedWithCustomText(R.string.pump_operation_not_supported_by_pump_driver)
-    }
-
-    // FIXME i18n, null checks: iob, TDD
-    override fun shortStatus(veryShort: Boolean): String {
-        var ret = ""
-
-        ret += if (pumpStatusData.lastConnection == 0L) {
-            "LastConn: never\n"
-        } else {
-            val agoMin = ((System.currentTimeMillis() - pumpStatusData.lastConnection) / 60.0 / 1000.0).toInt()
-            "LastConn: $agoMin min ago\n"
-        }
-
-        pumpStatusData.lastBolusTime?.let {
-            if (it.time != 0L) {
-                ret += "LastBolus: ${decimalFormatter.to2Decimal(pumpStatusData.lastBolusAmount!!)}U @${DateFormat.format("HH:mm", it)}\n"
-            }
-        }
-        pumpSync.expectedPumpState().temporaryBasal?.let { ret += "Temp: ${it.toStringFull(dateUtil, rh)}\n" }
-        pumpSync.expectedPumpState().extendedBolus?.let { ret += "Extended: ${it.toStringFull(dateUtil, rh)}\n" }
-        ret += "IOB: ${pumpStatusData.iob}U\n"
-        ret += "Reserv: ${decimalFormatter.to0Decimal(pumpStatusData.reservoirRemainingUnits)}U\n"
-        ret += "Batt: ${pumpStatusData.batteryRemaining}\n"
-        return ret
     }
 
     @Synchronized

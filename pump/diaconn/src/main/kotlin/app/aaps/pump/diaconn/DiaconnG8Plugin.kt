@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.text.format.DateFormat
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceScreen
@@ -45,7 +44,6 @@ import app.aaps.core.interfaces.rx.events.EventConfigBuilderChange
 import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.Round
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
@@ -65,7 +63,6 @@ import app.aaps.pump.diaconn.keys.DiaconnStringNonKey
 import app.aaps.pump.diaconn.service.DiaconnG8Service
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -90,7 +87,6 @@ class DiaconnG8Plugin @Inject constructor(
     private val aapsSchedulers: AapsSchedulers,
     private val uiInteraction: UiInteraction,
     private val diaconnHistoryDatabase: DiaconnHistoryDatabase,
-    private val decimalFormatter: DecimalFormatter,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>
 ) : PumpPluginBase(
     pluginDescription = PluginDescription()
@@ -475,31 +471,6 @@ class DiaconnG8Plugin @Inject constructor(
     override fun manufacturer(): ManufacturerType = ManufacturerType.G2e
     override fun model(): PumpType = PumpType.DIACONN_G8
     override fun serialNumber(): String = diaconnG8Pump.serialNo.toString()
-
-    override fun shortStatus(veryShort: Boolean): String {
-        var ret = ""
-        if (diaconnG8Pump.lastConnection != 0L) {
-            val agoMillis = System.currentTimeMillis() - diaconnG8Pump.lastConnection
-            val agoMin = (agoMillis / 60.0 / 1000.0).toInt()
-            ret += "LastConn: $agoMin minago\n"
-        }
-        if (diaconnG8Pump.lastBolusTime != 0L)
-            ret += "LastBolus: ${decimalFormatter.to2Decimal(diaconnG8Pump.lastBolusAmount)}U @${DateFormat.format("HH:mm", diaconnG8Pump.lastBolusTime)}"
-
-        if (diaconnG8Pump.isTempBasalInProgress)
-            ret += "Temp: ${diaconnG8Pump.temporaryBasalToString()}"
-
-        if (diaconnG8Pump.isExtendedInProgress)
-            ret += "Extended: ${diaconnG8Pump.extendedBolusToString()}\n"
-
-        if (!veryShort) {
-            ret += "TDD: ${decimalFormatter.to0Decimal(diaconnG8Pump.dailyTotalUnits)} / ${diaconnG8Pump.maxDailyTotalUnits} U"
-        }
-        ret += "Reserv: ${decimalFormatter.to0Decimal(diaconnG8Pump.systemRemainInsulin)} U"
-        ret += "Batt: ${diaconnG8Pump.systemRemainBattery}"
-        return ret
-    }
-
     override val isFakingTempsByExtendedBoluses: Boolean = false
     override fun loadTDDs(): PumpEnactResult = loadHistory()
     override fun getCustomActions(): List<CustomAction>? = null

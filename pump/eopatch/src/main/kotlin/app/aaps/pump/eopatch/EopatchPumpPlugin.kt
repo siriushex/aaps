@@ -55,12 +55,10 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.functions.Consumer
 import io.reactivex.rxjava3.kotlin.plusAssign
 import io.reactivex.rxjava3.subjects.BehaviorSubject
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 @Singleton
 class EopatchPumpPlugin @Inject constructor(
@@ -481,34 +479,6 @@ class EopatchPumpPlugin @Inject constructor(
     override fun model(): PumpType = PumpType.EOFLOW_EOPATCH2
     override fun serialNumber(): String = patchConfig.patchSerialNumber
     override val pumpDescription: PumpDescription get() = mPumpDescription
-
-    override fun shortStatus(veryShort: Boolean): String {
-        if (patchConfig.isActivated) {
-            var ret = ""
-            val activeTemp = pumpSync.expectedPumpState().temporaryBasal
-            if (activeTemp != null)
-                ret += "Temp: ${activeTemp.rate} U/hr"
-
-            val activeExtendedBolus = pumpSync.expectedPumpState().extendedBolus
-            if (activeExtendedBolus != null)
-                ret += "Extended: ${activeExtendedBolus.amount} U\n"
-
-            val reservoirStr = preferenceManager.patchState.remainedInsulin.let {
-                when {
-                    it > 50f -> "50+ U"
-                    it < 1f  -> "0 U"
-                    else     -> "${it.roundToInt()} U"
-                }
-            }
-
-            ret += "Reservoir: $reservoirStr"
-            ret += "Battery: ${preferenceManager.patchState.batteryLevel()}"
-            return ret
-        } else {
-            return "EOPatch is not enabled."
-        }
-    }
-
     override val isFakingTempsByExtendedBoluses: Boolean = false
 
     override fun loadTDDs(): PumpEnactResult {

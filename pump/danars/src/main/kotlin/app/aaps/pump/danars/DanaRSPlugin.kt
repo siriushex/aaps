@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.text.format.DateFormat
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
@@ -71,7 +70,6 @@ import app.aaps.pump.danars.events.EventDanaRSDeviceChange
 import app.aaps.pump.danars.services.DanaRSService
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -570,29 +568,10 @@ class DanaRSPlugin @Inject constructor(
     override fun model(): PumpType = danaPump.pumpType()
     override fun serialNumber(): String = danaPump.serialNumber
 
-    @Suppress("SpellCheckingInspection")
-    override fun shortStatus(veryShort: Boolean): String {
-        var ret = ""
-        if (danaPump.lastConnection != 0L) {
-            val agoMillis = System.currentTimeMillis() - danaPump.lastConnection
-            val agoMin = (agoMillis / 60.0 / 1000.0).toInt()
-            ret += "LastConn: $agoMin minAgo\n"
-        }
-        if (danaPump.lastBolusTime != 0L)
-            ret += "LastBolus: ${decimalFormatter.to2Decimal(danaPump.lastBolusAmount)}U @${DateFormat.format("HH:mm", danaPump.lastBolusTime)}"
-
-        if (danaPump.isTempBasalInProgress)
-            ret += "Temp: ${danaPump.temporaryBasalToString()}"
-
-        if (danaPump.isExtendedInProgress)
-            ret += "Extended: ${danaPump.extendedBolusToString()}\n"
-
-        if (!veryShort) {
-            ret += "TDD: ${decimalFormatter.to0Decimal(danaPump.dailyTotalUnits)} / ${danaPump.maxDailyTotalUnits} U"
-        }
-        ret += "Reserv: ${decimalFormatter.to0Decimal(danaPump.reservoirRemainingUnits)} U"
-        ret += "Batt: ${danaPump.batteryRemaining}"
-        return ret
+    override fun pumpSpecificShortStatus(veryShort: Boolean): String {
+        if (!veryShort)
+            return "TDD: ${decimalFormatter.to0Decimal(danaPump.dailyTotalUnits)} / ${danaPump.maxDailyTotalUnits} U"
+        return ""
     }
 
     override val isFakingTempsByExtendedBoluses: Boolean = false

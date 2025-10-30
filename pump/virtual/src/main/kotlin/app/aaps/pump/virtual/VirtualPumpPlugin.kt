@@ -50,7 +50,6 @@ import app.aaps.pump.virtual.extensions.toText
 import app.aaps.pump.virtual.keys.VirtualBooleanNonPreferenceKey
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -341,7 +340,6 @@ open class VirtualPumpPlugin @Inject constructor(
     override fun manufacturer(): ManufacturerType = pumpDescription.pumpType.manufacturer()
     override fun model(): PumpType = pumpDescription.pumpType
     override fun serialNumber(): String = InstanceId.instanceId
-    override fun shortStatus(veryShort: Boolean): String = "Virtual Pump"
     override fun canHandleDST(): Boolean = true
 
     fun refreshConfiguration() {

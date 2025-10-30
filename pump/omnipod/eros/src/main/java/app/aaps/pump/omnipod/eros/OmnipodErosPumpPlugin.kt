@@ -9,7 +9,6 @@ import android.os.HandlerThread
 import android.os.IBinder
 import android.os.SystemClock
 import android.text.TextUtils
-import android.text.format.DateFormat
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceManager
 import androidx.preference.PreferenceScreen
@@ -111,7 +110,6 @@ import io.reactivex.rxjava3.kotlin.plusAssign
 import org.joda.time.DateTime
 import org.joda.time.Duration
 import org.joda.time.Instant
-import org.json.JSONObject
 import java.util.Optional
 import java.util.function.Supplier
 import javax.inject.Inject
@@ -600,36 +598,6 @@ class OmnipodErosPumpPlugin @Inject constructor(
     override fun manufacturer(): ManufacturerType = pumpType.manufacturer()
     override fun model(): PumpType = pumpType
     override fun serialNumber(): String = if (podStateManager.isPodInitialized) podStateManager.address.toString() else "-"
-
-    override fun shortStatus(veryShort: Boolean): String {
-        if (!podStateManager.isPodActivationCompleted) {
-            return rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_short_status_no_active_pod)
-        }
-        var ret = ""
-        if (lastConnectionTimeMillis != 0L) {
-            @Suppress("SpellCheckingInspection") val agoMsec = System.currentTimeMillis() - lastConnectionTimeMillis
-            val agoMin = (agoMsec / 60.0 / 1000.0).toInt()
-            ret += rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_short_status_last_connection, agoMin) + "\n"
-        }
-        if (podStateManager.lastBolusStartTime != null) {
-            ret += rh.gs(
-                app.aaps.pump.omnipod.common.R.string.omnipod_common_short_status_last_bolus, decimalFormatter.to2Decimal(podStateManager.lastBolusAmount),
-                DateFormat.format("HH:mm", podStateManager.lastBolusStartTime.toDate())
-            ) + "\n"
-        }
-        val pumpState = pumpSync.expectedPumpState()
-        if (pumpState.temporaryBasal != null && pumpState.profile != null) {
-            ret += rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_short_status_temp_basal, pumpState.temporaryBasal!!.toStringFull(dateUtil, rh) + "\n")
-        }
-        if (pumpState.extendedBolus != null) {
-            ret += rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_short_status_extended_bolus, pumpState.extendedBolus!!.toStringFull(dateUtil, rh) + "\n")
-        }
-        ret += rh.gs(app.aaps.pump.omnipod.common.R.string.omnipod_common_short_status_reservoir, (if (reservoirLevel > OmnipodConstants.MAX_RESERVOIR_READING) "50+" else decimalFormatter.to0Decimal(reservoirLevel))) + "\n"
-        if (isUseRileyLinkBatteryLevel()) {
-            ret += rh.gs(R.string.omnipod_eros_short_status_riley_link_battery, batteryLevel) + "\n"
-        }
-        return ret.trim { it <= ' ' }
-    }
 
     override fun executeCustomAction(customActionType: CustomActionType) {
         aapsLogger.warn(LTag.PUMP, "Unknown custom action: $customActionType")

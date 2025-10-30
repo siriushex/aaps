@@ -1,6 +1,5 @@
 package app.aaps.pump.danar
 
-import android.text.format.DateFormat
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.pump.defs.ManufacturerType
 import app.aaps.core.data.pump.defs.PumpDescription
@@ -44,7 +43,6 @@ import app.aaps.pump.dana.keys.DanaStringKey
 import app.aaps.pump.danar.services.AbstractDanaRExecutionService
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
-import org.json.JSONObject
 import javax.inject.Provider
 import kotlin.math.abs
 import kotlin.math.max
@@ -357,32 +355,6 @@ abstract class AbstractDanaRPlugin protected constructor(
 
     override fun loadTDDs(): PumpEnactResult {
         return loadHistory(RecordTypes.RECORD_TYPE_DAILY)
-    }
-
-    // Reply for sms communicator
-    override fun shortStatus(veryShort: Boolean): String {
-        var ret = ""
-        if (danaPump.lastConnection != 0L) {
-            val agoMilliseconds = System.currentTimeMillis() - danaPump.lastConnection
-            val agoMin = (agoMilliseconds / 60.0 / 1000.0).toInt()
-            ret += "LastConn: $agoMin min ago\n"
-        }
-        if (danaPump.lastBolusTime != 0L) {
-            ret += "LastBolus: ${decimalFormatter.to2Decimal(danaPump.lastBolusAmount)}U @${DateFormat.format("HH:mm", danaPump.lastBolusTime)}\n"
-        }
-        val (temporaryBasal, extendedBolus) = pumpSync.expectedPumpState()
-        if (temporaryBasal != null) {
-            ret += "Temp: ${temporaryBasal.toStringFull(dateUtil, rh)}\n"
-        }
-        if (extendedBolus != null) {
-            ret += "Extended: ${extendedBolus.toStringFull(dateUtil, rh)}\n"
-        }
-        if (!veryShort) {
-            ret += "TDD: ${decimalFormatter.to0Decimal(danaPump.dailyTotalUnits)} / ${danaPump.maxDailyTotalUnits} U\n"
-        }
-        ret += "Reserv: ${decimalFormatter.to0Decimal(danaPump.reservoirRemainingUnits)}U\n"
-        ret += "Batt: ${danaPump.batteryRemaining}\n"
-        return ret
     }
 
     // TODO: daily total constraint

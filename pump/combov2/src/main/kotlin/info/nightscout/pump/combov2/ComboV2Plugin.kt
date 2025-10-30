@@ -44,7 +44,6 @@ import app.aaps.core.interfaces.rx.events.EventRefreshOverview
 import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.constraints.ConstraintObject
 import app.aaps.core.ui.dialogs.OKDialog
@@ -96,8 +95,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.joda.time.DateTime
 import org.json.JSONObject
 import java.util.Locale
@@ -132,7 +129,6 @@ class ComboV2Plugin @Inject constructor(
     private val uiInteraction: UiInteraction,
     private val androidPermission: AndroidPermission,
     private val config: Config,
-    private val decimalFormatter: DecimalFormatter,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>
 ) :
     PumpPluginBase(
@@ -1341,15 +1337,8 @@ class ComboV2Plugin @Inject constructor(
     override val pumpDescription: PumpDescription
         get() = _pumpDescription
 
-    @OptIn(ExperimentalTime::class)
-    override fun shortStatus(veryShort: Boolean): String {
+    override fun pumpSpecificShortStatus(veryShort: Boolean): String {
         val lines = mutableListOf<String>()
-
-        if (lastConnectionTimestamp != 0L) {
-            val agoMsec: Long = System.currentTimeMillis() - lastConnectionTimestamp
-            val agoMin = (agoMsec / 60.0 / 1000.0).toInt()
-            lines += rh.gs(R.string.combov2_short_status_last_connection, agoMin)
-        }
 
         val alertCodeString = when (val alert = lastComboAlert) {
             is AlertScreenContent.Warning -> "W${alert.code}"
@@ -1359,43 +1348,7 @@ class ComboV2Plugin @Inject constructor(
         if (alertCodeString != null)
             lines += rh.gs(R.string.combov2_short_status_alert, alertCodeString)
 
-        lastBolusUIFlow.value?.let {
-            val localBolusTimestamp = it.timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
-            lines += rh.gs(
-                R.string.combov2_short_status_last_bolus, decimalFormatter.to2Decimal(it.bolusAmount.cctlBolusToIU()),
-                String.format(Locale.getDefault(), "%02d:%02d", localBolusTimestamp.hour, localBolusTimestamp.minute)
-            )
-        }
-
-        val temporaryBasal = pumpSync.expectedPumpState().temporaryBasal
-        temporaryBasal?.let {
-            lines += rh.gs(
-                R.string.combov2_short_status_temp_basal,
-                it.toStringFull(dateUtil, rh)
-            )
-        }
-
-        pumpStatus?.let {
-            lines += rh.gs(
-                R.string.combov2_short_status_reservoir,
-                it.availableUnitsInReservoir
-            )
-            val batteryStateDesc = when (it.batteryState) {
-                BatteryState.NO_BATTERY   -> rh.gs(R.string.combov2_short_status_battery_state_empty)
-                BatteryState.LOW_BATTERY  -> rh.gs(R.string.combov2_short_status_battery_state_low)
-                BatteryState.FULL_BATTERY -> rh.gs(R.string.combov2_short_status_battery_state_full)
-            }
-            lines += rh.gs(
-                R.string.combov2_short_status_battery_state,
-                batteryStateDesc
-            )
-        }
-
-        val shortStatusString = lines.joinToString("\n")
-
-        aapsLogger.debug(LTag.PUMP, "Produced short status: [$shortStatusString]")
-
-        return shortStatusString
+        return lines.joinToString("\n")
     }
 
     override val isFakingTempsByExtendedBoluses = false

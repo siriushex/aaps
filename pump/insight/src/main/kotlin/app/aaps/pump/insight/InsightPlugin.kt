@@ -121,7 +121,6 @@ import app.aaps.pump.insight.keys.InsightIntentKey
 import app.aaps.pump.insight.keys.InsightLongNonKey
 import app.aaps.pump.insight.utils.ExceptionTranslator
 import app.aaps.pump.insight.utils.ParameterBlockUtil
-import org.json.JSONObject
 import java.util.Calendar
 import java.util.Date
 import java.util.TimeZone
@@ -948,38 +947,11 @@ class InsightPlugin @Inject constructor(
         return result
     }
 
-    override fun shortStatus(veryShort: Boolean): String {
-        val ret = StringBuilder()
-        connectionService?.let { service ->
-            if (service.lastConnected != 0L) {
-                val agoMsec = dateUtil.now() - service.lastConnected
-                val agoMin = (agoMsec / 60.0 / 1000.0).toInt()
-                ret.append(rh.gs(R.string.short_status_last_connected, agoMin)).append("\n")
-            }
-            activeTBR?.let { ret.append(rh.gs(R.string.short_status_tbr, it.percentage, it.initialDuration - it.remainingDuration, it.initialDuration)).append("\n") }
-            activeBoluses?.forEach {
-                if (it.bolusType != BolusType.STANDARD)
-                    ret.append(
-                        rh.gs(
-                            if (it.bolusType == BolusType.MULTIWAVE) R.string.short_status_multiwave else R.string.short_status_extended,
-                            it.remainingAmount, it.initialAmount, it.remainingDuration
-                        )
-                    ).append("\n")
-            }
-            if (!veryShort)
-                totalDailyDose?.let { ret.append(rh.gs(R.string.short_status_tdd, it.bolusAndBasal)).append("\n") }
-            cartridgeStatus?.let { ret.append(rh.gs(R.string.short_status_reservoir, it.remainingAmount)).append("\n") }
-            batteryStatus?.let { ret.append(rh.gs(R.string.short_status_battery, it.batteryAmount)).append("\n") }
-        }
-        return ret.toString()
-    }
-
     override val isFakingTempsByExtendedBoluses: Boolean
         get() = preferences.get(InsightBooleanKey.EnableTbrEmulation)
 
-    override fun loadTDDs(): PumpEnactResult {
-        return pumpEnactResultProvider.get().success(true)
-    }
+    override fun loadTDDs(): PumpEnactResult =
+        pumpEnactResultProvider.get().success(true)
 
     private fun readHistory() {
         connectionService?.let { service ->

@@ -11,7 +11,6 @@ import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.implementation.pump.PumpEnactResultObject
-import org.json.JSONObject
 
 @Suppress("MemberVisibilityCanBePrivate")
 class TestPumpPlugin(val rh: ResourceHelper) : Pump {
@@ -72,7 +71,7 @@ class TestPumpPlugin(val rh: ResourceHelper) : Pump {
     override fun manufacturer(): ManufacturerType = ManufacturerType.AAPS
     override fun model(): PumpType = PumpType.GENERIC_AAPS
     override fun serialNumber(): String = "1"
-    override fun shortStatus(veryShort: Boolean): String = "Virtual Pump"
+    override fun pumpSpecificShortStatus(veryShort: Boolean): String = "Virtual Pump"
     override val isFakingTempsByExtendedBoluses: Boolean = false
     override fun loadTDDs(): PumpEnactResult = PumpEnactResultObject(rh).success(true)
     override fun canHandleDST(): Boolean = true

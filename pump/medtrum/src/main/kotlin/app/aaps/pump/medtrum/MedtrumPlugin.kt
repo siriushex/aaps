@@ -7,7 +7,6 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import android.text.Editable
 import android.text.TextWatcher
-import android.text.format.DateFormat
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
@@ -33,12 +32,9 @@ import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpPluginBase
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.pump.TemporaryBasalStorage
-import app.aaps.core.interfaces.pump.actions.CustomAction
-import app.aaps.core.interfaces.pump.actions.CustomActionType
 import app.aaps.core.interfaces.pump.defs.fillFor
 import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.queue.CommandQueue
-import app.aaps.core.interfaces.queue.CustomCommand
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
@@ -46,7 +42,6 @@ import app.aaps.core.interfaces.rx.events.EventAppExit
 import app.aaps.core.interfaces.rx.events.EventDismissNotification
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
@@ -72,7 +67,6 @@ import app.aaps.pump.medtrum.ui.MedtrumOverviewFragment
 import app.aaps.pump.medtrum.util.MedtrumSnUtil
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -95,7 +89,6 @@ class MedtrumPlugin @Inject constructor(
     private val uiInteraction: UiInteraction,
     private val pumpSync: PumpSync,
     private val temporaryBasalStorage: TemporaryBasalStorage,
-    private val decimalFormatter: DecimalFormatter,
     private val pumpEnactResultProvider: Provider<PumpEnactResult>
 ) : PumpPluginBase(
     pluginDescription = PluginDescription()
@@ -410,45 +403,9 @@ class MedtrumPlugin @Inject constructor(
     override fun model(): PumpType = medtrumPump.pumpType()
     override fun serialNumber(): String = medtrumPump.pumpSNFromSP.toString(radix = 16)
     override val pumpDescription: PumpDescription get() = PumpDescription().fillFor(medtrumPump.pumpType())
-
-    override fun shortStatus(veryShort: Boolean): String {
-        var ret = ""
-        if (medtrumPump.lastConnection != 0L) {
-            val agoMillis = System.currentTimeMillis() - medtrumPump.lastConnection
-            val agoMin = (agoMillis / 60.0 / 1000.0).toInt()
-            ret += "LastConn: $agoMin minAgo\n"
-        }
-        if (medtrumPump.lastBolusTime != 0L)
-            ret += "LastBolus: ${decimalFormatter.to2Decimal(medtrumPump.lastBolusAmount)}U @${DateFormat.format("HH:mm", medtrumPump.lastBolusTime)}\n"
-
-        if (medtrumPump.tempBasalInProgress)
-            ret += "Temp: ${medtrumPump.temporaryBasalToString()}\n"
-
-        ret += "Res: ${decimalFormatter.to0Decimal(medtrumPump.reservoir)}U\n"
-        return ret
-    }
-
     override val isFakingTempsByExtendedBoluses: Boolean = false
-
-    override fun loadTDDs(): PumpEnactResult {
-        return pumpEnactResultProvider.get() // Note: Can implement this if we implement history fully (no priority)
-    }
-
-    override fun getCustomActions(): List<CustomAction>? {
-        return null
-    }
-
-    override fun executeCustomAction(customActionType: CustomActionType) {
-        // Unused
-    }
-
-    override fun executeCustomCommand(customCommand: CustomCommand): PumpEnactResult? {
-        return null
-    }
-
-    override fun canHandleDST(): Boolean {
-        return true
-    }
+    override fun loadTDDs(): PumpEnactResult = pumpEnactResultProvider.get() // Note: Can implement this if we implement history fully (no priority)
+    override fun canHandleDST(): Boolean = true
 
     override fun timezoneOrDSTChanged(timeChangeType: TimeChangeType) {
         medtrumPump.needCheckTimeUpdate = true
