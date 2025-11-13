@@ -19,8 +19,10 @@ import app.aaps.plugins.source.DexcomPlugin
 import app.aaps.plugins.source.GlimpPlugin
 import app.aaps.plugins.source.MM640gPlugin
 import app.aaps.plugins.source.OttaiPlugin
+import app.aaps.plugins.source.PatchedSiAppPlugin
+import app.aaps.plugins.source.PatchedSinoAppPlugin
 import app.aaps.plugins.source.PoctechPlugin
-import app.aaps.plugins.source.SyaiTagPlugin
+import app.aaps.plugins.source.SyaiPlugin
 import app.aaps.plugins.source.TomatoPlugin
 import app.aaps.plugins.source.XdripSourcePlugin
 import dagger.android.DaggerBroadcastReceiver
@@ -57,7 +59,6 @@ open class DataReceiver : DaggerBroadcastReceiver() {
                     }.build()).build()
 
             Intents.TOMATO_BG                         ->
-                @Suppress("SpellCheckingInspection")
                 OneTimeWorkRequest.Builder(TomatoPlugin.TomatoWorker::class.java)
                     .setInputData(Data.Builder().also {
                         it.copyDouble("com.fanqies.tomatofn.Extras.BgEstimate", bundle)
@@ -78,8 +79,22 @@ open class DataReceiver : DaggerBroadcastReceiver() {
                         it.copyString("data", bundle)
                     }.build()).build()
 
-            Intents.SYAI_TAG_APP                       ->
-                OneTimeWorkRequest.Builder(SyaiTagPlugin.SyaiTagWorker::class.java)
+            Intents.SYAI_APP                        ->
+                OneTimeWorkRequest.Builder(SyaiPlugin.SyaiWorker::class.java)
+                    .setInputData(Data.Builder().also {
+                        it.copyString("collection", bundle)
+                        it.copyString("data", bundle)
+                    }.build()).build()
+
+            Intents.SI_APP                          ->
+                OneTimeWorkRequest.Builder(PatchedSiAppPlugin.PatchedSiAppWorker::class.java)
+                    .setInputData(Data.Builder().also {
+                        it.copyString("collection", bundle)
+                        it.copyString("data", bundle)
+                    }.build()).build()
+
+            Intents.SINO_APP                        ->
+                OneTimeWorkRequest.Builder(PatchedSinoAppPlugin.PatchedSinoAppWorker::class.java)
                     .setInputData(Data.Builder().also {
                         it.copyString("collection", bundle)
                         it.copyString("data", bundle)

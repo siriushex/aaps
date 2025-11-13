@@ -123,7 +123,7 @@ abstract class PluginBase(
     }
 
     open fun onStart() {}
-    protected open fun onStop() {}
+    open fun onStop() {}
     protected open fun onStateChange(type: PluginType?, oldState: State?, newState: State?) {}
     open fun preprocessPreferences(preferenceFragment: PreferenceFragmentCompat) {}
     open fun updatePreferenceSummary(pref: Preference) {}

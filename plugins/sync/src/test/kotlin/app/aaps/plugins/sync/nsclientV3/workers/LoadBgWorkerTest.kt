@@ -1,6 +1,5 @@
 package app.aaps.plugins.sync.nsclientV3.workers
 
-import androidx.work.ExistingWorkPolicy
 import androidx.work.ListenableWorker
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkContinuation
@@ -104,7 +103,7 @@ internal class LoadBgWorkerTest : TestBaseWithProfile() {
 
     @Test
     fun testThereAreNewerDataFirstLoadEmptyReturn() = runTest(timeout = 30.seconds) {
-        Mockito.`when`(workManager.beginUniqueWork(anyString(), anyObject<ExistingWorkPolicy>(), anyObject<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        Mockito.`when`(workManager.beginUniqueWork(anyString(), anyObject(), anyObject<OneTimeWorkRequest>())).thenReturn(workContinuation)
         Mockito.`when`(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.lastLoadedSrvModified.collections.entries = 0L // first load
@@ -127,13 +126,13 @@ internal class LoadBgWorkerTest : TestBaseWithProfile() {
             value = 99.0,
             trendArrow = TrendArrow.DOUBLE_UP,
             noise = 1.0,
-            sourceSensor = SourceSensor.DEXCOM_G4_WIXEL,
+            sourceSensor = SourceSensor.DEXCOM_G6_NATIVE,
             ids = IDs(
                 nightscoutId = "nightscoutId"
             )
         )
 
-        Mockito.`when`(workManager.beginUniqueWork(anyString(), anyObject<ExistingWorkPolicy>(), anyObject<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        Mockito.`when`(workManager.beginUniqueWork(anyString(), anyObject(), anyObject<OneTimeWorkRequest>())).thenReturn(workContinuation)
         Mockito.`when`(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.lastLoadedSrvModified.collections.entries = 0L // first load
@@ -147,7 +146,7 @@ internal class LoadBgWorkerTest : TestBaseWithProfile() {
 
     @Test
     fun testNoLoadNeeded() = runTest(timeout = 30.seconds) {
-        Mockito.`when`(workManager.beginUniqueWork(anyString(), anyObject<ExistingWorkPolicy>(), anyObject<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        Mockito.`when`(workManager.beginUniqueWork(anyString(), anyObject(), anyObject<OneTimeWorkRequest>())).thenReturn(workContinuation)
         Mockito.`when`(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.firstLoadContinueTimestamp.collections.entries = now - 1000

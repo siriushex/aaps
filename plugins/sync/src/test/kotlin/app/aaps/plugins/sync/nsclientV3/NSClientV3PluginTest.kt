@@ -113,7 +113,7 @@ internal class NSClientV3PluginTest : TestBaseWithProfile() {
             value = 99.0,
             trendArrow = TrendArrow.DOUBLE_UP,
             noise = 1.0,
-            sourceSensor = SourceSensor.DEXCOM_G4_WIXEL,
+            sourceSensor = SourceSensor.DEXCOM_G6_NATIVE,
             ids = IDs(nightscoutId = "nightscoutId")
         )
         val dataPair = DataSyncSelector.PairGlucoseValue(glucoseValue, 1000)

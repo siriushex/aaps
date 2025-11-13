@@ -24,7 +24,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SyaiTagPlugin @Inject constructor(
+class SyaiPlugin @Inject constructor(
     rh: ResourceHelper,
     aapsLogger: AAPSLogger,
     preferences: Preferences
@@ -41,22 +41,22 @@ class SyaiTagPlugin @Inject constructor(
     aapsLogger, rh, preferences
 ), BgSource {
 
-    class SyaiTagWorker(
+    class SyaiWorker(
         context: Context,
         params: WorkerParameters
     ) : LoggingWorker(context, params, Dispatchers.IO) {
 
-        @Inject lateinit var syaiTagPlugin: SyaiTagPlugin
+        @Inject lateinit var syaiPlugin: SyaiPlugin
         @Inject lateinit var persistenceLayer: PersistenceLayer
 
         @SuppressLint("CheckResult")
         override suspend fun doWorkAndLog(): Result {
             var ret = Result.success()
-            if (!syaiTagPlugin.isEnabled()) return Result.success(workDataOf("Result" to "Plugin not enabled"))
+            if (!syaiPlugin.isEnabled()) return Result.success(workDataOf("Result" to "Plugin not enabled"))
             val collection = inputData.getString("collection") ?: return Result.failure(workDataOf("Error" to "missing collection"))
             if (collection == "entries") {
                 val data = inputData.getString("data")
-                aapsLogger.debug(LTag.BGSOURCE, "Received Syai Tag Data $data")
+                aapsLogger.debug(LTag.BGSOURCE, "Received Syai Data $data")
                 if (!data.isNullOrEmpty()) {
                     try {
                         val glucoseValues = mutableListOf<GV>()
@@ -68,7 +68,7 @@ class SyaiTagPlugin @Inject constructor(
                                     glucoseValues += GV(
                                         timestamp = jsonObject.getLong("date"),
                                         value = jsonObject.getDouble("sgv"),
-                                        raw = jsonObject.getDouble("sgv"),
+                                        raw = null,
                                         noise = null,
                                         trendArrow = TrendArrow.fromString(jsonObject.getString("direction")),
                                         sourceSensor = SourceSensor.SYAI_TAG
@@ -85,6 +85,8 @@ class SyaiTagPlugin @Inject constructor(
                         ret = Result.failure(workDataOf("Error" to e.toString()))
                     }
                 }
+            } else {
+                ret = Result.failure(workDataOf("Error" to "missing input data"))
             }
             return ret
         }

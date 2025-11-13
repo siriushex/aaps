@@ -11,7 +11,7 @@ import java.io.Serializable
 @Suppress("unused", "deprecation")
 object BundleMock {
 
-    @JvmOverloads fun mock(map: HashMap<String?, Any?> = HashMap()): Bundle {
+    fun mock(map: HashMap<String?, Any?> = HashMap()): Bundle {
         val unsupported: Answer<*> = Answer { throw UnsupportedOperationException() }
         val put: Answer<*> = Answer { invocation: InvocationOnMock ->
             map[invocation.arguments[0] as String] = invocation.arguments[1]

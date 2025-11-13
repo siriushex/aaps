@@ -1,13 +1,18 @@
 package app.aaps.plugins.source
 
-import androidx.preference.PreferenceManager
+import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.pump.VirtualPump
+import app.aaps.core.keys.IntKey
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
+import io.reactivex.rxjava3.core.Single
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 class RandomBgPluginTest : TestBaseWithProfile() {
 
@@ -17,8 +22,33 @@ class RandomBgPluginTest : TestBaseWithProfile() {
     private lateinit var randomBgPlugin: RandomBgPlugin
 
     @BeforeEach fun prepare() {
-        preferenceManager = PreferenceManager(context)
         randomBgPlugin = RandomBgPlugin(context, rh, aapsLogger, persistenceLayer, virtualPump, preferences, config)
+    }
+
+    @Test
+    fun `When plugin enabled then insert data`() {
+        whenever(persistenceLayer.insertCgmSourceData(anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(Single.just(PersistenceLayer.TransactionResult()))
+        whenever(config.isUnfinishedMode()).thenReturn(true)
+        whenever(preferences.get(IntKey.BgSourceRandomInterval)).thenReturn(5)
+        randomBgPlugin.setPluginEnabled(PluginType.BGSOURCE, true)
+        randomBgPlugin.handleNewData()
+
+        verify(persistenceLayer).insertCgmSourceData(anyObject(), anyObject(), anyObject(), anyObject())
+    }
+
+    @Test
+    fun startStopTest() {
+        whenever(preferences.get(IntKey.BgSourceRandomInterval)).thenReturn(5)
+        Assertions.assertNull(randomBgPlugin.handler)
+        randomBgPlugin.onStart()
+        Assertions.assertNotNull(randomBgPlugin.handler)
+        randomBgPlugin.onStop()
+        Assertions.assertNull(randomBgPlugin.handler)
+    }
+
+    @Test
+    fun advancedFilteringSupported() {
+        assertThat(randomBgPlugin.advancedFilteringSupported()).isTrue()
     }
 
     @Test
