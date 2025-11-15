@@ -18,26 +18,40 @@ import app.aaps.core.data.model.TB
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.model.TrendArrow
+import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.pump.defs.PumpType
+import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.insulin.Insulin
 import app.aaps.core.interfaces.logging.L
+import app.aaps.core.interfaces.nsclient.NSAlarm
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.VirtualPump
 import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.interfaces.sync.DataSyncSelector
+import app.aaps.core.interfaces.sync.NsClient
+import app.aaps.core.keys.BooleanKey
 import app.aaps.core.nssdk.interfaces.NSAndroidClient
 import app.aaps.core.nssdk.localmodel.treatment.CreateUpdateResponse
+import app.aaps.core.nssdk.remotemodel.LastModified
 import app.aaps.plugins.sync.nsShared.StoreDataForDbImpl
 import app.aaps.plugins.sync.nsclient.ReceiverDelegate
+import app.aaps.plugins.sync.nsclientV3.keys.NsclientStringKey
+import app.aaps.plugins.sync.nsclientV3.services.NSClientV3Service
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.Mockito.anyLong
+import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 @Suppress("SpellCheckingInspection")
 internal class NSClientV3PluginTest : TestBaseWithProfile() {
@@ -51,6 +65,7 @@ internal class NSClientV3PluginTest : TestBaseWithProfile() {
     @Mock lateinit var persistenceLayer: PersistenceLayer
     @Mock lateinit var insulin: Insulin
     @Mock lateinit var l: L
+    @Mock lateinit var nsClientV3Service: NSClientV3Service
 
     private lateinit var storeDataForDb: StoreDataForDbImpl
     private lateinit var sut: NSClientV3Plugin
@@ -58,13 +73,9 @@ internal class NSClientV3PluginTest : TestBaseWithProfile() {
     private var insulinConfiguration: ICfg = ICfg("Insulin", 360 * 60 * 1000, 60 * 60 * 1000)
 
     @BeforeEach
-    fun mock() {
+    fun prepare() {
         Mockito.`when`(insulin.iCfg).thenReturn(insulinConfiguration)
         Mockito.`when`(activePlugin.activeInsulin).thenReturn(insulin)
-    }
-
-    @BeforeEach
-    fun prepare() {
         storeDataForDb = StoreDataForDbImpl(aapsLogger, rxBus, persistenceLayer, preferences, config, nsClientSource, virtualPump)
         sut =
             NSClientV3Plugin(
@@ -73,6 +84,7 @@ internal class NSClientV3PluginTest : TestBaseWithProfile() {
                 nsClientSource, storeDataForDb, decimalFormatter, l
             )
         sut.nsAndroidClient = nsAndroidClient
+        sut.nsClientV3Service = nsClientV3Service
         Mockito.`when`(mockedProfileFunction.getProfile(anyLong())).thenReturn(validProfile)
     }
 
@@ -501,5 +513,227 @@ internal class NSClientV3PluginTest : TestBaseWithProfile() {
         val screen = preferenceManager.createPreferenceScreen(context)
         sut.addPreferenceScreen(preferenceManager, screen, context, null)
         assertThat(screen.preferenceCount).isGreaterThan(0)
+    }
+
+    @Test
+    fun `resetToFullSync should clear sync timestamps and reset initialLoadFinished flag`() {
+        // Arrange
+        // 1. Set the plugin's state to a "synced" status to ensure the reset works.
+        sut.initialLoadFinished = true
+        sut.lastLoadedSrvModified = LastModified(
+            LastModified.Collections().apply {
+                treatments = 1672531200000L // Jan 1, 2023
+                devicestatus = 1672531200000L
+                profile = 1672531200000L
+                foods = 1672531200000L
+                entries = 1672531200000L
+            }
+        )
+        sut.firstLoadContinueTimestamp = sut.lastLoadedSrvModified
+
+        // 2. Define the expected state after reset (an empty LastModified object as a JSON string).
+        val expectedEmptyLastModifiedJson = "{\"collections\":{}}"
+
+        // Act
+        sut.resetToFullSync()
+
+        // Assert
+        // 1. Verify the in-memory flags and objects are reset to their default states.
+        assertThat(sut.initialLoadFinished).isFalse()
+        assertThat(sut.fullSyncRequested).isTrue()
+        assertThat(sut.lastLoadedSrvModified.collections.treatments).isEqualTo(0L)
+        assertThat(sut.firstLoadContinueTimestamp.collections.treatments).isEqualTo(0L)
+
+        // 2. Verify that the empty state was written to preferences to make the reset persistent.
+        Mockito.verify(preferences).put(NsclientStringKey.V3LastModified, expectedEmptyLastModifiedJson)
+        Mockito.verify(dataSyncSelectorV3).resetToNextFullSync()
+    }
+
+    @Test
+    fun `isFirstLoad returns true when collection timestamp is 0`() {
+        // Arrange
+        // The plugin is initialized with lastLoadedSrvModified where all timestamps are 0L by default.
+        // So, no extra arrangement is needed.
+
+        // Act & Assert
+        // Verify that isFirstLoad returns true for all collections in the initial state.
+        assertThat(sut.isFirstLoad(NsClient.Collection.ENTRIES)).isTrue()
+        assertThat(sut.isFirstLoad(NsClient.Collection.TREATMENTS)).isTrue()
+        assertThat(sut.isFirstLoad(NsClient.Collection.FOODS)).isTrue()
+        assertThat(sut.isFirstLoad(NsClient.Collection.PROFILE)).isTrue()
+    }
+
+    @Test
+    fun `isFirstLoad returns false when collection timestamp is greater than 0`() {
+        // Arrange
+        // Set a "synced" state where all collection timestamps are non-zero.
+        val collectionsWithData =
+            LastModified.Collections().apply {
+                treatments = 1672531200000L // Jan 1, 2023
+                devicestatus = 1672531200000L
+                profile = 1672531200000L
+                foods = 1672531200000L
+                entries = 1672531200000L
+            }
+
+        sut.lastLoadedSrvModified = LastModified(collectionsWithData)
+
+        // Act & Assert
+        // Verify that isFirstLoad now returns false for all collections.
+        assertThat(sut.isFirstLoad(NsClient.Collection.ENTRIES)).isFalse()
+        assertThat(sut.isFirstLoad(NsClient.Collection.TREATMENTS)).isFalse()
+        assertThat(sut.isFirstLoad(NsClient.Collection.FOODS)).isFalse()
+        assertThat(sut.isFirstLoad(NsClient.Collection.PROFILE)).isFalse()
+    }
+
+    @Test
+    fun `isFirstLoad returns correct value for mixed state`() {
+        // Arrange
+        // Set a state where only Treatments and Profile have been synced. Entries and Foods have not.
+        val collectionsWithData = LastModified.Collections(
+            entries = 0L, // Not synced
+            treatments = 1672531200001L, // Synced
+            foods = 0L, // Not synced
+            profile = 1672531200003L // Synced
+        )
+        sut.lastLoadedSrvModified = LastModified(collectionsWithData)
+
+        // Act & Assert
+        // Verify the result for each collection individually.
+        assertThat(sut.isFirstLoad(NsClient.Collection.ENTRIES)).isTrue()
+        assertThat(sut.isFirstLoad(NsClient.Collection.TREATMENTS)).isFalse()
+        assertThat(sut.isFirstLoad(NsClient.Collection.FOODS)).isTrue()
+        assertThat(sut.isFirstLoad(NsClient.Collection.PROFILE)).isFalse()
+    }
+
+    @Test
+    fun `updateLatestBgReceivedIfNewer SETS timestamp during a first load`() {
+        // Arrange
+        // 1. Ensure isFirstLoad(ENTRIES) will return true. The default initial state is 0L, so no setup is needed.
+        val latestReceivedTimestamp = 1672531200000L // Jan 1, 2023
+        assertThat(sut.isFirstLoad(NsClient.Collection.ENTRIES)).isTrue()
+        assertThat(sut.firstLoadContinueTimestamp.collections.entries).isEqualTo(0L)
+
+        // Act
+        sut.updateLatestBgReceivedIfNewer(latestReceivedTimestamp)
+
+        // Assert
+        // Verify that the firstLoadContinueTimestamp for entries was updated.
+        assertThat(sut.firstLoadContinueTimestamp.collections.entries).isEqualTo(latestReceivedTimestamp)
+    }
+
+    @Test
+    fun `updateLatestBgReceivedIfNewer IGNORES timestamp after a first load`() {
+        // Arrange
+        // 1. Set a state where ENTRIES have already been synced.
+        val initialTimestamp = 1672531200000L
+        sut.lastLoadedSrvModified = LastModified(
+            LastModified.Collections(entries = initialTimestamp)
+        )
+        val newTimestamp = initialTimestamp + 1000L
+        assertThat(sut.isFirstLoad(NsClient.Collection.ENTRIES)).isFalse()
+
+        // Act
+        sut.updateLatestBgReceivedIfNewer(newTimestamp)
+
+        // Assert
+        // Verify that the firstLoadContinueTimestamp for entries remains unchanged (at its default 0L).
+        assertThat(sut.firstLoadContinueTimestamp.collections.entries).isEqualTo(0L)
+    }
+
+    @Test
+    fun `updateLatestTreatmentReceivedIfNewer SETS timestamp during a first load`() {
+        // Arrange
+        // 1. Ensure isFirstLoad(TREATMENTS) will return true.
+        val latestReceivedTimestamp = 1672541200000L
+        assertThat(sut.isFirstLoad(NsClient.Collection.TREATMENTS)).isTrue()
+        assertThat(sut.firstLoadContinueTimestamp.collections.treatments).isEqualTo(0L)
+
+        // Act
+        sut.updateLatestTreatmentReceivedIfNewer(latestReceivedTimestamp)
+
+        // Assert
+        // Verify that the firstLoadContinueTimestamp for treatments was updated.
+        assertThat(sut.firstLoadContinueTimestamp.collections.treatments).isEqualTo(latestReceivedTimestamp)
+    }
+
+    @Test
+    fun `updateLatestTreatmentReceivedIfNewer IGNORES timestamp after a first load`() {
+        // Arrange
+        // 1. Set a state where TREATMENTS have already been synced.
+        val initialTimestamp = 1672541200000L
+        sut.lastLoadedSrvModified = LastModified(
+            LastModified.Collections(treatments = initialTimestamp)
+        )
+        val newTimestamp = initialTimestamp + 1000L
+        assertThat(sut.isFirstLoad(NsClient.Collection.TREATMENTS)).isFalse()
+
+        // Act
+        sut.updateLatestTreatmentReceivedIfNewer(newTimestamp)
+
+        // Assert
+        // Verify that the firstLoadContinueTimestamp for treatments remains unchanged (at its default 0L).
+        assertThat(sut.firstLoadContinueTimestamp.collections.treatments).isEqualTo(0L)
+    }
+
+    @Test
+    fun `handleClearAlarm delegates to service when plugin and upload are enabled`() {
+        // Arrange
+        //1. Mock the original alarm object
+        val mockAlarm: NSAlarm = mock()
+        val silenceDuration = T.mins(15).msecs()
+        val lastModified = Json.encodeToString(LastModified.serializer(), LastModified(LastModified.Collections()))
+
+        // 2. Ensure both the plugin and the upload preference are enabled.
+        whenever(preferences.get(NsclientStringKey.V3LastModified)).thenReturn(lastModified)
+        whenever(preferences.get(BooleanKey.NsClientUploadData)).thenReturn(true)
+        whenever(receiverDelegate.blockingReason).thenReturn("Block")
+        sut.setPluginEnabledBlocking(PluginType.SYNC, true)
+
+        // Act
+        sut.handleClearAlarm(mockAlarm, silenceDuration)
+
+        // Assert
+        // Verify that the call was passed through to the nsClientV3Service with the correct parameters.
+        verify(nsClientV3Service).handleClearAlarm(mockAlarm, silenceDuration)
+        sut.setPluginEnabled(PluginType.SYNC, false)
+    }
+
+    @Test
+    fun `handleClearAlarm does nothing when plugin is disabled`() {
+        // Arrange
+        val mockAlarm: NSAlarm = mock()
+        val silenceDuration = T.mins(15).msecs()
+        val lastModified = Json.encodeToString(LastModified.serializer(), LastModified(LastModified.Collections()))
+
+        // 2. Ensure both the plugin and the upload preference are enabled.
+        whenever(preferences.get(NsclientStringKey.V3LastModified)).thenReturn(lastModified)
+        whenever(preferences.get(BooleanKey.NsClientUploadData)).thenReturn(true) // Upload is still enabled
+        whenever(receiverDelegate.blockingReason).thenReturn("Block")
+        sut.setPluginEnabled(PluginType.SYNC, false)
+
+        // Act
+        sut.handleClearAlarm(mockAlarm, silenceDuration)
+
+        // Assert
+        // Verify that the service was never called.
+        verify(nsClientV3Service, never()).handleClearAlarm(any(), any())
+    }
+
+    @Test
+    fun `handleClearAlarm does nothing and logs when upload is disabled`() {
+        // Arrange
+        val mockAlarm: NSAlarm = mock()
+        val silenceDuration = T.mins(15).msecs()
+
+        // 2. Ensure the plugin is enabled, but the upload preference is disabled.
+        whenever(preferences.get(BooleanKey.NsClientUploadData)).thenReturn(false)
+
+        // Act
+        sut.handleClearAlarm(mockAlarm, silenceDuration)
+
+        // Assert
+        // 1. Verify that the service was never called.
+        verify(nsClientV3Service, never()).handleClearAlarm(any(), any())
     }
 }

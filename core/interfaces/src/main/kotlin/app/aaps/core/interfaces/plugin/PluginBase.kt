@@ -98,6 +98,30 @@ abstract class PluginBase(
         }
     }
 
+    /**
+     * Version of setPluginEnabled used for testing only.
+     * OnStart/OnStop is called directly.
+     */
+    fun setPluginEnabledBlocking(type: PluginType, newState: Boolean) {
+        if (type == pluginDescription.mainType) {
+            if (newState) { // enabling plugin
+                if (state != State.ENABLED) {
+                    onStateChange(type, state, State.ENABLED)
+                    state = State.ENABLED
+                    aapsLogger.debug(LTag.CORE, "Starting: $name")
+                    onStart()
+                }
+            } else { // disabling plugin
+                if (state == State.ENABLED) {
+                    onStateChange(type, state, State.DISABLED)
+                    state = State.DISABLED
+                    onStop()
+                    aapsLogger.debug(LTag.CORE, "Stopping: $name")
+                }
+            }
+        }
+    }
+
     open fun setFragmentVisible(type: PluginType, fragmentVisible: Boolean) {
         if (type == pluginDescription.mainType) {
             this.fragmentVisible = fragmentVisible && specialEnableCondition()
