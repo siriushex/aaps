@@ -57,6 +57,7 @@ import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.whenever
 import javax.inject.Provider
 
 @Suppress("SpellCheckingInspection")
@@ -160,13 +161,13 @@ open class TestBaseWithProfile : TestBase() {
         decimalFormatter = DecimalFormatterImpl(rh)
         profileUtil = ProfileUtilImpl(preferences, decimalFormatter)
         testPumpPlugin = TestPumpPlugin(rh)
-        Mockito.`when`(context.applicationContext).thenReturn(context)
-        Mockito.`when`(context.androidInjector()).thenReturn(injector.androidInjector())
-        Mockito.`when`(context.theme).thenReturn(theme)
-        Mockito.`when`(context.obtainStyledAttributes(anyObject(), any(), any(), any())).thenReturn(typedArray)
-        Mockito.`when`(dateUtil.now()).thenReturn(now)
-        Mockito.`when`(activePlugin.activePump).thenReturn(testPumpPlugin)
-        Mockito.`when`(preferences.get(StringKey.GeneralUnits)).thenReturn(GlucoseUnit.MGDL.asText)
+        whenever(context.applicationContext).thenReturn(context)
+        whenever(context.androidInjector()).thenReturn(injector.androidInjector())
+        whenever(context.theme).thenReturn(theme)
+        whenever(context.obtainStyledAttributes(anyObject(), any(), any(), any())).thenReturn(typedArray)
+        whenever(dateUtil.now()).thenReturn(now)
+        whenever(activePlugin.activePump).thenReturn(testPumpPlugin)
+        whenever(preferences.get(StringKey.GeneralUnits)).thenReturn(GlucoseUnit.MGDL.asText)
         deltaCalculator = DeltaCalculator(aapsLogger)
         apsResultProvider = Provider { DetermineBasalResult(aapsLogger, constraintsChecker, preferences, activePlugin, processedTbrEbData, profileFunction, rh, decimalFormatter, dateUtil, apsResultProvider) }
         hardLimits = HardLimitsMock(preferences, rh)
@@ -187,8 +188,8 @@ open class TestBaseWithProfile : TestBase() {
             iCfg = ICfg("", 0, 0)
         )
 
-        Mockito.`when`(rh.gs(R.string.ok)).thenReturn("OK")
-        Mockito.`when`(rh.gs(R.string.error)).thenReturn("Error")
+        whenever(rh.gs(R.string.ok)).thenReturn("OK")
+        whenever(rh.gs(R.string.error)).thenReturn("Error")
 
         Mockito.doAnswer { invocation: InvocationOnMock ->
             val string = invocation.getArgument<Int>(0)
