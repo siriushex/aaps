@@ -75,7 +75,7 @@ class NsIncomingDataProcessor @Inject constructor(
 ) {
 
     private fun toGv(jsonObject: JSONObject): GV? {
-        val sgv = NSSgvObject(jsonObject)
+        val sgv = NSSgv(jsonObject)
         return GV(
             timestamp = sgv.mills ?: return null,
             value = sgv.mgdl?.toDouble() ?: return null,

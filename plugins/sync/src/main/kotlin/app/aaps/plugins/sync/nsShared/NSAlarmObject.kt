@@ -19,24 +19,31 @@ class NSAlarmObject(private var data: JSONObject) : NSAlarm {
     }
      */
 
-    override fun level(): Int =
+    override val level: Int
+        get() =
         JsonHelper.safeGetInt(data, "level", 0)
 
-    override fun group(): String =
+    override val group: String
+        get() =
         JsonHelper.safeGetString(data, "group", "N/A")
 
-    override fun title(): String =
+    override val title: String
+        get() =
         JsonHelper.safeGetString(data, "title", "N/A")
 
-    override fun message(): String =
+    override val message: String
+        get() =
         JsonHelper.safeGetString(data, "message", "N/A")
 
-    override fun low(): Boolean =
+    override val low: Boolean
+        get() =
         JsonHelper.safeGetString(data, "eventName", "") == "low"
 
-    override fun high(): Boolean =
+    override val high: Boolean
+        get() =
         JsonHelper.safeGetString(data, "eventName", "") == "high"
 
-    override fun timeago(): Boolean =
+    override val timeAgo: Boolean
+        get() =
         JsonHelper.safeGetString(data, "eventName", "") == "timeago"
 }
