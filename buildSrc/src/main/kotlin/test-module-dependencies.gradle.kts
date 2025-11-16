@@ -21,6 +21,7 @@ dependencies {
     androidTestImplementationFromCatalog("androidx-test-rules")
     androidTestImplementationFromCatalog("com-google-truth")
     androidTestImplementationFromCatalog("androidx-uiautomator")
+    androidTestImplementationFromCatalog("org-mockito-android")
     androidTestImplementationFromCatalog("org-mockito-kotlin")
 }
 
