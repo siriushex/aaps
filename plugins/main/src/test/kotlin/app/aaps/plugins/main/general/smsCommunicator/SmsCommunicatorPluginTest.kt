@@ -655,6 +655,7 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
     @Test fun processProfileTest() {
 
         //PROFILE
+        whenever(preferences.get(BooleanKey.SmsAllowRemoteCommands)).thenReturn(false)
         smsCommunicatorPlugin.messages = ArrayList()
         var sms = Sms("1234", "PROFILE")
         smsCommunicatorPlugin.processSms(sms)
@@ -750,6 +751,7 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
     @Test fun processBasalTest() {
 
         //BASAL
+        whenever(preferences.get(BooleanKey.SmsAllowRemoteCommands)).thenReturn(false)
         smsCommunicatorPlugin.messages = ArrayList()
         var sms = Sms("1234", "BASAL")
         smsCommunicatorPlugin.processSms(sms)
@@ -847,6 +849,7 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
     @Test fun processExtendedTest() {
 
         //EXTENDED
+        whenever(preferences.get(BooleanKey.SmsAllowRemoteCommands)).thenReturn(false)
         smsCommunicatorPlugin.messages = ArrayList()
         var sms = Sms("1234", "EXTENDED")
         smsCommunicatorPlugin.processSms(sms)
@@ -902,6 +905,7 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
     @Test fun processBolusTest() {
 
         //BOLUS
+        whenever(preferences.get(BooleanKey.SmsAllowRemoteCommands)).thenReturn(false)
         smsCommunicatorPlugin.messages = ArrayList()
         var sms = Sms("1234", "BOLUS")
         smsCommunicatorPlugin.processSms(sms)
@@ -990,6 +994,7 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
     @Test fun processCalTest() {
 
         //CAL
+        whenever(preferences.get(BooleanKey.SmsAllowRemoteCommands)).thenReturn(false)
         smsCommunicatorPlugin.messages = ArrayList()
         var sms = Sms("1234", "CAL")
         smsCommunicatorPlugin.processSms(sms)
