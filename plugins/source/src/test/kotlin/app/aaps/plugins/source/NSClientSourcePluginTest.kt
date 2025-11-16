@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 
-class NSClientPluginTest : TestBase() {
+class NSClientSourcePluginTest : TestBase() {
 
     private lateinit var nsClientSourcePlugin: NSClientSourcePlugin
 

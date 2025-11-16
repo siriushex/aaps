@@ -45,7 +45,7 @@ class BolusWizardTest : TestBaseWithProfile() {
     @Mock lateinit var persistenceLayer: PersistenceLayer
 
     @BeforeEach
-    fun prepareMocking() {
+    fun prepare() {
         whenever(activePlugin.activeAPS).thenReturn(openAPSSMBPlugin)
     }
 

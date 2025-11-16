@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
+import org.mockito.MockitoAnnotations
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.whenever
@@ -25,6 +26,7 @@ class SPImplTest {
 
     @BeforeEach
     fun setUp() {
+        MockitoAnnotations.openMocks(this)
         sut = SPImpl(SharedPreferencesMock(), context)
         whenever(context.getString(someResource)).thenReturn("some_resource")
         whenever(context.getString(someResource2)).thenReturn("some_resource_2")

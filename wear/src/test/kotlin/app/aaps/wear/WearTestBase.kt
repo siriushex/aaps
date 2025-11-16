@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mock
+import org.mockito.MockitoAnnotations
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
 import org.mockito.kotlin.doAnswer
@@ -42,6 +43,7 @@ open class WearTestBase {
     @OptIn(ExperimentalTime::class)
     @BeforeEach
     fun setup() {
+        MockitoAnnotations.openMocks(this)
         wearUtil = WearUtil(context, aapsLogger, clock)
         doAnswer { invocation ->
             val key = invocation.getArgument<String>(0)
