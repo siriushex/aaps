@@ -6,6 +6,7 @@ import androidx.preference.PreferenceManager
 import app.aaps.core.data.model.EPS
 import app.aaps.core.data.model.GlucoseUnit
 import app.aaps.core.data.model.ICfg
+import app.aaps.core.data.model.PS
 import app.aaps.core.interfaces.aps.APSResult
 import app.aaps.core.interfaces.aps.GlucoseStatus
 import app.aaps.core.interfaces.configuration.Config
@@ -142,6 +143,7 @@ open class TestBaseWithProfile : TestBase() {
     lateinit var preferenceManager: PreferenceManager
     lateinit var validProfile: ProfileSealed.Pure
     lateinit var effectiveProfileSwitch: EPS
+    lateinit var profileSwitch: PS
     lateinit var testPumpPlugin: TestPumpPlugin
 
     var now = 1656358822000L
@@ -185,6 +187,19 @@ open class TestBaseWithProfile : TestBase() {
             originalPercentage = 100,
             originalDuration = 0,
             originalEnd = 0,
+            iCfg = ICfg("", 0, 0)
+        )
+        profileSwitch = PS(
+            timestamp = dateUtil.now(),
+            basalBlocks = validProfile.basalBlocks,
+            isfBlocks = validProfile.isfBlocks,
+            icBlocks = validProfile.icBlocks,
+            targetBlocks = validProfile.targetBlocks,
+            glucoseUnit = GlucoseUnit.MMOL,
+            profileName = "",
+            timeshift = 0,
+            percentage = 100,
+            duration = 0,
             iCfg = ICfg("", 0, 0)
         )
 
