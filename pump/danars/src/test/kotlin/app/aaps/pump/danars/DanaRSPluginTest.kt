@@ -15,7 +15,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mock
-import org.mockito.Mockito
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.whenever
 
 @Suppress("SpellCheckingInspection")
 class DanaRSPluginTest : DanaRSTestBase() {
@@ -55,10 +56,10 @@ class DanaRSPluginTest : DanaRSTestBase() {
 
     @BeforeEach
     fun prepareMocks() {
-        Mockito.`when`(preferences.get(DanaStringKey.RsName)).thenReturn("")
-        Mockito.`when`(preferences.get(DanaStringKey.MacAddress)).thenReturn("")
-        Mockito.`when`(rh.gs(eq(app.aaps.core.ui.R.string.limitingbasalratio), anyObject(), anyObject())).thenReturn("limitingbasalratio")
-        Mockito.`when`(rh.gs(eq(app.aaps.core.ui.R.string.limitingpercentrate), anyObject(), anyObject())).thenReturn("limitingpercentrate")
+        whenever(preferences.get(DanaStringKey.RsName)).thenReturn("")
+        whenever(preferences.get(DanaStringKey.MacAddress)).thenReturn("")
+        whenever(rh.gs(eq(app.aaps.core.ui.R.string.limitingbasalratio), anyOrNull(), anyOrNull())).thenReturn("limitingbasalratio")
+        whenever(rh.gs(eq(app.aaps.core.ui.R.string.limitingpercentrate), anyOrNull(), anyOrNull())).thenReturn("limitingpercentrate")
 
         danaRSPlugin =
             DanaRSPlugin(

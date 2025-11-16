@@ -5,16 +5,16 @@ import app.aaps.core.interfaces.profile.Profile.ProfileValue
 import app.aaps.pump.omnipod.dash.driver.pod.definition.BasalProgram
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import kotlin.test.assertFailsWith
 
 class FunctionsTest {
 
     @Test fun validProfile() {
-        val profile = Mockito.mock(Profile::class.java)
+        val profile: Profile = mock()
 
-        `when`(profile.getBasalValues()).thenReturn(
+        whenever(profile.getBasalValues()).thenReturn(
             arrayOf(
                 ProfileValue(0, 0.5),
                 ProfileValue(18000, 1.0),
@@ -40,9 +40,9 @@ class FunctionsTest {
     }
 
     @Test fun invalidProfileZeroEntries() {
-        val profile = Mockito.mock(Profile::class.java)
+        val profile: Profile = mock()
 
-        `when`(profile.getBasalValues()).thenReturn(emptyArray())
+        whenever(profile.getBasalValues()).thenReturn(emptyArray())
 
         val exception = assertFailsWith<IllegalArgumentException> {
             mapProfileToBasalProgram(profile)
@@ -51,9 +51,9 @@ class FunctionsTest {
     }
 
     @Test fun invalidProfileNonZeroOffset() {
-        val profile = Mockito.mock(Profile::class.java)
+        val profile: Profile = mock()
 
-        `when`(profile.getBasalValues()).thenReturn(
+        whenever(profile.getBasalValues()).thenReturn(
             arrayOf(ProfileValue(1800, 0.5))
         )
 
@@ -64,9 +64,9 @@ class FunctionsTest {
     }
 
     @Test fun invalidProfileMoreThan24Hours() {
-        val profile = Mockito.mock(Profile::class.java)
+        val profile: Profile = mock()
 
-        `when`(profile.getBasalValues()).thenReturn(
+        whenever(profile.getBasalValues()).thenReturn(
             arrayOf(
                 ProfileValue(0, 0.5),
                 ProfileValue(86400, 0.5)
@@ -80,9 +80,9 @@ class FunctionsTest {
     }
 
     @Test fun invalidProfileNegativeOffset() {
-        val profile = Mockito.mock(Profile::class.java)
+        val profile: Profile = mock()
 
-        `when`(profile.getBasalValues()).thenReturn(
+        whenever(profile.getBasalValues()).thenReturn(
             arrayOf(ProfileValue(-1, 0.5))
         )
 
@@ -93,9 +93,9 @@ class FunctionsTest {
     }
 
     @Test fun roundsToSupportedPrecision() {
-        val profile = Mockito.mock(Profile::class.java)
+        val profile: Profile = mock()
 
-        `when`(profile.getBasalValues()).thenReturn(
+        whenever(profile.getBasalValues()).thenReturn(
             arrayOf(
                 ProfileValue(0, 0.04)
             )

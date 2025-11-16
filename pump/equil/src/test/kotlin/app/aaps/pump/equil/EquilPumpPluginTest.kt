@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
-import org.mockito.Mockito
+import org.mockito.kotlin.whenever
 
 class EquilPumpPluginTest : TestBaseWithProfile() {
 
@@ -22,7 +22,7 @@ class EquilPumpPluginTest : TestBaseWithProfile() {
     @BeforeEach
     fun prepareMocks() {
 
-        Mockito.`when`(rh.gs(anyInt())).thenReturn("")
+        whenever(rh.gs(anyInt())).thenReturn("")
         equilPumpPlugin =
             EquilPumpPlugin(
                 aapsLogger, rh, preferences, commandQueue, aapsSchedulers, rxBus, context,

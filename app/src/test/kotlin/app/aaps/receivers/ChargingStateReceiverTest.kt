@@ -9,8 +9,9 @@ import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 class ChargingStateReceiverTest : TestBaseWithProfile() {
@@ -38,7 +39,7 @@ class ChargingStateReceiverTest : TestBaseWithProfile() {
         whenever(intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)).thenReturn(pluggedType)
 
         // Mock the specific call the receiver makes
-        whenever(context.registerReceiver(anyObject(), any())).thenReturn(intent)
+        whenever(context.registerReceiver(anyOrNull(), any())).thenReturn(intent)
     }
 
     @Test

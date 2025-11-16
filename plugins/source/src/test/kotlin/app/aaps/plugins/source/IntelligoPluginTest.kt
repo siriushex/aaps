@@ -34,8 +34,8 @@ class IntelligoPluginTest : TestBaseWithProfile() {
     @BeforeEach
     fun setup() {
         whenever(context.contentResolver).thenReturn(contentResolver)
-        whenever(contentResolver.query(anyObject(), anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(cursor)
-        whenever(persistenceLayer.insertCgmSourceData(anyObject(), anyObject(), anyObject(), anyObject())).thenReturn(Single.just(PersistenceLayer.TransactionResult()))
+        whenever(contentResolver.query(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(cursor)
+        whenever(persistenceLayer.insertCgmSourceData(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(Single.just(PersistenceLayer.TransactionResult()))
 
         intelligoPlugin = IntelligoPlugin(rh, aapsLogger, preferences, context, persistenceLayer, dateUtil, fabricPrivacy)
 

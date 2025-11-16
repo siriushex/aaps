@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
 @ExtendWith(MockitoExtension::class)
@@ -50,13 +50,13 @@ class InsulinOrefUltraRapidActingPluginTest {
 
     @Test
     fun commentStandardTextTest() {
-        `when`(rh.gs(eq(R.string.ultra_fast_acting_insulin_comment))).thenReturn("Fiasp")
+        whenever(rh.gs(eq(R.string.ultra_fast_acting_insulin_comment))).thenReturn("Fiasp")
         assertThat(sut.commentStandardText()).isEqualTo("Fiasp")
     }
 
     @Test
     fun getFriendlyNameTest() {
-        `when`(rh.gs(eq(R.string.ultra_rapid_oref))).thenReturn("Ultra-Rapid Oref")
+        whenever(rh.gs(eq(R.string.ultra_rapid_oref))).thenReturn("Ultra-Rapid Oref")
         assertThat(sut.friendlyName).isEqualTo("Ultra-Rapid Oref")
     }
 

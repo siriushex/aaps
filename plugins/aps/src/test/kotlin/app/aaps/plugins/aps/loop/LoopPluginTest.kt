@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.Mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.never
@@ -316,7 +317,7 @@ class LoopPluginTest : TestBaseWithProfile() {
         whenever(constraintChecker.isClosedLoopAllowed()).thenReturn(ConstraintObject(true, aapsLogger))
         mockCurrentMode(RM.Mode.OPEN_LOOP)
         whenever(constraintChecker.isLoopInvocationAllowed()).thenReturn(ConstraintObject(false, aapsLogger))
-        whenever(persistenceLayer.insertOrUpdateRunningMode(any(), any(), any(), anyObject(), any()))
+        whenever(persistenceLayer.insertOrUpdateRunningMode(any(), any(), any(), anyOrNull(), any()))
             .thenReturn(Single.just(PersistenceLayer.TransactionResult()))
         val expectedModes = listOf(
             // OPEN_LOOP, CLOSED_LOOP, and CLOSED_LOOP_LGS should be removed
@@ -367,7 +368,7 @@ class LoopPluginTest : TestBaseWithProfile() {
         whenever(constraintChecker.isLgsForced()).thenReturn(ConstraintObject(false, aapsLogger))
 
         // Mock the database calls
-        whenever(persistenceLayer.insertOrUpdateRunningMode(any(), any(), any(), anyObject(), any()))
+        whenever(persistenceLayer.insertOrUpdateRunningMode(any(), any(), any(), anyOrNull(), any()))
             .thenReturn(Single.just(PersistenceLayer.TransactionResult()))
 
         // Default the active mode to prevent nulls. The mockCurrentMode helper will override this.
@@ -396,8 +397,8 @@ class LoopPluginTest : TestBaseWithProfile() {
             modeCaptor.capture(),
             eq(Action.SUSPEND),
             eq(Sources.Loop),
-            anyObject(),
-            anyObject()
+            anyOrNull(),
+            anyOrNull()
         )
         // Verify that the plugin tried to insert a new, auto-forced SUSPENDED_BY_PUMP mode
         assertThat(modeCaptor.firstValue.mode).isEqualTo(RM.Mode.SUSPENDED_BY_PUMP)
@@ -430,8 +431,8 @@ class LoopPluginTest : TestBaseWithProfile() {
             modeCaptor.capture(),
             eq(Action.PUMP_RUNNING),
             eq(Sources.Loop),
-            anyObject(),
-            anyObject()
+            anyOrNull(),
+            anyOrNull()
         )
         // Verify we are *ending* the SUSPENDED_BY_PUMP mode by setting its duration
         assertThat(modeCaptor.firstValue.mode).isEqualTo(RM.Mode.SUSPENDED_BY_PUMP)
@@ -455,8 +456,8 @@ class LoopPluginTest : TestBaseWithProfile() {
             modeCaptor.capture(),
             eq(Action.LOOP_DISABLED),
             eq(Sources.Loop),
-            anyObject(),
-            anyObject()
+            anyOrNull(),
+            anyOrNull()
         )
         assertThat(modeCaptor.firstValue.mode).isEqualTo(RM.Mode.DISABLED_LOOP)
         assertThat(modeCaptor.firstValue.autoForced).isTrue()
@@ -479,8 +480,8 @@ class LoopPluginTest : TestBaseWithProfile() {
             modeCaptor.capture(),
             eq(Action.OPEN_LOOP_MODE),
             eq(Sources.Loop),
-            anyObject(),
-            anyObject()
+            anyOrNull(),
+            anyOrNull()
         )
         assertThat(modeCaptor.firstValue.mode).isEqualTo(RM.Mode.OPEN_LOOP)
         assertThat(modeCaptor.firstValue.autoForced).isTrue()
@@ -511,8 +512,8 @@ class LoopPluginTest : TestBaseWithProfile() {
             modeCaptor.capture(),
             eq(Action.LOOP_CHANGE),
             eq(Sources.Loop),
-            anyObject(),
-            anyObject()
+            anyOrNull(),
+            anyOrNull()
         )
         // Verify that the ended mode is the one we started with, and its duration is now set
         assertThat(modeCaptor.firstValue.mode).isEqualTo(RM.Mode.OPEN_LOOP)
@@ -532,7 +533,7 @@ class LoopPluginTest : TestBaseWithProfile() {
 
         // Assert
         // Verify that no *new* running mode was inserted.
-        verify(persistenceLayer, never()).insertOrUpdateRunningMode(any(), any(), any(), anyObject(), any())
+        verify(persistenceLayer, never()).insertOrUpdateRunningMode(any(), any(), any(), anyOrNull(), any())
     }
 
 // endregion

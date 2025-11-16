@@ -10,9 +10,10 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.spy
+import org.mockito.kotlin.doReturn
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.spy
+import org.mockito.kotlin.whenever
 import org.spongycastle.util.encoders.Hex
 
 class KeyExchangeTest : TestBase() {
@@ -27,12 +28,12 @@ class KeyExchangeTest : TestBase() {
     @Test fun testLTK() {
         val aapsLogger = AAPSLoggerTest()
 
-        Mockito.doReturn(Hex.decode("27ec94b71a201c5e92698d668806ae5ba00594c307cf5566e60c1fc53a6f6bb6"))
-            .`when`(keyGeneratorSpy).generatePrivateKey()
+        doReturn(Hex.decode("27ec94b71a201c5e92698d668806ae5ba00594c307cf5566e60c1fc53a6f6bb6"))
+            .whenever(keyGeneratorSpy).generatePrivateKey()
 
         val pdmNonce = Hex.decode("edfdacb242c7f4e1d2bc4d93ca3c5706")
 
-        Mockito.`when`(randomByteGenerator.nextBytes(anyInt())).thenReturn(pdmNonce)
+        whenever(randomByteGenerator.nextBytes(anyInt())).thenReturn(pdmNonce)
 
         val ke = KeyExchange(
             aapsLogger,

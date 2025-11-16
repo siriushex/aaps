@@ -16,8 +16,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.Mockito
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import kotlin.test.assertIs
 import kotlin.time.Duration.Companion.seconds
 
@@ -50,21 +51,21 @@ internal class DataSyncWorkerTest : TestBase() {
 
     @BeforeEach
     fun prepare() {
-        `when`(context.applicationContext).thenReturn(context)
-        `when`(context.androidInjector()).thenReturn(injector.androidInjector())
-        `when`(activePlugin.activeNsClient).thenReturn(nsClient)
+        whenever(context.applicationContext).thenReturn(context)
+        whenever(context.androidInjector()).thenReturn(injector.androidInjector())
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
     }
 
     @Test
     fun doWorkAndLog() = runTest(timeout = 30.seconds) {
         sut = TestListenableWorkerBuilder<DataSyncWorker>(context).build()
-        `when`(nsClient.hasWritePermission).thenReturn(false)
+        whenever(nsClient.hasWritePermission).thenReturn(false)
         sut.doWorkAndLog()
-        Mockito.verify(dataSyncSelectorV3, Mockito.times(0)).doUpload()
+        verify(dataSyncSelectorV3, times(0)).doUpload()
 
-        `when`(nsClient.hasWritePermission).thenReturn(true)
+        whenever(nsClient.hasWritePermission).thenReturn(true)
         val result = sut.doWorkAndLog()
-        Mockito.verify(dataSyncSelectorV3, Mockito.times(1)).doUpload()
+        verify(dataSyncSelectorV3, times(1)).doUpload()
         assertIs<Success>(result)
     }
 }

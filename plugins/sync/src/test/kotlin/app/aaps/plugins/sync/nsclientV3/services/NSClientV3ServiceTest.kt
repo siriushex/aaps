@@ -12,7 +12,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 
 class NSClientV3ServiceTest : TestBaseWithProfile() {
 
@@ -44,14 +44,14 @@ class NSClientV3ServiceTest : TestBaseWithProfile() {
     @Test
     fun initializeWebSocketsTest() {
         // No url specified
-        `when`(preferences.get(StringKey.NsClientUrl)).thenReturn("")
+        whenever(preferences.get(StringKey.NsClientUrl)).thenReturn("")
         sut.initializeWebSockets("Test")
         sut.shutdownWebsockets()
         assertThat(sut.storageSocket).isNull()
         // Socket should be created
-        `when`(preferences.get(StringKey.NsClientUrl)).thenReturn("http://something")
-        `when`(preferences.get(BooleanKey.NsClientNotificationsFromAnnouncements)).thenReturn(true)
-        `when`(nsClientV3Plugin.isAllowed).thenReturn(true)
+        whenever(preferences.get(StringKey.NsClientUrl)).thenReturn("http://something")
+        whenever(preferences.get(BooleanKey.NsClientNotificationsFromAnnouncements)).thenReturn(true)
+        whenever(nsClientV3Plugin.isAllowed).thenReturn(true)
         sut.initializeWebSockets("Test")
         assertThat(sut.storageSocket).isNotNull()
         assertThat(sut.alarmSocket).isNotNull()

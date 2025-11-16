@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.junit.jupiter.MockitoSettings
+import org.mockito.kotlin.whenever
 import org.mockito.quality.Strictness
 
 @ExtendWith(MockitoExtension::class)
@@ -50,13 +50,13 @@ class InsulinLyumjevPluginTest {
 
     @Test
     fun commentStandardTextTest() {
-        `when`(rh.gs(eq(R.string.lyumjev))).thenReturn("Lyumjev")
+        whenever(rh.gs(eq(R.string.lyumjev))).thenReturn("Lyumjev")
         assertThat(sut.commentStandardText()).isEqualTo("Lyumjev")
     }
 
     @Test
     fun getFriendlyNameTest() {
-        `when`(rh.gs(eq(R.string.lyumjev))).thenReturn("Lyumjev")
+        whenever(rh.gs(eq(R.string.lyumjev))).thenReturn("Lyumjev")
         assertThat(sut.friendlyName).isEqualTo("Lyumjev")
     }
 
