@@ -407,4 +407,302 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         sut.confirmLastProfileStore(10)
         verify(preferences, Times(1)).put(NsclientLongKey.ProfileStoreLastSyncedId, 10)
     }
+
+    // Tests for processChangedCarbs
+    @Test
+    fun processChangedCarbsWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedCarbs()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementCarbs(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedCarbsAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastCarbsId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementCarbs(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedCarbs()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedBolusCalculatorResults
+    @Test
+    fun processChangedBolusCalculatorResultsWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastBolusCalculatorResultId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.BolusCalculatorLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedBolusCalculatorResults()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementBolusCalculatorResult(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedBolusCalculatorResultsAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastBolusCalculatorResultId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.BolusCalculatorLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementBolusCalculatorResult(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedBolusCalculatorResults()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.BolusCalculatorLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedTempTargets
+    @Test
+    fun processChangedTempTargetsWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastTemporaryTargetId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.TemporaryTargetLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedTempTargets()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementTemporaryTarget(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedTempTargetsAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastTemporaryTargetId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.TemporaryTargetLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementTemporaryTarget(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedTempTargets()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.TemporaryTargetLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedFoods
+    @Test
+    fun processChangedFoodsWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastFoodId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.FoodLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedFoods()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementFood(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedFoodsAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastFoodId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.FoodLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementFood(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedFoods()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.FoodLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedGlucoseValues
+    @Test
+    fun processChangedGlucoseValuesWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastGlucoseValueId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.GlucoseValueLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedGlucoseValues()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementGlucoseValue(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedGlucoseValuesAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastGlucoseValueId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.GlucoseValueLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementGlucoseValue(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedGlucoseValues()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.GlucoseValueLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedTherapyEvents
+    @Test
+    fun processChangedTherapyEventsWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastTherapyEventId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.TherapyEventLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedTherapyEvents()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementTherapyEvent(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedTherapyEventsAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastTherapyEventId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.TherapyEventLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementTherapyEvent(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedTherapyEvents()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.TherapyEventLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedDeviceStatuses
+    @Test
+    fun processChangedDeviceStatusesWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastDeviceStatusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.DeviceStatusLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedDeviceStatuses()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementDeviceStatus(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedDeviceStatusesAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastDeviceStatusId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.DeviceStatusLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementDeviceStatus(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedDeviceStatuses()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.DeviceStatusLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedTemporaryBasals
+    @Test
+    fun processChangedTemporaryBasalsWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastTemporaryBasalId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.TemporaryBasalLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedTemporaryBasals()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementTemporaryBasal(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedTemporaryBasalsAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastTemporaryBasalId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.TemporaryBasalLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementTemporaryBasal(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedTemporaryBasals()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.TemporaryBasalLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedExtendedBoluses
+    @Test
+    fun processChangedExtendedBolusesWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastExtendedBolusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.ExtendedBolusLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedExtendedBoluses()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementExtendedBolus(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedExtendedBolusesAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastExtendedBolusId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.ExtendedBolusLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementExtendedBolus(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedExtendedBoluses()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.ExtendedBolusLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedProfileSwitches
+    @Test
+    fun processChangedProfileSwitchesWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastProfileSwitchId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.ProfileSwitchLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedProfileSwitches()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementProfileSwitch(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedProfileSwitchesAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastProfileSwitchId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.ProfileSwitchLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementProfileSwitch(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedProfileSwitches()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.ProfileSwitchLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedEffectiveProfileSwitches
+    @Test
+    fun processChangedEffectiveProfileSwitchesWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastEffectiveProfileSwitchId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.EffectiveProfileSwitchLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedEffectiveProfileSwitches()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementEffectiveProfileSwitch(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedEffectiveProfileSwitchesAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastEffectiveProfileSwitchId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.EffectiveProfileSwitchLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementEffectiveProfileSwitch(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedEffectiveProfileSwitches()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.EffectiveProfileSwitchLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Tests for processChangedRunningModes
+    @Test
+    fun processChangedRunningModesWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastRunningModeId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.RunningModeLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedRunningModes()
+
+        verify(persistenceLayer, Times(0)).getNextSyncElementRunningMode(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedRunningModesAfterDbResetTest() = runBlocking {
+        whenever(persistenceLayer.getLastRunningModeId()).thenReturn(0)
+        whenever(preferences.get(NsclientLongKey.RunningModeLastSyncedId)).thenReturn(1)
+        whenever(persistenceLayer.getNextSyncElementRunningMode(0)).thenReturn(Maybe.empty())
+
+        sut.processChangedRunningModes()
+
+        verify(preferences, Times(1)).put(NsclientLongKey.RunningModeLastSyncedId, 0)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    // Test for processChangedProfileStore
+    @Test
+    fun processChangedProfileStoreWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+
+        sut.processChangedProfileStore()
+
+        verify(persistenceLayer, Times(0)).getProfileStore(org.mockito.kotlin.any())
+    }
 }
