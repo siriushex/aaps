@@ -72,6 +72,8 @@ class SyncNsRunningModeTransactionTest {
 
         assertThat(result.invalidated).hasSize(1)
         assertThat(existing.isValid).isFalse()
+
+        verify(runningModeDao).updateExistingEntry(existing)
     }
 
     private fun createRunningMode(
