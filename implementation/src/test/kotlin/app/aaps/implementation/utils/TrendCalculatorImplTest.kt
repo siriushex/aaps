@@ -56,8 +56,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendArrow returns existing arrow when value not recalculated`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 100.0, trendArrow = TrendArrow.SINGLE_UP),
-            createGlucoseValue(95.0, 700L)
+            createGlucoseValue(100.0, 300000L, recalculated = 100.0, trendArrow = TrendArrow.SINGLE_UP),
+            createGlucoseValue(95.0, 0L)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_UP)
@@ -65,12 +65,12 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `getTrendArrow calculates DOUBLE_DOWN for slope less than -3_5 per minute`() {
-        // Slope = (95 - 100) / (1000 - 700) = -5 / 300 = -0.01666... per ms = -1000 per minute
-        // We need slope <= -3.5 per minute, so difference must be at least 3.5 * 300 / 60000 = 0.0175 per ms
-        // For 300ms, that's 3.5 * 300 / 60 = 17.5 mg/dL
+        // Need slope <= -3.5 per minute
+        // Over 5 minutes: -3.5 * 5 = -17.5 mg/dL
+        // Using -20 mg/dL over 5 minutes = -4 per minute
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 80.0),  // 20 mg/dL drop over 300ms = -4000 per minute
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 80.0),  // 20 mg/dL drop over 5 min = -4 per minute
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.DOUBLE_DOWN)
@@ -78,10 +78,11 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `getTrendArrow calculates SINGLE_DOWN for slope between -3_5 and -2 per minute`() {
-        // For -3 per minute over 300ms: 3 * 300 / 60000 = 0.015 per ms = 4.5 mg/dL
+        // Need -3.5 < slope <= -2 per minute
+        // Over 5 minutes: -2.5 * 5 = -12.5 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 90.0),  // 10 mg/dL drop over 300ms = -2000 per minute
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 87.5),  // 12.5 mg/dL drop over 5 min = -2.5 per minute
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_DOWN)
@@ -89,10 +90,11 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `getTrendArrow calculates FORTY_FIVE_DOWN for slope between -2 and -1 per minute`() {
-        // For -1.5 per minute over 300ms: 1.5 * 300 / 60000 = 0.0075 per ms = 2.25 mg/dL
+        // Need -2 < slope <= -1 per minute
+        // Over 5 minutes: -1.5 * 5 = -7.5 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 97.0),  // 3 mg/dL drop over 300ms = -600 per minute
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 92.5),  // 7.5 mg/dL drop over 5 min = -1.5 per minute
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FORTY_FIVE_DOWN)
@@ -101,8 +103,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendArrow calculates FLAT for slope between -1 and 1 per minute`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 100.0),
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 100.0),
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FLAT)
@@ -110,9 +112,11 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `getTrendArrow calculates FORTY_FIVE_UP for slope between 1 and 2 per minute`() {
+        // Need 1 < slope <= 2 per minute
+        // Over 5 minutes: 1.5 * 5 = 7.5 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 103.0),  // 3 mg/dL rise over 300ms = 600 per minute
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 107.5),  // 7.5 mg/dL rise over 5 min = 1.5 per minute
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FORTY_FIVE_UP)
@@ -120,9 +124,11 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `getTrendArrow calculates SINGLE_UP for slope between 2 and 3_5 per minute`() {
+        // Need 2 < slope <= 3.5 per minute
+        // Over 5 minutes: 2.5 * 5 = 12.5 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 110.0),  // 10 mg/dL rise over 300ms = 2000 per minute
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 112.5),  // 12.5 mg/dL rise over 5 min = 2.5 per minute
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_UP)
@@ -130,9 +136,11 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `getTrendArrow calculates DOUBLE_UP for slope between 3_5 and 40 per minute`() {
+        // Need 3.5 < slope <= 40 per minute
+        // Over 5 minutes: 4 * 5 = 20 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 120.0),  // 20 mg/dL rise over 300ms = 4000 per minute
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 120.0),  // 20 mg/dL rise over 5 min = 4 per minute
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.DOUBLE_UP)
@@ -140,9 +148,10 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `getTrendArrow returns NONE for slope greater than 40 per minute`() {
+        // Over 5 minutes: 50 * 5 = 250 mg/dL (slope = 50 per minute > 40)
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 300.0),  // 200 mg/dL rise over 300ms = 40000 per minute
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 350.0),  // 250 mg/dL rise over 5 min = 50 per minute
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.NONE)
@@ -151,8 +160,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendArrow handles same timestamp gracefully`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 110.0),
-            createGlucoseValue(100.0, 1000L, recalculated = 100.0)  // Same timestamp
+            createGlucoseValue(100.0, 300000L, recalculated = 110.0),
+            createGlucoseValue(100.0, 300000L, recalculated = 100.0)  // Same timestamp
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FLAT)
@@ -161,19 +170,19 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendArrow recalculates when value differs from recalculated`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 110.0, trendArrow = TrendArrow.FLAT),  // Smoothed value differs
-            createGlucoseValue(95.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 112.5, trendArrow = TrendArrow.FLAT),  // Smoothed value differs
+            createGlucoseValue(95.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
-        // Should recalculate and get SINGLE_UP (10 mg/dL rise over 300ms = 2000 per minute)
+        // Should recalculate and get SINGLE_UP (12.5 mg/dL rise over 5 min = 2.5 per minute)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_UP)
     }
 
     @Test
     fun `getTrendDescription returns correct description for DOUBLE_DOWN`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 80.0),
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 80.0),
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Double Down")
@@ -182,8 +191,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendDescription returns correct description for SINGLE_DOWN`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 90.0),
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 87.5),
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Single Down")
@@ -192,8 +201,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendDescription returns correct description for FORTY_FIVE_DOWN`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 97.0),
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 92.5),
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Forty Five Down")
@@ -202,8 +211,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendDescription returns correct description for FLAT`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 100.0),
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 100.0),
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Flat")
@@ -212,8 +221,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendDescription returns correct description for FORTY_FIVE_UP`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 103.0),
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 107.5),
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Forty Five Up")
@@ -222,8 +231,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendDescription returns correct description for SINGLE_UP`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 110.0),
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 112.5),
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Single Up")
@@ -232,8 +241,8 @@ class TrendCalculatorImplTest : TestBase() {
     @Test
     fun `getTrendDescription returns correct description for DOUBLE_UP`() {
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 120.0),
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 120.0),
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Double Up")
@@ -256,10 +265,10 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `slope boundary test at exactly -3_5 per minute`() {
-        // -3.5 per minute over 300ms = -3.5 * 300 / 60000 = -0.0175
+        // -3.5 per minute over 5 minutes = -3.5 * 5 = -17.5 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 98.25),  // -1.75 mg/dL over 300ms
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 82.5),  // -17.5 mg/dL over 5 min
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.DOUBLE_DOWN)
@@ -267,10 +276,10 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `slope boundary test at exactly -2 per minute`() {
-        // -2 per minute over 300ms = -2 * 300 / 60000 = -0.01
+        // -2 per minute over 5 minutes = -2 * 5 = -10 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 99.0),  // -1 mg/dL over 300ms
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 90.0),  // -10 mg/dL over 5 min
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_DOWN)
@@ -278,10 +287,10 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `slope boundary test at exactly -1 per minute`() {
-        // -1 per minute over 300ms = -1 * 300 / 60000 = -0.005
+        // -1 per minute over 5 minutes = -1 * 5 = -5 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 99.5),  // -0.5 mg/dL over 300ms
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 95.0),  // -5 mg/dL over 5 min
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FORTY_FIVE_DOWN)
@@ -289,10 +298,10 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `slope boundary test at exactly 1 per minute`() {
-        // 1 per minute over 300ms = 1 * 300 / 60000 = 0.005
+        // 1 per minute over 5 minutes = 1 * 5 = 5 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 100.5),  // 0.5 mg/dL over 300ms
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 105.0),  // 5 mg/dL over 5 min
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FLAT)
@@ -300,10 +309,10 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `slope boundary test at exactly 2 per minute`() {
-        // 2 per minute over 300ms = 2 * 300 / 60000 = 0.01
+        // 2 per minute over 5 minutes = 2 * 5 = 10 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 101.0),  // 1 mg/dL over 300ms
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 110.0),  // 10 mg/dL over 5 min
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FORTY_FIVE_UP)
@@ -311,10 +320,10 @@ class TrendCalculatorImplTest : TestBase() {
 
     @Test
     fun `slope boundary test at exactly 3_5 per minute`() {
-        // 3.5 per minute over 300ms = 3.5 * 300 / 60000 = 0.0175
+        // 3.5 per minute over 5 minutes = 3.5 * 5 = 17.5 mg/dL
         val data = mutableListOf(
-            createGlucoseValue(100.0, 1000L, recalculated = 101.75),  // 1.75 mg/dL over 300ms
-            createGlucoseValue(100.0, 700L, recalculated = 100.0)
+            createGlucoseValue(100.0, 300000L, recalculated = 117.5),  // 17.5 mg/dL over 5 min
+            createGlucoseValue(100.0, 0L, recalculated = 100.0)
         )
         whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_UP)
