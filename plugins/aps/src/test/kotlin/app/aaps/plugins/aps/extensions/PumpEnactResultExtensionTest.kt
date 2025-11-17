@@ -16,6 +16,32 @@ class PumpEnactResultExtensionTest : TestBase() {
     @Mock lateinit var rh: ResourceHelper
     @Mock lateinit var decimalFormatter: DecimalFormatter
 
+    // Simple test implementation of PumpEnactResult
+    private class TestPumpEnactResult : PumpEnactResult {
+        override var success = false
+        override var enacted = false
+        override var comment = ""
+        override var duration = -1
+        override var absolute = -1.0
+        override var percent = -1
+        override var isPercent = false
+        override var isTempCancel = false
+        override var bolusDelivered = 0.0
+        override var queued = false
+
+        override fun success(success: Boolean) = apply { this.success = success }
+        override fun enacted(enacted: Boolean) = apply { this.enacted = enacted }
+        override fun comment(comment: String) = apply { this.comment = comment }
+        override fun comment(comment: Int) = apply { this.comment = comment.toString() }
+        override fun duration(duration: Int) = apply { this.duration = duration }
+        override fun absolute(absolute: Double) = apply { this.absolute = absolute }
+        override fun percent(percent: Int) = apply { this.percent = percent }
+        override fun isPercent(isPercent: Boolean) = apply { this.isPercent = isPercent }
+        override fun isTempCancel(isTempCancel: Boolean) = apply { this.isTempCancel = isTempCancel }
+        override fun bolusDelivered(bolusDelivered: Double) = apply { this.bolusDelivered = bolusDelivered }
+        override fun queued(queued: Boolean) = apply { this.queued = queued }
+    }
+
     @BeforeEach
     fun setup() {
         // Setup common resource string mocks
@@ -36,7 +62,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with queued result shows waiting message`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             queued = true
         }
@@ -48,7 +74,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with simple success shows success status`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
         }
 
@@ -59,7 +85,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with simple failure shows success status`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = false
         }
 
@@ -70,7 +96,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with bolus delivered shows bolus information`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             bolusDelivered = 5.0
@@ -87,7 +113,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with temp basal cancel shows cancel message`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             isTempCancel = true
@@ -103,7 +129,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with percent temp basal shows percent information`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             isPercent = true
@@ -122,7 +148,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with absolute temp basal shows absolute information`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             absolute = 1.5
@@ -140,7 +166,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with not enacted but with comment shows comment`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = false
             enacted = false
             comment = "Pump not reachable"
@@ -154,7 +180,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml without comment does not include comment line`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             isPercent = true
@@ -169,7 +195,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with bolus and empty comment does not include comment line`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             bolusDelivered = 3.0
@@ -184,7 +210,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with absolute value of -1 is not shown`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             absolute = -1.0
@@ -200,7 +226,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with percent -1 is not shown`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             isPercent = true
@@ -217,7 +243,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with zero bolus delivered shows bolus`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             bolusDelivered = 0.0
@@ -231,7 +257,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml with very small bolus shows bolus`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             bolusDelivered = 0.1
@@ -244,7 +270,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `toHtml formats absolute value to 2 decimals`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             success = true
             enacted = true
             absolute = 2.456

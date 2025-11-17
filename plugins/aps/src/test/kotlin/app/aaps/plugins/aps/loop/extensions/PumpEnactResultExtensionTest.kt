@@ -7,9 +7,35 @@ import org.junit.jupiter.api.Test
 
 class PumpEnactResultExtensionTest : TestBase() {
 
+    // Simple test implementation of PumpEnactResult
+    private class TestPumpEnactResult : PumpEnactResult {
+        override var success = false
+        override var enacted = false
+        override var comment = ""
+        override var duration = -1
+        override var absolute = -1.0
+        override var percent = -1
+        override var isPercent = false
+        override var isTempCancel = false
+        override var bolusDelivered = 0.0
+        override var queued = false
+
+        override fun success(success: Boolean) = apply { this.success = success }
+        override fun enacted(enacted: Boolean) = apply { this.enacted = enacted }
+        override fun comment(comment: String) = apply { this.comment = comment }
+        override fun comment(comment: Int) = apply { this.comment = comment.toString() }
+        override fun duration(duration: Int) = apply { this.duration = duration }
+        override fun absolute(absolute: Double) = apply { this.absolute = absolute }
+        override fun percent(percent: Int) = apply { this.percent = percent }
+        override fun isPercent(isPercent: Boolean) = apply { this.isPercent = isPercent }
+        override fun isTempCancel(isTempCancel: Boolean) = apply { this.isTempCancel = isTempCancel }
+        override fun bolusDelivered(bolusDelivered: Double) = apply { this.bolusDelivered = bolusDelivered }
+        override fun queued(queued: Boolean) = apply { this.queued = queued }
+    }
+
     @Test
     fun `json with bolus delivered includes smb field`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             bolusDelivered = 2.5
         }
 
@@ -22,7 +48,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with zero bolus does not include smb field`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             bolusDelivered = 0.0
         }
 
@@ -33,7 +59,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with temp cancel includes zero rate and duration`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isTempCancel = true
         }
 
@@ -46,7 +72,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with percent temp converts to absolute value`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isPercent = true
             percent = 150
             duration = 30
@@ -62,7 +88,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with percent temp rounds to 2 decimals`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isPercent = true
             percent = 133
             duration = 30
@@ -77,7 +103,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with percent temp handles zero percent`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isPercent = true
             percent = 0
             duration = 30
@@ -92,7 +118,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with absolute temp includes rate and duration`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             absolute = 2.0
             duration = 45
         }
@@ -106,7 +132,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with absolute temp does not depend on baseBasal`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             absolute = 2.5
             duration = 30
         }
@@ -121,7 +147,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with percent temp depends on baseBasal`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isPercent = true
             percent = 200
             duration = 30
@@ -138,7 +164,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with bolus takes precedence over temp`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             bolusDelivered = 3.0
             absolute = 2.0
             duration = 30
@@ -154,7 +180,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with temp cancel takes precedence over percent`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isTempCancel = true
             isPercent = true
             percent = 150
@@ -170,7 +196,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with small bolus includes smb`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             bolusDelivered = 0.1
         }
 
@@ -181,7 +207,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with large bolus includes smb`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             bolusDelivered = 25.0
         }
 
@@ -192,7 +218,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with very small absolute rate`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             absolute = 0.05
             duration = 30
         }
@@ -204,7 +230,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with large absolute rate`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             absolute = 15.0
             duration = 30
         }
@@ -216,7 +242,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with zero duration for absolute temp`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             absolute = 2.0
             duration = 0
         }
@@ -229,7 +255,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with percent handles fractional baseBasal`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isPercent = true
             percent = 120
             duration = 30
@@ -243,7 +269,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with percent 100 equals baseBasal`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isPercent = true
             percent = 100
             duration = 30
@@ -257,7 +283,7 @@ class PumpEnactResultExtensionTest : TestBase() {
 
     @Test
     fun `json with percent 50 is half of baseBasal`() {
-        val result = PumpEnactResult(injector).apply {
+        val result = TestPumpEnactResult().apply {
             isPercent = true
             percent = 50
             duration = 30
