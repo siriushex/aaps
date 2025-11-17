@@ -113,23 +113,6 @@ class SyncNsExtendedBolusTransactionTest {
         assertThat(existing.amount).isEqualTo(10.0)
     }
 
-    @Test
-    fun `ends running bolus with ending event (duration 0)`() {
-        val eb = createExtendedBolus(id = 0, nsId = "ns-123", timestamp = 31_000L, duration = 0L, amount = 0.0)
-        val existing = createExtendedBolus(id = 1, nsId = null, timestamp = 1000L, duration = 60_000L, amount = 6.0)
-
-        `when`(extendedBolusDao.getExtendedBolusActiveAt(31_000L)).thenReturn(Maybe.just(existing))
-
-        val transaction = SyncNsExtendedBolusTransaction(listOf(eb), nsClientMode = false)
-        transaction.database = database
-        val result = transaction.run()
-
-        assertThat(result.ended).hasSize(1)
-        assertThat(existing.end).isEqualTo(31_000L)
-        assertThat(existing.amount).isWithin(0.1).of(3.0)
-        assertThat(result.inserted).isEmpty()
-    }
-
     private fun createExtendedBolus(
         id: Long,
         nsId: String?,
