@@ -194,4 +194,190 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         verify(activePlugin, Times(0)).activeNsClient
         clearInvocations(preferences, activePlugin)
     }
+
+    @Test
+    fun queueSizeTest() {
+        // All counters initialized to -1, so total should be -13 (13 fields)
+        assertThat(sut.queueSize()).isEqualTo(-13)
+    }
+
+    @Test
+    fun doUploadWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(preferences.get(BooleanKey.NsClientUploadData)).thenReturn(true)
+
+        sut.doUpload()
+
+        // Should not calculate queue counters when paused
+        verify(persistenceLayer, Times(0)).getLastBolusId()
+        verify(persistenceLayer, Times(0)).getLastCarbsId()
+    }
+
+    @Test
+    fun doUploadWhenUploadDisabledTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(preferences.get(BooleanKey.NsClientUploadData)).thenReturn(false)
+        whenever(config.AAPSCLIENT).thenReturn(false)
+
+        sut.doUpload()
+
+        // Should not process when upload is disabled
+        verify(persistenceLayer, Times(0)).getLastBolusId()
+    }
+
+    @Test
+    fun doUploadCalculatesQueueCountersTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(preferences.get(BooleanKey.NsClientUploadData)).thenReturn(true)
+
+        // Mock all the getLastId methods
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(100L)
+        whenever(persistenceLayer.getLastCarbsId()).thenReturn(200L)
+        whenever(persistenceLayer.getLastBolusCalculatorResultId()).thenReturn(50L)
+        whenever(persistenceLayer.getLastTemporaryTargetId()).thenReturn(75L)
+        whenever(persistenceLayer.getLastFoodId()).thenReturn(25L)
+        whenever(persistenceLayer.getLastGlucoseValueId()).thenReturn(500L)
+        whenever(persistenceLayer.getLastTherapyEventId()).thenReturn(30L)
+        whenever(persistenceLayer.getLastDeviceStatusId()).thenReturn(10L)
+        whenever(persistenceLayer.getLastTemporaryBasalId()).thenReturn(40L)
+        whenever(persistenceLayer.getLastExtendedBolusId()).thenReturn(20L)
+        whenever(persistenceLayer.getLastProfileSwitchId()).thenReturn(15L)
+        whenever(persistenceLayer.getLastEffectiveProfileSwitchId()).thenReturn(60L)
+        whenever(persistenceLayer.getLastRunningModeId()).thenReturn(5L)
+
+        // Mock all the sync preferences to 0
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.BolusCalculatorLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.TemporaryTargetLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.FoodLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.GlucoseValueLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.TherapyEventLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.DeviceStatusLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.TemporaryBasalLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.ExtendedBolusLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.ProfileSwitchLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.EffectiveProfileSwitchLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.RunningModeLastSyncedId)).thenReturn(0L)
+
+        // Mock all the getNextSyncElement methods to return empty
+        whenever(persistenceLayer.getNextSyncElementBolus(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementCarbs(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementBolusCalculatorResult(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementTemporaryTarget(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementFood(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementGlucoseValue(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementTherapyEvent(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementDeviceStatus(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementTemporaryBasal(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementExtendedBolus(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementProfileSwitch(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementEffectiveProfileSwitch(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementRunningMode(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getProfileStore(0)).thenReturn(null)
+
+        sut.doUpload()
+
+        // Queue counters should be calculated
+        assertThat(sut.queueSize()).isEqualTo(1130L) // Sum of all differences
+    }
+
+    @Test
+    fun doUploadWithPartialSyncTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(preferences.get(BooleanKey.NsClientUploadData)).thenReturn(true)
+
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(100L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(50L)
+
+        // Mock other IDs to 0 or empty
+        whenever(persistenceLayer.getLastCarbsId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastBolusCalculatorResultId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastTemporaryTargetId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastFoodId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastGlucoseValueId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastTherapyEventId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastDeviceStatusId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastTemporaryBasalId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastExtendedBolusId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastProfileSwitchId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastEffectiveProfileSwitchId()).thenReturn(0L)
+        whenever(persistenceLayer.getLastRunningModeId()).thenReturn(0L)
+
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.BolusCalculatorLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.TemporaryTargetLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.FoodLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.GlucoseValueLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.TherapyEventLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.DeviceStatusLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.TemporaryBasalLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.ExtendedBolusLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.ProfileSwitchLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.EffectiveProfileSwitchLastSyncedId)).thenReturn(0L)
+        whenever(preferences.get(NsclientLongKey.RunningModeLastSyncedId)).thenReturn(0L)
+
+        whenever(persistenceLayer.getNextSyncElementBolus(50)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementCarbs(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementBolusCalculatorResult(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementTemporaryTarget(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementFood(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementGlucoseValue(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementTherapyEvent(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementDeviceStatus(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementTemporaryBasal(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementExtendedBolus(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementProfileSwitch(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementEffectiveProfileSwitch(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementRunningMode(0)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getProfileStore(0)).thenReturn(null)
+
+        sut.doUpload()
+
+        // Only boluses should have remaining items (100 - 50 = 50)
+        assertThat(sut.queueSize()).isEqualTo(50L)
+    }
+
+    @Test
+    fun bgUploadEnabledWhenBothConditionsFalseTest() {
+        whenever(preferences.get(BooleanKey.BgSourceUploadToNs)).thenReturn(false)
+        val nonNsClientSource = object : BgSource {}
+        whenever(activePlugin.activeBgSource).thenReturn(nonNsClientSource)
+
+        assertThat(sut.bgUploadEnabled).isFalse()
+    }
+
+    @Test
+    fun confirmMethodsDoNotUpdateWhenIdIsEqualTest() {
+        // Test that confirm methods don't update when new ID equals current ID
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        sut.confirmLastBolusIdIfGreater(5)
+        verify(preferences, Times(0)).put(NsclientLongKey.BolusLastSyncedId, 5)
+
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(10L)
+        sut.confirmLastCarbsIdIfGreater(10)
+        verify(preferences, Times(0)).put(NsclientLongKey.CarbsLastSyncedId, 10)
+    }
+
+    @Test
+    fun confirmMethodsDoNotUpdateWhenIdIsLessTest() {
+        // Test that confirm methods don't update when new ID is less than current ID
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(10L)
+        sut.confirmLastBolusIdIfGreater(5)
+        verify(preferences, Times(0)).put(NsclientLongKey.BolusLastSyncedId, 5)
+
+        whenever(preferences.get(NsclientLongKey.GlucoseValueLastSyncedId)).thenReturn(100L)
+        sut.confirmLastGlucoseValueIdIfGreater(50)
+        verify(preferences, Times(0)).put(NsclientLongKey.GlucoseValueLastSyncedId, 50)
+    }
+
+    @Test
+    fun confirmProfileStoreAlwaysUpdatesTest() {
+        // ProfileStore always updates regardless of current value
+        sut.confirmLastProfileStore(42)
+        verify(preferences, Times(1)).put(NsclientLongKey.ProfileStoreLastSyncedId, 42)
+
+        sut.confirmLastProfileStore(10)
+        verify(preferences, Times(1)).put(NsclientLongKey.ProfileStoreLastSyncedId, 10)
+    }
 }
