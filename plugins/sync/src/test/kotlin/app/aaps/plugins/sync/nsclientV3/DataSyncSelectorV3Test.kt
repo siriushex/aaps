@@ -197,6 +197,32 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
     }
 
     @Test
+    fun processChangedBolusesWhenPausedTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(true)
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+
+        sut.processChangedBoluses()
+
+        // Should not call getNextSyncElementBolus when paused
+        verify(persistenceLayer, Times(0)).getNextSyncElementBolus(org.mockito.kotlin.any())
+    }
+
+    @Test
+    fun processChangedBolusesWithEmptyQueueTest() = runBlocking {
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(5L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.empty())
+
+        sut.processChangedBoluses()
+
+        // Should call getNextSyncElementBolus once and then stop
+        verify(persistenceLayer, Times(1)).getNextSyncElementBolus(5L)
+        verify(activePlugin, Times(0)).activeNsClient
+    }
+
+    @Test
     fun queueSizeTest() {
         // All counters initialized to -1, so total should be -13 (13 fields)
         assertThat(sut.queueSize()).isEqualTo(-13)
