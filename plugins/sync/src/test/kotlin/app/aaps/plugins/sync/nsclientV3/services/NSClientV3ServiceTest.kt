@@ -216,8 +216,8 @@ class NSClientV3ServiceTest : TestBaseWithProfile() {
 
         sut.initializeWebSockets("TestReason")
 
-        assertThat(events.any { it.action == "► WS" && it.logText.contains("do connect storage TestReason") }).isTrue()
-        assertThat(events.any { it.action == "► WS" && it.logText.contains("do connect alarm TestReason") }).isTrue()
+        assertThat(events.any { it.action == "► WS" && it.logText?.contains("do connect storage TestReason") ?: false }).isTrue()
+        assertThat(events.any { it.action == "► WS" && it.logText?.contains("do connect alarm TestReason") ?: false }).isTrue()
         subscription.dispose()
         sut.shutdownWebsockets()
     }
