@@ -1,7 +1,7 @@
 package app.aaps.pump.equil.manager.command
 
 import app.aaps.core.interfaces.logging.AAPSLogger
-import app.aaps.core.interfaces.sharedPreferences.SP
+import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.equil.database.EquilHistoryRecord
 import app.aaps.pump.equil.manager.EquilManager
 import app.aaps.pump.equil.manager.EquilResponse
@@ -19,7 +19,7 @@ class BaseCmdTest {
     private lateinit var aapsLogger: AAPSLogger
 
     @Mock
-    private lateinit var sp: SP
+    private lateinit var preferences: Preferences
 
     @Mock
     private lateinit var equilManager: EquilManager
@@ -28,7 +28,7 @@ class BaseCmdTest {
 
     // Concrete implementation of BaseCmd for testing
     private inner class TestCmd(createTime: Long = System.currentTimeMillis()) :
-        BaseCmd(createTime, aapsLogger, sp, equilManager) {
+        BaseCmd(createTime, aapsLogger, preferences, equilManager) {
 
         override fun getEquilResponse(): EquilResponse? = null
         override fun getNextEquilResponse(): EquilResponse? = null
