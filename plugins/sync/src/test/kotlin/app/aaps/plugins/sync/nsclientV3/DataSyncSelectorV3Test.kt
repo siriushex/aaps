@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.internal.verification.Times
+import org.mockito.kotlin.any
 import org.mockito.kotlin.clearInvocations
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -205,7 +206,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         sut.processChangedBoluses()
 
         // Should not call getNextSyncElementBolus when paused
-        verify(persistenceLayer, Times(0)).getNextSyncElementBolus(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementBolus(any())
+        Unit
     }
 
     @Test
@@ -220,6 +222,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Should call getNextSyncElementBolus once and then stop
         verify(persistenceLayer, Times(1)).getNextSyncElementBolus(5L)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     @Test
@@ -417,7 +420,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedCarbs()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementCarbs(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementCarbs(any())
+        Unit
     }
 
     @Test
@@ -430,6 +434,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedBolusCalculatorResults
@@ -441,7 +446,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedBolusCalculatorResults()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementBolusCalculatorResult(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementBolusCalculatorResult(any())
+        Unit
     }
 
     @Test
@@ -454,6 +460,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.BolusCalculatorLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedTempTargets
@@ -465,7 +472,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedTempTargets()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementTemporaryTarget(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementTemporaryTarget(any())
+        Unit
     }
 
     @Test
@@ -478,6 +486,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.TemporaryTargetLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedFoods
@@ -489,7 +498,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedFoods()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementFood(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementFood(any())
+        Unit
     }
 
     @Test
@@ -502,6 +512,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.FoodLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedGlucoseValues
@@ -513,7 +524,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedGlucoseValues()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementGlucoseValue(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementGlucoseValue(any())
+        Unit
     }
 
     @Test
@@ -526,6 +538,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.GlucoseValueLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedTherapyEvents
@@ -537,7 +550,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedTherapyEvents()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementTherapyEvent(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementTherapyEvent(any())
+        Unit
     }
 
     @Test
@@ -550,6 +564,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.TherapyEventLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedDeviceStatuses
@@ -561,7 +576,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedDeviceStatuses()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementDeviceStatus(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementDeviceStatus(any())
+        Unit
     }
 
     @Test
@@ -574,6 +590,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.DeviceStatusLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedTemporaryBasals
@@ -585,7 +602,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedTemporaryBasals()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementTemporaryBasal(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementTemporaryBasal(any())
+        Unit
     }
 
     @Test
@@ -598,6 +616,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.TemporaryBasalLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedExtendedBoluses
@@ -609,7 +628,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedExtendedBoluses()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementExtendedBolus(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementExtendedBolus(any())
+        Unit
     }
 
     @Test
@@ -622,6 +642,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.ExtendedBolusLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedProfileSwitches
@@ -633,7 +654,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedProfileSwitches()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementProfileSwitch(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementProfileSwitch(any())
+        Unit
     }
 
     @Test
@@ -646,6 +668,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.ProfileSwitchLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedEffectiveProfileSwitches
@@ -657,7 +680,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedEffectiveProfileSwitches()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementEffectiveProfileSwitch(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementEffectiveProfileSwitch(any())
+        Unit
     }
 
     @Test
@@ -670,6 +694,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.EffectiveProfileSwitchLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Tests for processChangedRunningModes
@@ -681,7 +706,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedRunningModes()
 
-        verify(persistenceLayer, Times(0)).getNextSyncElementRunningMode(org.mockito.kotlin.any())
+        verify(persistenceLayer, Times(0)).getNextSyncElementRunningMode(any())
+        Unit
     }
 
     @Test
@@ -694,6 +720,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         verify(preferences, Times(1)).put(NsclientLongKey.RunningModeLastSyncedId, 0)
         verify(activePlugin, Times(0)).activeNsClient
+        Unit
     }
 
     // Test for processChangedProfileStore
@@ -703,6 +730,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         sut.processChangedProfileStore()
 
-        verify(persistenceLayer, Times(0)).getProfileStore(org.mockito.kotlin.any())
+        verify(activePlugin, Times(0)).activeNsClient?.nsAdd(any(), any(), any())
+        Unit
     }
 }
