@@ -18,6 +18,7 @@ import app.aaps.core.keys.BooleanKey
 import app.aaps.core.nssdk.interfaces.NSAndroidClient
 import app.aaps.core.nssdk.remotemodel.LastModified
 import app.aaps.core.utils.receivers.DataWorkerStorage
+import app.aaps.plugins.sync.nsShared.NsIncomingDataProcessor
 import app.aaps.plugins.sync.nsclient.ReceiverDelegate
 import app.aaps.plugins.sync.nsclientV3.DataSyncSelectorV3
 import app.aaps.plugins.sync.nsclientV3.NSClientV3Plugin
@@ -48,6 +49,7 @@ internal class LoadBgWorkerTest : TestBaseWithProfile() {
     @Mock lateinit var workContinuation: WorkContinuation
     @Mock lateinit var storeDataForDb: StoreDataForDb
     @Mock lateinit var l: L
+    @Mock lateinit var nsIncomingDataProcessor: NsIncomingDataProcessor
 
     private lateinit var nsClientV3Plugin: NSClientV3Plugin
     private lateinit var receiverDelegate: ReceiverDelegate
@@ -66,6 +68,7 @@ internal class LoadBgWorkerTest : TestBaseWithProfile() {
                 it.nsClientV3Plugin = nsClientV3Plugin
                 it.nsClientSource = nsClientSource
                 it.storeDataForDb = storeDataForDb
+                it.nsIncomingDataProcessor = nsIncomingDataProcessor
             }
         }
     }
@@ -211,6 +214,7 @@ internal class LoadBgWorkerTest : TestBaseWithProfile() {
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.lastLoadedSrvModified.collections.entries = 0L
         nsClientV3Plugin.firstLoadContinueTimestamp.collections.entries = now - 1000
+        nsClientV3Plugin.newestDataOnServer?.collections?.entries = Long.MAX_VALUE
         sut = TestListenableWorkerBuilder<LoadBgWorker>(context).build()
         val errorMessage = "Network error"
         whenever(nsAndroidClient.getSgvsNewerThan(anyLong(), anyInt()))

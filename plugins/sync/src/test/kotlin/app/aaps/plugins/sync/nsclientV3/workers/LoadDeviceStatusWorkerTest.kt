@@ -8,7 +8,9 @@ import androidx.work.testing.TestListenableWorkerBuilder
 import app.aaps.core.data.time.T
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.L
+import app.aaps.core.interfaces.nsclient.StoreDataForDb
 import app.aaps.core.interfaces.receivers.ReceiverStatusStore
+import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.nssdk.interfaces.NSAndroidClient
 import app.aaps.core.nssdk.localmodel.devicestatus.NSDeviceStatus
 import app.aaps.core.nssdk.remotemodel.LastModified
@@ -26,6 +28,7 @@ import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.whenever
 import kotlin.test.assertIs
 import kotlin.time.Duration.Companion.seconds
@@ -40,6 +43,8 @@ internal class LoadDeviceStatusWorkerTest : TestBaseWithProfile() {
     @Mock lateinit var workContinuation: WorkContinuation
     @Mock lateinit var nsDeviceStatusHandler: NSDeviceStatusHandler
     @Mock lateinit var l: L
+    @Mock lateinit var nsClientSource: NSClientSource
+    @Mock lateinit var storeDataForDb: StoreDataForDb
 
     private lateinit var nsClientV3Plugin: NSClientV3Plugin
     private lateinit var receiverDelegate: ReceiverDelegate
@@ -93,7 +98,12 @@ internal class LoadDeviceStatusWorkerTest : TestBaseWithProfile() {
         val deviceStatus = NSDeviceStatus(
             date = now - 1000,
             device = "test-device",
-            uploaderBattery = 80
+            uploaderBattery = 80,
+            isCharging = true,
+            uploader = null,
+            pump = null,
+            openaps = null,
+            configuration = null
         )
         whenever(nsAndroidClient.getDeviceStatusModifiedSince(anyLong()))
             .thenReturn(listOf(deviceStatus))
@@ -194,12 +204,22 @@ internal class LoadDeviceStatusWorkerTest : TestBaseWithProfile() {
         val deviceStatus1 = NSDeviceStatus(
             date = now - 1000,
             device = "test-device-1",
-            uploaderBattery = 80
+            uploaderBattery = 80,
+            isCharging = true,
+            uploader = null,
+            pump = null,
+            openaps = null,
+            configuration = null
         )
         val deviceStatus2 = NSDeviceStatus(
             date = now - 2000,
             device = "test-device-2",
-            uploaderBattery = 75
+            uploaderBattery = 75,
+            isCharging = true,
+            uploader = null,
+            pump = null,
+            openaps = null,
+            configuration = null
         )
         whenever(nsAndroidClient.getDeviceStatusModifiedSince(anyLong()))
             .thenReturn(listOf(deviceStatus1, deviceStatus2))
@@ -207,9 +227,7 @@ internal class LoadDeviceStatusWorkerTest : TestBaseWithProfile() {
         val result = sut.doWorkAndLog()
 
         assertIs<ListenableWorker.Result.Success>(result)
-        org.mockito.kotlin.verify(nsDeviceStatusHandler).handleNewData(
-            org.mockito.kotlin.argThat { it.size == 2 }
-        )
+        org.mockito.kotlin.verify(nsDeviceStatusHandler).handleNewData(argThat { size == 2 })
     }
 
     @Test

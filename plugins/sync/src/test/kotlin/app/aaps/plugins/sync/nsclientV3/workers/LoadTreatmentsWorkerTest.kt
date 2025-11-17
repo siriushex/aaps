@@ -7,15 +7,15 @@ import androidx.work.WorkManager
 import androidx.work.testing.TestListenableWorkerBuilder
 import app.aaps.core.data.model.CA
 import app.aaps.core.data.model.IDs
-import app.aaps.core.data.model.SourceSensor
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.logging.L
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
 import app.aaps.core.interfaces.receivers.ReceiverStatusStore
+import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.nssdk.interfaces.NSAndroidClient
-import app.aaps.core.nssdk.localmodel.treatment.NSCarbs
 import app.aaps.core.nssdk.remotemodel.LastModified
 import app.aaps.core.utils.receivers.DataWorkerStorage
+import app.aaps.plugins.sync.nsShared.NsIncomingDataProcessor
 import app.aaps.plugins.sync.nsclient.ReceiverDelegate
 import app.aaps.plugins.sync.nsclientV3.DataSyncSelectorV3
 import app.aaps.plugins.sync.nsclientV3.NSClientV3Plugin
@@ -25,7 +25,6 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
@@ -45,6 +44,8 @@ internal class LoadTreatmentsWorkerTest : TestBaseWithProfile() {
     @Mock lateinit var workContinuation: WorkContinuation
     @Mock lateinit var storeDataForDb: StoreDataForDb
     @Mock lateinit var l: L
+    @Mock lateinit var nsClientSource: NSClientSource
+    @Mock lateinit var nsIncomingDataProcessor: NsIncomingDataProcessor
 
     private lateinit var nsClientV3Plugin: NSClientV3Plugin
     private lateinit var receiverDelegate: ReceiverDelegate
@@ -61,6 +62,7 @@ internal class LoadTreatmentsWorkerTest : TestBaseWithProfile() {
                 it.dateUtil = dateUtil
                 it.nsClientV3Plugin = nsClientV3Plugin
                 it.storeDataForDb = storeDataForDb
+                it.nsIncomingDataProcessor = nsIncomingDataProcessor
             }
         }
     }
@@ -195,6 +197,7 @@ internal class LoadTreatmentsWorkerTest : TestBaseWithProfile() {
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.lastLoadedSrvModified.collections.treatments = 0L
         nsClientV3Plugin.firstLoadContinueTimestamp.collections.treatments = now - 1000
+        nsClientV3Plugin.newestDataOnServer?.collections?.treatments = Long.MAX_VALUE
         sut = TestListenableWorkerBuilder<LoadTreatmentsWorker>(context).build()
         val errorMessage = "Network error"
         whenever(nsAndroidClient.getTreatmentsNewerThan(anyString(), anyInt()))
@@ -295,6 +298,7 @@ internal class LoadTreatmentsWorkerTest : TestBaseWithProfile() {
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.lastLoadedSrvModified.collections.treatments = 0L // first load
         nsClientV3Plugin.firstLoadContinueTimestamp.collections.treatments = now - 1000
+        nsClientV3Plugin.newestDataOnServer?.collections?.treatments = Long.MAX_VALUE
         sut = TestListenableWorkerBuilder<LoadTreatmentsWorker>(context).build()
         whenever(nsAndroidClient.getTreatmentsNewerThan(anyString(), anyInt()))
             .thenReturn(NSAndroidClient.ReadResponse(200, 0, emptyList()))
