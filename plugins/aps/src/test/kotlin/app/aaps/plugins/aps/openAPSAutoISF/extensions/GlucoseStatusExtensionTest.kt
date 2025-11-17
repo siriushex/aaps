@@ -373,22 +373,22 @@ class GlucoseStatusExtensionTest : TestBase() {
     @Test
     fun `asRounded handles boundary rounding cases`() {
         val status = GlucoseStatusAutoIsf(
-            glucose = 120.05,       // rounds to 120.1
-            noise = 5.005,          // rounds to 5.01
-            delta = 3.005,          // rounds to 3.01
-            shortAvgDelta = 2.005,
-            longAvgDelta = 1.005,
+            glucose = 120.06,       // rounds to 120.1
+            noise = 5.006,          // rounds to 5.01
+            delta = 3.006,          // rounds to 3.01
+            shortAvgDelta = 2.006,
+            longAvgDelta = 1.006,
             date = 1609459200000L,
-            duraISFminutes = 15.05, // rounds to 15.1
-            duraISFaverage = 118.05,
-            parabolaMinutes = 30.05,
-            deltaPl = -2.005,
-            deltaPn = -1.005,
-            bgAcceleration = 0.505,
-            a0 = 120.05,
-            a1 = -2.005,
-            a2 = 0.105,
-            corrSqu = 0.95005       // rounds to 0.9501
+            duraISFminutes = 15.06, // rounds to 15.1
+            duraISFaverage = 118.06,
+            parabolaMinutes = 30.06,
+            deltaPl = -2.006,
+            deltaPn = -1.006,
+            bgAcceleration = 0.506,
+            a0 = 120.06,
+            a1 = -2.006,
+            a2 = 0.106,
+            corrSqu = 0.95006       // rounds to 0.9501
         )
 
         val rounded = status.asRounded()
