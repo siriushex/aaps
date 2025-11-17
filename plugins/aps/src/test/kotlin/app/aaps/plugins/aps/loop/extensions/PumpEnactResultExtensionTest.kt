@@ -125,7 +125,8 @@ class PumpEnactResultExtensionTest : TestBase() {
 
         val json = result.json(baseBasal = 1.0)
 
-        assertThat(json.getDouble("absolute")).isEqualTo(2.0)
+        // Absolute temp puts value in "rate" field, not "absolute"
+        assertThat(json.getDouble("rate")).isEqualTo(2.0)
         assertThat(json.getInt("duration")).isEqualTo(45)
         assertThat(json.has("smb")).isFalse()
     }
@@ -141,8 +142,9 @@ class PumpEnactResultExtensionTest : TestBase() {
         val json1 = result.json(baseBasal = 1.0)
         val json2 = result.json(baseBasal = 2.0)
 
-        assertThat(json1.getDouble("absolute")).isEqualTo(2.5)
-        assertThat(json2.getDouble("absolute")).isEqualTo(2.5)
+        // Absolute temp puts value in "rate" field, not "absolute"
+        assertThat(json1.getDouble("rate")).isEqualTo(2.5)
+        assertThat(json2.getDouble("rate")).isEqualTo(2.5)
     }
 
     @Test
@@ -225,7 +227,8 @@ class PumpEnactResultExtensionTest : TestBase() {
 
         val json = result.json(baseBasal = 1.0)
 
-        assertThat(json.getDouble("absolute")).isEqualTo(0.05)
+        // Absolute temp puts value in "rate" field, not "absolute"
+        assertThat(json.getDouble("rate")).isEqualTo(0.05)
     }
 
     @Test
@@ -237,7 +240,8 @@ class PumpEnactResultExtensionTest : TestBase() {
 
         val json = result.json(baseBasal = 1.0)
 
-        assertThat(json.getDouble("absolute")).isEqualTo(15.0)
+        // Absolute temp puts value in "rate" field, not "absolute"
+        assertThat(json.getDouble("rate")).isEqualTo(15.0)
     }
 
     @Test
@@ -249,7 +253,8 @@ class PumpEnactResultExtensionTest : TestBase() {
 
         val json = result.json(baseBasal = 1.0)
 
-        assertThat(json.getDouble("absolute")).isEqualTo(2.0)
+        // Absolute temp puts value in "rate" field, not "absolute"
+        assertThat(json.getDouble("rate")).isEqualTo(2.0)
         assertThat(json.getInt("duration")).isEqualTo(0)
     }
 
