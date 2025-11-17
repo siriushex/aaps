@@ -311,4 +311,100 @@ class MedtronicDTOUTest : MedtronicTestBase() {
         unknownStatus.batteryStatusType = BatteryStatusDTO.BatteryStatusType.Unknown
         assertThat(unknownStatus.batteryStatusType).isEqualTo(BatteryStatusDTO.BatteryStatusType.Unknown)
     }
+
+    // ClockDTO Tests
+    @Test
+    fun `test ClockDTO creation and properties`() {
+        val localTime = org.joda.time.LocalDateTime(2019, 1, 30, 14, 35, 20)
+        val pumpTime = org.joda.time.LocalDateTime(2019, 1, 30, 14, 30, 15)
+
+        val clockDTO = ClockDTO(localTime, pumpTime)
+
+        assertThat(clockDTO.localDeviceTime).isEqualTo(localTime)
+        assertThat(clockDTO.pumpTime).isEqualTo(pumpTime)
+        assertThat(clockDTO.timeDifference).isEqualTo(0) // Default value
+    }
+
+    @Test
+    fun `test ClockDTO with time difference`() {
+        val localTime = org.joda.time.LocalDateTime(2019, 1, 30, 14, 35, 20)
+        val pumpTime = org.joda.time.LocalDateTime(2019, 1, 30, 14, 30, 15)
+
+        val clockDTO = ClockDTO(localTime, pumpTime)
+        clockDTO.timeDifference = 305 // 5 minutes and 5 seconds
+
+        assertThat(clockDTO.timeDifference).isEqualTo(305)
+    }
+
+    // BasalProfileEntry Tests
+    @Test
+    fun `test BasalProfileEntry default constructor`() {
+        val entry = BasalProfileEntry()
+
+        assertThat(entry.rate).isWithin(0.01).of(-9.999E6)
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(0, 0))
+        assertThat(entry.startTime_raw).isEqualTo(0xFF.toByte())
+    }
+
+    @Test
+    fun `test BasalProfileEntry with rate and time`() {
+        // Create entry for 1.25 U/hr starting at 06:00
+        val entry = BasalProfileEntry(1.25, 6, 0)
+
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(6, 0))
+        assertThat(entry.startTime_raw).isEqualTo(12.toByte()) // 6 hours * 2 = 12 (30-min intervals)
+    }
+
+    @Test
+    fun `test BasalProfileEntry with half hour interval`() {
+        // Create entry for 0.75 U/hr starting at 08:30
+        val entry = BasalProfileEntry(0.75, 8, 30)
+
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(8, 30))
+        assertThat(entry.startTime_raw).isEqualTo(17.toByte()) // (8 * 2) + 1 = 17
+    }
+
+    @Test
+    fun `test BasalProfileEntry from strokes`() {
+        // 50 strokes * 0.025 = 1.25 U/hr, interval 12 = 06:00
+        val entry = BasalProfileEntry(aapsLogger, 50, 12)
+
+        assertThat(entry.rate).isWithin(0.01).of(1.25)
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(6, 0))
+        assertThat(entry.startTime_raw).isEqualTo(12.toByte())
+    }
+
+    @Test
+    fun `test BasalProfileEntry from byte with even interval`() {
+        // 40 strokes (as byte) * 0.025 = 1.0 U/hr, interval 0 = 00:00
+        val entry = BasalProfileEntry(40.toByte(), 0)
+
+        assertThat(entry.rate).isWithin(0.01).of(1.0)
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(0, 0))
+    }
+
+    @Test
+    fun `test BasalProfileEntry from byte with odd interval`() {
+        // 30 strokes * 0.025 = 0.75 U/hr, interval 23 = 11:30
+        val entry = BasalProfileEntry(30.toByte(), 23)
+
+        assertThat(entry.rate).isWithin(0.01).of(0.75)
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(11, 30))
+    }
+
+    @Test
+    fun `test BasalProfileEntry time calculation for midnight`() {
+        val entry = BasalProfileEntry(1.0, 0, 0)
+
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(0, 0))
+        assertThat(entry.startTime_raw).isEqualTo(0.toByte())
+    }
+
+    @Test
+    fun `test BasalProfileEntry time calculation for noon`() {
+        val entry = BasalProfileEntry(1.5, 12, 0)
+
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(12, 0))
+        assertThat(entry.startTime_raw).isEqualTo(24.toByte()) // 12 * 2 = 24
+    }
 }
