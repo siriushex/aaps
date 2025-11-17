@@ -1,7 +1,6 @@
 package app.aaps.plugins.aps.autotune.data
 
 import app.aaps.core.data.model.BS
-import app.aaps.core.data.model.SourceSensor
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.Test
@@ -87,8 +86,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - 3600000L,  // 1 hour ago
             amount = 0.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -105,8 +103,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (7 * 60 * 60 * 1000L),  // 7 hours ago (beyond DIA)
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -123,8 +120,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (1 * 60 * 60 * 1000L),  // 1 hour ago
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -144,8 +140,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - 1000L,  // 1 second ago
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -162,8 +157,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (45 * 60 * 1000L),  // 45 minutes ago (at peak)
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -181,8 +175,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (75 * 60 * 1000L),  // 75 minutes ago (at peak)
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -200,8 +193,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (2 * 60 * 60 * 1000L),  // 2 hours ago
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -218,8 +210,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = bolusTime,
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         // Calculate IOB at 1 hour after bolus
@@ -239,8 +230,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (1 * 60 * 60 * 1000L),  // 1 hour ago
             amount = 0.1,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -257,8 +247,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (1 * 60 * 60 * 1000L),  // 1 hour ago
             amount = 20.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -275,8 +264,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (1 * 60 * 60 * 1000L),  // 1 hour ago
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
@@ -294,8 +282,7 @@ class LocalInsulinTest : TestBase() {
             timestamp = now - (6 * 60 * 60 * 1000L),  // Exactly 6 hours ago
             amount = 5.0,
             type = BS.Type.NORMAL,
-            isValid = true,
-            sourceSensor = SourceSensor.UNKNOWN
+            isValid = true
         )
 
         val iob = insulin.iobCalcForTreatment(bolus, now)
