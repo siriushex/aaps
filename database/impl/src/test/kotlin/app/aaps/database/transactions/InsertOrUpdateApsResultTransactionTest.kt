@@ -74,7 +74,9 @@ class InsertOrUpdateApsResultTransactionTest {
         val result = transaction.run()
 
         assertThat(result.updated).hasSize(1)
-        assertThat(result.updated[0].targetBG).isEqualTo(120.0)
+        assertThat(result.updated[0]).isEqualTo(updated)
+
+        verify(apsResultDao).updateExistingEntry(updated)
     }
 
     @Test
@@ -88,7 +90,9 @@ class InsertOrUpdateApsResultTransactionTest {
         val result = transaction.run()
 
         assertThat(result.inserted).hasSize(1)
-        assertThat(result.inserted[0].rate).isEqualTo(0.85)
+        assertThat(result.inserted[0]).isEqualTo(apsResult)
+
+        verify(apsResultDao).insertNewEntry(apsResult)
     }
 
     private fun createApsResult(
