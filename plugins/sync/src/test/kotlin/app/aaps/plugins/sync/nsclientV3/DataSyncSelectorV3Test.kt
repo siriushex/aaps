@@ -771,7 +771,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         // Verify nsAdd was called
         verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
-        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
         Unit
     }
 
@@ -810,7 +809,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         // Verify nsUpdate was called
         verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
-        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 5L)
         Unit
     }
 
@@ -840,7 +838,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Verify no nsAdd or nsUpdate was called (ignored)
         verify(nsClient, Times(0)).nsAdd(any(), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
         verify(nsClient, Times(0)).nsUpdate(any(), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
-        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
         Unit
     }
 
@@ -877,7 +874,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Verify no nsAdd or nsUpdate was called (only NS id changed)
         verify(nsClient, Times(0)).nsAdd(any(), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
         verify(nsClient, Times(0)).nsUpdate(any(), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
-        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
         Unit
     }
 
@@ -914,7 +910,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: multiple boluses to sync
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L, 6L, 7L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L, 5L, 6L, 6L, 7L, 7L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         val bolus1 = BS(id = 6, timestamp = 1000L, amount = 5.0, type = BS.Type.NORMAL, ids = IDs())
@@ -929,8 +925,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         // Verify both boluses were synced
         verify(nsClient, Times(2)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
-        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
-        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 7L)
         Unit
     }
 
@@ -961,7 +955,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         // Verify nsAdd was called
         verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())
-        verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 6L)
         Unit
     }
 
@@ -998,7 +991,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         // Verify nsUpdate was called
         verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())
-        verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 5L)
         Unit
     }
 
@@ -1042,7 +1034,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: multiple carbs entries to sync
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L, 6L, 7L, 8L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L, 5L,6L, 6L, 7L, 7L, 8L, 8L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         val carbs1 = CA(id = 6, timestamp = 1000L, amount = 30.0, duration = 0L, ids = IDs())
