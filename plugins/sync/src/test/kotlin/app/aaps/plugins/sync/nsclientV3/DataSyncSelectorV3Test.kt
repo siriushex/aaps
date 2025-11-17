@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.internal.verification.Times
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.clearInvocations
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
@@ -764,12 +765,12 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(pair))
         whenever(persistenceLayer.getNextSyncElementBolus(6L)).thenReturn(Maybe.empty())
-        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(true)
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())).thenReturn(true)
 
         sut.processChangedBoluses()
 
         // Verify nsAdd was called
-        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
         verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
         Unit
     }
@@ -803,12 +804,12 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         whenever(persistenceLayer.getNextSyncElementBolus(5L))
             .thenReturn(Maybe.just(pair))
             .thenReturn(Maybe.empty())
-        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(true)
+        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())).thenReturn(true)
 
         sut.processChangedBoluses()
 
         // Verify nsUpdate was called
-        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
         verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 5L)
         Unit
     }
@@ -837,8 +838,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         sut.processChangedBoluses()
 
         // Verify no nsAdd or nsUpdate was called (ignored)
-        verify(nsClient, Times(0)).nsAdd(any(), any<DataSyncSelector.PairBolus>(), any(), any())
-        verify(nsClient, Times(0)).nsUpdate(any(), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(nsClient, Times(0)).nsAdd(any(), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
+        verify(nsClient, Times(0)).nsUpdate(any(), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
         verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
         Unit
     }
@@ -874,8 +875,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         sut.processChangedBoluses()
 
         // Verify no nsAdd or nsUpdate was called (only NS id changed)
-        verify(nsClient, Times(0)).nsAdd(any(), any<DataSyncSelector.PairBolus>(), any(), any())
-        verify(nsClient, Times(0)).nsUpdate(any(), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(nsClient, Times(0)).nsAdd(any(), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
+        verify(nsClient, Times(0)).nsUpdate(any(), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
         verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
         Unit
     }
@@ -898,12 +899,12 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         val pair = Pair(bolus, bolus)
 
         whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(pair))
-        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(false)
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())).thenReturn(false)
 
         sut.processChangedBoluses()
 
         // Verify nsAdd was called but loop stopped (no confirmLastId call)
-        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
         verify(preferences, Times(0)).put(NsclientLongKey.BolusLastSyncedId, 6L)
         Unit
     }
@@ -922,12 +923,12 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(Pair(bolus1, bolus1)))
         whenever(persistenceLayer.getNextSyncElementBolus(6L)).thenReturn(Maybe.just(Pair(bolus2, bolus2)))
         whenever(persistenceLayer.getNextSyncElementBolus(7L)).thenReturn(Maybe.empty())
-        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(true)
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())).thenReturn(true)
 
         sut.processChangedBoluses()
 
         // Verify both boluses were synced
-        verify(nsClient, Times(2)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(nsClient, Times(2)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), anyOrNull())
         verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
         verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 7L)
         Unit
@@ -954,12 +955,12 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.just(pair))
         whenever(persistenceLayer.getNextSyncElementCarbs(6L)).thenReturn(Maybe.empty())
-        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(true)
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())).thenReturn(true)
 
         sut.processChangedCarbs()
 
         // Verify nsAdd was called
-        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())
+        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())
         verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 6L)
         Unit
     }
@@ -991,12 +992,12 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         whenever(persistenceLayer.getNextSyncElementCarbs(5L))
             .thenReturn(Maybe.just(pair))
             .thenReturn(Maybe.empty())
-        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(true)
+        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())).thenReturn(true)
 
         sut.processChangedCarbs()
 
         // Verify nsUpdate was called
-        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())
+        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())
         verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 5L)
         Unit
     }
@@ -1026,12 +1027,12 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         val pair = Pair(newCarbs, oldCarbs)
 
         whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.just(pair))
-        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(false)
+        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())).thenReturn(false)
 
         sut.processChangedCarbs()
 
         // Verify nsUpdate was called but loop stopped (no confirmLastId call)
-        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())
+        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())
         verify(preferences, Times(0)).put(NsclientLongKey.CarbsLastSyncedId, 6L)
         Unit
     }
@@ -1052,12 +1053,12 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         whenever(persistenceLayer.getNextSyncElementCarbs(6L)).thenReturn(Maybe.just(Pair(carbs2, carbs2)))
         whenever(persistenceLayer.getNextSyncElementCarbs(7L)).thenReturn(Maybe.just(Pair(carbs3, carbs3)))
         whenever(persistenceLayer.getNextSyncElementCarbs(8L)).thenReturn(Maybe.empty())
-        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(true)
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())).thenReturn(true)
 
         sut.processChangedCarbs()
 
         // Verify all carbs were synced
-        verify(nsClient, Times(3)).nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())
+        verify(nsClient, Times(3)).nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), anyOrNull())
         verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 6L)
         verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 7L)
         verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 8L)
