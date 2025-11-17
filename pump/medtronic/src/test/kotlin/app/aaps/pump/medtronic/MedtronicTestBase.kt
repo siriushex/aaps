@@ -27,6 +27,11 @@ open class MedtronicTestBase : TestBaseWithProfile() {
 
     val packetInjector = HasAndroidInjector { AndroidInjector { } }
 
+    fun initializeCommonMocks() {
+        // Common initialization for all Medtronic tests
+        // Override in specific test classes if needed
+    }
+
     fun preProcessListTBR(inputList: MutableList<PumpHistoryEntry>) {
 
         val tbrs: MutableList<PumpHistoryEntry> = mutableListOf()
