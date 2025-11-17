@@ -1,6 +1,6 @@
 package app.aaps.implementation.stats
 
-import android.util.LongSparseArray
+import androidx.collection.LongSparseArray
 import app.aaps.core.data.aps.AverageTDD
 import app.aaps.core.data.model.TDD
 import app.aaps.core.data.pump.defs.PumpType
