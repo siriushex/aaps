@@ -8,6 +8,7 @@ import app.aaps.core.interfaces.source.BgSource
 import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.keys.BooleanKey
 import app.aaps.plugins.sync.nsShared.StoreDataForDbImpl
+import app.aaps.plugins.sync.nsclientV3.keys.NsclientBooleanKey
 import app.aaps.plugins.sync.nsclientV3.keys.NsclientLongKey
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
@@ -211,6 +212,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Should not calculate queue counters when paused
         verify(persistenceLayer, Times(0)).getLastBolusId()
         verify(persistenceLayer, Times(0)).getLastCarbsId()
+        Unit
     }
 
     @Test
@@ -223,6 +225,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
 
         // Should not process when upload is disabled
         verify(persistenceLayer, Times(0)).getLastBolusId()
+        Unit
     }
 
     @Test
@@ -274,7 +277,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         whenever(persistenceLayer.getNextSyncElementProfileSwitch(0)).thenReturn(Maybe.empty())
         whenever(persistenceLayer.getNextSyncElementEffectiveProfileSwitch(0)).thenReturn(Maybe.empty())
         whenever(persistenceLayer.getNextSyncElementRunningMode(0)).thenReturn(Maybe.empty())
-        whenever(persistenceLayer.getProfileStore(0)).thenReturn(null)
 
         sut.doUpload()
 
@@ -330,7 +332,6 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         whenever(persistenceLayer.getNextSyncElementProfileSwitch(0)).thenReturn(Maybe.empty())
         whenever(persistenceLayer.getNextSyncElementEffectiveProfileSwitch(0)).thenReturn(Maybe.empty())
         whenever(persistenceLayer.getNextSyncElementRunningMode(0)).thenReturn(Maybe.empty())
-        whenever(persistenceLayer.getProfileStore(0)).thenReturn(null)
 
         sut.doUpload()
 
