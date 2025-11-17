@@ -3,6 +3,7 @@ package app.aaps.database.transactions
 import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.TherapyEventDao
 import app.aaps.database.entities.TherapyEvent
+import app.aaps.database.entities.data.GlucoseUnit
 import app.aaps.database.entities.embedments.InterfaceIDs
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -123,7 +124,7 @@ class InvalidateTherapyEventsWithNoteTransactionTest {
         type = TherapyEvent.Type.NOTE,
         note = note,
         isValid = isValid,
-        glucoseUnit = TherapyEvent.GlucoseUnit.MGDL,
+        glucoseUnit = GlucoseUnit.MGDL,
         interfaceIDs_backing = InterfaceIDs()
     ).also { it.id = id }
 }

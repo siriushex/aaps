@@ -67,7 +67,7 @@ class InvalidateExtendedBolusTransactionTest {
             transaction.run()
             throw AssertionError("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
-            assertThat(e.message).contains("There is no such ExtendedBolus")
+            assertThat(e.message).contains("There is no such Extended Bolus with the specified ID.")
         }
     }
 

@@ -76,7 +76,7 @@ class InvalidateRunningModeTransactionTest {
         isValid: Boolean
     ): RunningMode = RunningMode(
         timestamp = System.currentTimeMillis(),
-        runningMode = RunningMode.Type.CLOSED,
+        mode = RunningMode.Mode.CLOSED_LOOP,
         duration = 0,
         isValid = isValid,
         interfaceIDs_backing = InterfaceIDs()

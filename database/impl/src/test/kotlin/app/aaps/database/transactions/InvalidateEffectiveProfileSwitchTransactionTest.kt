@@ -3,6 +3,8 @@ package app.aaps.database.transactions
 import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.EffectiveProfileSwitchDao
 import app.aaps.database.entities.EffectiveProfileSwitch
+import app.aaps.database.entities.data.GlucoseUnit
+import app.aaps.database.entities.embedments.InsulinConfiguration
 import app.aaps.database.entities.embedments.InterfaceIDs
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -80,7 +82,7 @@ class InvalidateEffectiveProfileSwitchTransactionTest {
         isfBlocks = emptyList(),
         icBlocks = emptyList(),
         targetBlocks = emptyList(),
-        glucoseUnit = EffectiveProfileSwitch.GlucoseUnit.MGDL,
+        glucoseUnit = GlucoseUnit.MGDL,
         originalProfileName = "Test",
         originalCustomizedName = "Test",
         originalTimeshift = 0,
@@ -88,6 +90,7 @@ class InvalidateEffectiveProfileSwitchTransactionTest {
         originalDuration = 0,
         originalEnd = 0,
         isValid = isValid,
-        interfaceIDs_backing = InterfaceIDs()
+        interfaceIDs_backing = InterfaceIDs(),
+        insulinConfiguration = InsulinConfiguration("some", 600000L, 60000L)
     ).also { it.id = id }
 }

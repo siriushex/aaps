@@ -67,7 +67,7 @@ class InvalidateTemporaryBasalTransactionTest {
             transaction.run()
             throw AssertionError("Expected IllegalArgumentException")
         } catch (e: IllegalArgumentException) {
-            assertThat(e.message).contains("There is no such TemporaryBasal")
+            assertThat(e.message).contains("There is no such Temporary Basal with the specified ID.")
         }
     }
 
