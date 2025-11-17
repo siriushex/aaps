@@ -33,7 +33,7 @@ class HardLimitsImplTest : TestBase() {
     fun setup() {
         hardLimits = HardLimitsImpl(aapsLogger, uiInteraction, preferences, rh, context, persistenceLayer, dateUtil)
         `when`(dateUtil.now()).thenReturn(1000L)
-        `when`(persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(any(), any(), any(), any(), any(), any())).thenReturn(Single.just(true))
+        `when`(persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(any(), any(), any(), any(), any(), any())).thenReturn(Single.just(PersistenceLayer.TransactionResult()))
         `when`(rh.gs(any())).thenReturn("")
         `when`(rh.gs(any(), any())).thenReturn("")
     }

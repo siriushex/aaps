@@ -9,7 +9,7 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 
 class TrendCalculatorImplTest : TestBase() {
 
@@ -21,26 +21,26 @@ class TrendCalculatorImplTest : TestBase() {
     @BeforeEach
     fun setup() {
         trendCalculator = TrendCalculatorImpl(rh)
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_double_down)).thenReturn("Double Down")
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_single_down)).thenReturn("Single Down")
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_forty_five_down)).thenReturn("Forty Five Down")
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_flat)).thenReturn("Flat")
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_forty_five_up)).thenReturn("Forty Five Up")
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_single_up)).thenReturn("Single Up")
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_double_up)).thenReturn("Double Up")
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_none)).thenReturn("None")
-        `when`(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_unknown)).thenReturn("Unknown")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_double_down)).thenReturn("Double Down")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_single_down)).thenReturn("Single Down")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_forty_five_down)).thenReturn("Forty Five Down")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_flat)).thenReturn("Flat")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_forty_five_up)).thenReturn("Forty Five Up")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_single_up)).thenReturn("Single Up")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_double_up)).thenReturn("Double Up")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_none)).thenReturn("None")
+        whenever(rh.gs(app.aaps.core.ui.R.string.a11y_arrow_unknown)).thenReturn("Unknown")
     }
 
     @Test
     fun `getTrendArrow returns null when data is null`() {
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(null)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(null)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isNull()
     }
 
     @Test
     fun `getTrendArrow returns null when data is empty`() {
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(mutableListOf())
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(mutableListOf())
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isNull()
     }
 
@@ -49,7 +49,7 @@ class TrendCalculatorImplTest : TestBase() {
         val data = mutableListOf(
             createGlucoseValue(100.0, 1000L)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.NONE)
     }
 
@@ -59,7 +59,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 100.0, trendArrow = TrendArrow.SINGLE_UP),
             createGlucoseValue(95.0, 700L)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_UP)
     }
 
@@ -72,7 +72,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 80.0),  // 20 mg/dL drop over 300ms = -4000 per minute
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.DOUBLE_DOWN)
     }
 
@@ -83,7 +83,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 90.0),  // 10 mg/dL drop over 300ms = -2000 per minute
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_DOWN)
     }
 
@@ -94,7 +94,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 97.0),  // 3 mg/dL drop over 300ms = -600 per minute
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FORTY_FIVE_DOWN)
     }
 
@@ -104,7 +104,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 100.0),
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FLAT)
     }
 
@@ -114,7 +114,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 103.0),  // 3 mg/dL rise over 300ms = 600 per minute
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FORTY_FIVE_UP)
     }
 
@@ -124,7 +124,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 110.0),  // 10 mg/dL rise over 300ms = 2000 per minute
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_UP)
     }
 
@@ -134,7 +134,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 120.0),  // 20 mg/dL rise over 300ms = 4000 per minute
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.DOUBLE_UP)
     }
 
@@ -144,7 +144,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 300.0),  // 200 mg/dL rise over 300ms = 40000 per minute
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.NONE)
     }
 
@@ -154,7 +154,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 110.0),
             createGlucoseValue(100.0, 1000L, recalculated = 100.0)  // Same timestamp
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FLAT)
     }
 
@@ -164,7 +164,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 110.0, trendArrow = TrendArrow.FLAT),  // Smoothed value differs
             createGlucoseValue(95.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         // Should recalculate and get SINGLE_UP (10 mg/dL rise over 300ms = 2000 per minute)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_UP)
     }
@@ -175,7 +175,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 80.0),
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Double Down")
     }
 
@@ -185,7 +185,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 90.0),
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Single Down")
     }
 
@@ -195,7 +195,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 97.0),
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Forty Five Down")
     }
 
@@ -205,7 +205,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 100.0),
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Flat")
     }
 
@@ -215,7 +215,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 103.0),
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Forty Five Up")
     }
 
@@ -225,7 +225,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 110.0),
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Single Up")
     }
 
@@ -235,7 +235,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 120.0),
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Double Up")
     }
 
@@ -244,13 +244,13 @@ class TrendCalculatorImplTest : TestBase() {
         val data = mutableListOf(
             createGlucoseValue(100.0, 1000L)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("None")
     }
 
     @Test
     fun `getTrendDescription handles null data`() {
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(null)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(null)
         assertThat(trendCalculator.getTrendDescription(autosensDataStore)).isEqualTo("Unknown")
     }
 
@@ -261,7 +261,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 98.25),  // -1.75 mg/dL over 300ms
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.DOUBLE_DOWN)
     }
 
@@ -272,7 +272,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 99.0),  // -1 mg/dL over 300ms
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_DOWN)
     }
 
@@ -283,7 +283,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 99.5),  // -0.5 mg/dL over 300ms
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FORTY_FIVE_DOWN)
     }
 
@@ -294,7 +294,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 100.5),  // 0.5 mg/dL over 300ms
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FLAT)
     }
 
@@ -305,7 +305,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 101.0),  // 1 mg/dL over 300ms
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.FORTY_FIVE_UP)
     }
 
@@ -316,7 +316,7 @@ class TrendCalculatorImplTest : TestBase() {
             createGlucoseValue(100.0, 1000L, recalculated = 101.75),  // 1.75 mg/dL over 300ms
             createGlucoseValue(100.0, 700L, recalculated = 100.0)
         )
-        `when`(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
+        whenever(autosensDataStore.getBucketedDataTableCopy()).thenReturn(data)
         assertThat(trendCalculator.getTrendArrow(autosensDataStore)).isEqualTo(TrendArrow.SINGLE_UP)
     }
 
@@ -329,6 +329,6 @@ class TrendCalculatorImplTest : TestBase() {
         timestamp = timestamp,
         value = value,
         trendArrow = trendArrow,
-        recalculated = recalculated
+        smoothed = recalculated
     )
 }
