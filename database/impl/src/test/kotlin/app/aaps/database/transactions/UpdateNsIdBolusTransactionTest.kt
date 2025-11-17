@@ -169,7 +169,7 @@ class UpdateNsIdBolusTransactionTest {
     }
 
     @Test
-    fun `does not update from actual NS ID to null`() {
+    fun `updates from actual NS ID to null`() {
         val currentBolus = createBolus(id = 1, nsId = "existing-id")
         val updateBolus = createBolus(id = 1, nsId = null)
 
@@ -179,9 +179,10 @@ class UpdateNsIdBolusTransactionTest {
         transaction.database = database
         val result = transaction.run()
 
-        assertThat(result.updatedNsId).isEmpty()
+        assertThat(currentBolus.interfaceIDs.nightscoutId).isNull()
+        assertThat(result.updatedNsId).hasSize(1)
 
-        verify(bolusDao, never()).updateExistingEntry(any())
+        verify(bolusDao).updateExistingEntry(currentBolus)
     }
 
     @Test
