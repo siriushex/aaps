@@ -1,11 +1,16 @@
 package app.aaps.plugins.sync.nsclientV3
 
+import app.aaps.core.data.model.BS
+import app.aaps.core.data.model.CA
 import app.aaps.core.data.model.GV
+import app.aaps.core.data.model.IDs
 import app.aaps.core.interfaces.db.PersistenceLayer
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
 import app.aaps.core.interfaces.pump.VirtualPump
 import app.aaps.core.interfaces.source.BgSource
 import app.aaps.core.interfaces.source.NSClientSource
+import app.aaps.core.interfaces.sync.DataSyncSelector
+import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.keys.BooleanKey
 import app.aaps.plugins.sync.nsShared.StoreDataForDbImpl
 import app.aaps.plugins.sync.nsclientV3.keys.NsclientBooleanKey
@@ -20,6 +25,7 @@ import org.mockito.Mock
 import org.mockito.internal.verification.Times
 import org.mockito.kotlin.any
 import org.mockito.kotlin.clearInvocations
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -28,6 +34,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
     @Mock lateinit var persistenceLayer: PersistenceLayer
     @Mock lateinit var virtualPump: VirtualPump
     @Mock lateinit var nsClientSource: NSClientSource
+    @Mock lateinit var nsClient: NsClient
 
     private lateinit var storeDataForDb: StoreDataForDb
     private lateinit var sut: DataSyncSelectorV3
@@ -731,6 +738,325 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         sut.processChangedProfileStore()
 
         verify(activePlugin, Times(0)).activeNsClient?.nsAdd(any(), any(), any())
+        Unit
+    }
+
+    // Tests for processChangedBoluses with getNextSyncElement returning data
+
+    @Test
+    fun processChangedBolusesWithNewBolusTest() = runBlocking {
+        // Setup: new bolus without NS id (should call nsAdd)
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        // Create test bolus without nightscoutId
+        val bolus = BS(
+            id = 6,
+            timestamp = 1000L,
+            amount = 5.0,
+            type = BS.Type.NORMAL,
+            ids = IDs()
+        )
+        val pair = Pair(bolus, bolus)
+
+        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(pair))
+        whenever(persistenceLayer.getNextSyncElementBolus(6L)).thenReturn(Maybe.empty())
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(true)
+
+        sut.processChangedBoluses()
+
+        // Verify nsAdd was called
+        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
+        Unit
+    }
+
+    @Test
+    fun processChangedBolusesWithExistingBolusTest() = runBlocking {
+        // Setup: existing bolus with NS id and changes (should call nsUpdate)
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        // Create modified bolus with nightscoutId
+        val oldBolus = BS(
+            id = 5,
+            timestamp = 1000L,
+            amount = 5.0,
+            type = BS.Type.NORMAL,
+            ids = IDs(nightscoutId = "ns123")
+        )
+        val newBolus = BS(
+            id = 6,
+            timestamp = 1000L,
+            amount = 5.5, // Modified amount
+            type = BS.Type.NORMAL,
+            ids = IDs(nightscoutId = "ns123")
+        )
+        val pair = Pair(newBolus, oldBolus)
+
+        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(pair))
+        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.empty())
+        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(true)
+
+        sut.processChangedBoluses()
+
+        // Verify nsUpdate was called
+        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 5L)
+        Unit
+    }
+
+    @Test
+    fun processChangedBolusesWithBolusFromNSTest() = runBlocking {
+        // Setup: bolus loaded from NS (should ignore)
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        // Create bolus with same id and existing nightscoutId (loaded from NS)
+        val bolus = BS(
+            id = 6,
+            timestamp = 1000L,
+            amount = 5.0,
+            type = BS.Type.NORMAL,
+            ids = IDs(nightscoutId = "ns123")
+        )
+        val pair = Pair(bolus, bolus)
+
+        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(pair))
+        whenever(persistenceLayer.getNextSyncElementBolus(6L)).thenReturn(Maybe.empty())
+
+        sut.processChangedBoluses()
+
+        // Verify no nsAdd or nsUpdate was called (ignored)
+        verify(nsClient, Times(0)).nsAdd(any(), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(nsClient, Times(0)).nsUpdate(any(), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
+        Unit
+    }
+
+    @Test
+    fun processChangedBolusesWithOnlyNsIdChangedTest() = runBlocking {
+        // Setup: bolus with only NS id changed (should ignore)
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        // Create bolus where only nightscoutId was added
+        val oldBolus = BS(
+            id = 5,
+            timestamp = 1000L,
+            amount = 5.0,
+            type = BS.Type.NORMAL,
+            ids = IDs()
+        )
+        val newBolus = BS(
+            id = 6,
+            timestamp = 1000L,
+            amount = 5.0,
+            type = BS.Type.NORMAL,
+            ids = IDs(nightscoutId = "ns123")
+        )
+        val pair = Pair(newBolus, oldBolus)
+
+        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(pair))
+        whenever(persistenceLayer.getNextSyncElementBolus(6L)).thenReturn(Maybe.empty())
+
+        sut.processChangedBoluses()
+
+        // Verify no nsAdd or nsUpdate was called (only NS id changed)
+        verify(nsClient, Times(0)).nsAdd(any(), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(nsClient, Times(0)).nsUpdate(any(), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
+        Unit
+    }
+
+    @Test
+    fun processChangedBolusesWhenNsAddFailsTest() = runBlocking {
+        // Setup: nsAdd returns false (should stop loop)
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        val bolus = BS(
+            id = 6,
+            timestamp = 1000L,
+            amount = 5.0,
+            type = BS.Type.NORMAL,
+            ids = IDs()
+        )
+        val pair = Pair(bolus, bolus)
+
+        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(pair))
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(false)
+
+        sut.processChangedBoluses()
+
+        // Verify nsAdd was called but loop stopped (no confirmLastId call)
+        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(preferences, Times(0)).put(NsclientLongKey.BolusLastSyncedId, 6L)
+        Unit
+    }
+
+    @Test
+    fun processChangedBolusesWithMultipleBolusesTest() = runBlocking {
+        // Setup: multiple boluses to sync
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        val bolus1 = BS(id = 6, timestamp = 1000L, amount = 5.0, type = BS.Type.NORMAL, ids = IDs())
+        val bolus2 = BS(id = 7, timestamp = 2000L, amount = 3.0, type = BS.Type.NORMAL, ids = IDs())
+
+        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(Pair(bolus1, bolus1)))
+        whenever(persistenceLayer.getNextSyncElementBolus(6L)).thenReturn(Maybe.just(Pair(bolus2, bolus2)))
+        whenever(persistenceLayer.getNextSyncElementBolus(7L)).thenReturn(Maybe.empty())
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(true)
+
+        sut.processChangedBoluses()
+
+        // Verify both boluses were synced
+        verify(nsClient, Times(2)).nsAdd(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())
+        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 6L)
+        verify(preferences, Times(1)).put(NsclientLongKey.BolusLastSyncedId, 7L)
+        Unit
+    }
+
+    // Tests for processChangedCarbs with getNextSyncElement returning data
+
+    @Test
+    fun processChangedCarbsWithNewCarbsTest() = runBlocking {
+        // Setup: new carbs without NS id (should call nsAdd)
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        val carbs = CA(
+            id = 6,
+            timestamp = 1000L,
+            amount = 30.0,
+            duration = 0L,
+            ids = IDs()
+        )
+        val pair = Pair(carbs, carbs)
+
+        whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.just(pair))
+        whenever(persistenceLayer.getNextSyncElementCarbs(6L)).thenReturn(Maybe.empty())
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(true)
+
+        sut.processChangedCarbs()
+
+        // Verify nsAdd was called
+        verify(nsClient, Times(1)).nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())
+        verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 6L)
+        Unit
+    }
+
+    @Test
+    fun processChangedCarbsWithExistingCarbsTest() = runBlocking {
+        // Setup: existing carbs with NS id and changes (should call nsUpdate)
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        val oldCarbs = CA(
+            id = 5,
+            timestamp = 1000L,
+            amount = 30.0,
+            duration = 0L,
+            ids = IDs(nightscoutId = "ns123")
+        )
+        val newCarbs = CA(
+            id = 6,
+            timestamp = 1000L,
+            amount = 35.0, // Modified amount
+            duration = 0L,
+            ids = IDs(nightscoutId = "ns123")
+        )
+        val pair = Pair(newCarbs, oldCarbs)
+
+        whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.just(pair))
+        whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.empty())
+        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(true)
+
+        sut.processChangedCarbs()
+
+        // Verify nsUpdate was called
+        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())
+        verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 5L)
+        Unit
+    }
+
+    @Test
+    fun processChangedCarbsWhenNsUpdateFailsTest() = runBlocking {
+        // Setup: nsUpdate returns false (should stop loop)
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        val oldCarbs = CA(
+            id = 5,
+            timestamp = 1000L,
+            amount = 30.0,
+            duration = 0L,
+            ids = IDs(nightscoutId = "ns123")
+        )
+        val newCarbs = CA(
+            id = 6,
+            timestamp = 1000L,
+            amount = 35.0,
+            duration = 0L,
+            ids = IDs(nightscoutId = "ns123")
+        )
+        val pair = Pair(newCarbs, oldCarbs)
+
+        whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.just(pair))
+        whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(false)
+
+        sut.processChangedCarbs()
+
+        // Verify nsUpdate was called but loop stopped (no confirmLastId call)
+        verify(nsClient, Times(1)).nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())
+        verify(preferences, Times(0)).put(NsclientLongKey.CarbsLastSyncedId, 6L)
+        Unit
+    }
+
+    @Test
+    fun processChangedCarbsWithMultipleCarbsTest() = runBlocking {
+        // Setup: multiple carbs entries to sync
+        whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
+        whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L)
+        whenever(activePlugin.activeNsClient).thenReturn(nsClient)
+
+        val carbs1 = CA(id = 6, timestamp = 1000L, amount = 30.0, duration = 0L, ids = IDs())
+        val carbs2 = CA(id = 7, timestamp = 2000L, amount = 20.0, duration = 0L, ids = IDs())
+        val carbs3 = CA(id = 8, timestamp = 3000L, amount = 15.0, duration = 0L, ids = IDs())
+
+        whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.just(Pair(carbs1, carbs1)))
+        whenever(persistenceLayer.getNextSyncElementCarbs(6L)).thenReturn(Maybe.just(Pair(carbs2, carbs2)))
+        whenever(persistenceLayer.getNextSyncElementCarbs(7L)).thenReturn(Maybe.just(Pair(carbs3, carbs3)))
+        whenever(persistenceLayer.getNextSyncElementCarbs(8L)).thenReturn(Maybe.empty())
+        whenever(nsClient.nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(true)
+
+        sut.processChangedCarbs()
+
+        // Verify all carbs were synced
+        verify(nsClient, Times(3)).nsAdd(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())
+        verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 6L)
+        verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 7L)
+        verify(preferences, Times(1)).put(NsclientLongKey.CarbsLastSyncedId, 8L)
         Unit
     }
 }
