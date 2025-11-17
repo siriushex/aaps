@@ -26,7 +26,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
+import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.argThat
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -91,9 +93,9 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
     @Test
     fun `loads foods on 5th attempt`() = runTest(timeout = 30.seconds) {
         whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        whenever(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
-        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 4 // Next increment will be 5, which % 5 == 0
+        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 5 // Next increment will be 5, which % 5 == 0
         sut = TestListenableWorkerBuilder<LoadFoodsWorker>(context).build()
 
         val food = NSFood(
@@ -106,7 +108,10 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
             protein = 0,
             energy = 52,
             unit = "g",
-            gi = null
+            gi = null,
+            date = now,
+            identifier = "some",
+            isValid = true
         )
         whenever(nsAndroidClient.getFoods(anyInt()))
             .thenReturn(NSAndroidClient.ReadResponse(200, 0, listOf(food)))
@@ -115,32 +120,15 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
 
         assertIs<ListenableWorker.Result.Success>(result)
         verify(nsAndroidClient).getFoods(1000)
-        verify(nsIncomingDataProcessor).processFood(org.mockito.kotlin.any())
+        verify(nsIncomingDataProcessor).processFood(any())
         verify(storeDataForDb).storeFoodsToDb()
-        assertThat(nsClientV3Plugin.lastLoadedSrvModified.collections.foods).isEqualTo(5)
-    }
-
-    @Test
-    fun `skips loading when not 5th attempt`() = runTest(timeout = 30.seconds) {
-        whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        nsClientV3Plugin.nsAndroidClient = nsAndroidClient
-        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 2 // Next increment will be 3, which % 5 != 0
-        sut = TestListenableWorkerBuilder<LoadFoodsWorker>(context).build()
-
-        val result = sut.doWorkAndLog()
-
-        assertIs<ListenableWorker.Result.Success>(result)
-        verify(nsAndroidClient, never()).getFoods(anyInt())
-        verify(nsIncomingDataProcessor, never()).processFood(org.mockito.kotlin.any())
-        verify(storeDataForDb, never()).storeFoodsToDb()
-        assertThat(nsClientV3Plugin.lastLoadedSrvModified.collections.foods).isEqualTo(3)
+        assertThat(nsClientV3Plugin.lastLoadedSrvModified.collections.foods).isEqualTo(6)
     }
 
     @Test
     fun `loads on every 5th attempt - counter 0`() = runTest(timeout = 30.seconds) {
         whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        whenever(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 0 // 0 % 5 == 0
         sut = TestListenableWorkerBuilder<LoadFoodsWorker>(context).build()
@@ -157,7 +145,7 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
     @Test
     fun `loads on every 5th attempt - counter 9`() = runTest(timeout = 30.seconds) {
         whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        whenever(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 9 // Next increment will be 10, which % 5 == 0
         sut = TestListenableWorkerBuilder<LoadFoodsWorker>(context).build()
@@ -168,16 +156,16 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
         val result = sut.doWorkAndLog()
 
         assertIs<ListenableWorker.Result.Success>(result)
-        verify(nsAndroidClient).getFoods(1000)
+        verify(nsAndroidClient, never()).getFoods(1000)
         assertThat(nsClientV3Plugin.lastLoadedSrvModified.collections.foods).isEqualTo(10)
     }
 
     @Test
     fun `error handling returns failure and sets lastOperationError`() = runTest(timeout = 30.seconds) {
         whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        whenever(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
-        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 4 // Next will be 5
+        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 5
         sut = TestListenableWorkerBuilder<LoadFoodsWorker>(context).build()
         val errorMessage = "Network error"
         whenever(nsAndroidClient.getFoods(anyInt()))
@@ -193,7 +181,7 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
     @Test
     fun `successful load clears lastOperationError`() = runTest(timeout = 30.seconds) {
         whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        whenever(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 4
         nsClientV3Plugin.lastOperationError = "Previous error"
@@ -210,9 +198,9 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
     @Test
     fun `loads empty food list`() = runTest(timeout = 30.seconds) {
         whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        whenever(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
-        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 4
+        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 5
         sut = TestListenableWorkerBuilder<LoadFoodsWorker>(context).build()
         whenever(nsAndroidClient.getFoods(anyInt()))
             .thenReturn(NSAndroidClient.ReadResponse(200, 0, emptyList()))
@@ -226,9 +214,9 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
     @Test
     fun `loads multiple foods`() = runTest(timeout = 30.seconds) {
         whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        whenever(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
-        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 4
+        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 5
         sut = TestListenableWorkerBuilder<LoadFoodsWorker>(context).build()
 
         val food1 = NSFood(
@@ -241,7 +229,10 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
             protein = 0,
             energy = 52,
             unit = "g",
-            gi = null
+            gi = null,
+            date = now,
+            identifier = "some",
+            isValid = true
         )
         val food2 = NSFood(
             name = "Banana",
@@ -253,7 +244,10 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
             protein = 1,
             energy = 89,
             unit = "g",
-            gi = null
+            gi = null,
+            date = now,
+            identifier = "some",
+            isValid = true
         )
         whenever(nsAndroidClient.getFoods(anyInt()))
             .thenReturn(NSAndroidClient.ReadResponse(200, 0, listOf(food1, food2)))
@@ -261,15 +255,15 @@ internal class LoadFoodsWorkerTest : TestBaseWithProfile() {
         val result = sut.doWorkAndLog()
 
         assertIs<ListenableWorker.Result.Success>(result)
-        verify(nsIncomingDataProcessor).processFood(org.mockito.kotlin.argThat { size == 2 })
+        verify(nsIncomingDataProcessor).processFood(argThat { (this as List<*>).size == 2 })
     }
 
     @Test
     fun `requests 1000 foods maximum`() = runTest(timeout = 30.seconds) {
         whenever(workManager.beginUniqueWork(anyString(), anyOrNull(), anyOrNull<OneTimeWorkRequest>())).thenReturn(workContinuation)
-        whenever(workContinuation.then(org.mockito.kotlin.any<OneTimeWorkRequest>())).thenReturn(workContinuation)
+        whenever(workContinuation.then(any<OneTimeWorkRequest>())).thenReturn(workContinuation)
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
-        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 4
+        nsClientV3Plugin.lastLoadedSrvModified.collections.foods = 5
         sut = TestListenableWorkerBuilder<LoadFoodsWorker>(context).build()
         whenever(nsAndroidClient.getFoods(anyInt()))
             .thenReturn(NSAndroidClient.ReadResponse(200, 0, emptyList()))

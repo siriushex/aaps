@@ -12,11 +12,14 @@ import app.aaps.core.interfaces.receivers.ReceiverStatusStore
 import app.aaps.core.interfaces.rx.events.EventNSClientNewLog
 import app.aaps.core.interfaces.source.NSClientSource
 import app.aaps.core.nssdk.interfaces.NSAndroidClient
+import app.aaps.core.nssdk.localmodel.ApiPermission
+import app.aaps.core.nssdk.localmodel.ApiPermissions
+import app.aaps.core.nssdk.localmodel.Status
+import app.aaps.core.nssdk.localmodel.Storage
 import app.aaps.core.nssdk.remotemodel.LastModified
-import app.aaps.core.nssdk.remotemodel.RemoteStatusResponse
 import app.aaps.core.utils.receivers.DataWorkerStorage
-import app.aaps.plugins.sync.nsclient.ReceiverDelegate
 import app.aaps.plugins.sync.nsShared.events.EventNSClientUpdateGuiStatus
+import app.aaps.plugins.sync.nsclient.ReceiverDelegate
 import app.aaps.plugins.sync.nsclientV3.DataSyncSelectorV3
 import app.aaps.plugins.sync.nsclientV3.NSClientV3Plugin
 import app.aaps.shared.tests.TestBaseWithProfile
@@ -88,13 +91,19 @@ internal class LoadStatusWorkerTest : TestBaseWithProfile() {
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         sut = TestListenableWorkerBuilder<LoadStatusWorker>(context).build()
 
-        val status = RemoteStatusResponse(
-            status = "ok",
-            name = "Nightscout",
+        val status = Status(
             version = "15.0.0",
-            apiEnabled = true,
-            careportalEnabled = true,
-            apiPermissions = null
+            apiVersion = "1.0",
+            srvDate = now,
+            storage = Storage(storage = "storage", version = "1.0"),
+            apiPermissions = ApiPermissions(
+                deviceStatus = ApiPermission(create = true, read = true, update = true, delete = true),
+                entries = ApiPermission(create = true, read = true, update = true, delete = true),
+                food = ApiPermission(create = true, read = true, update = true, delete = true),
+                profile = ApiPermission(create = true, read = true, update = true, delete = true),
+                settings = ApiPermission(create = true, read = true, update = true, delete = true),
+                treatments = ApiPermission(create = true, read = true, update = true, delete = true)
+            )
         )
         whenever(nsAndroidClient.getStatus()).thenReturn(status)
 
@@ -128,13 +137,19 @@ internal class LoadStatusWorkerTest : TestBaseWithProfile() {
         nsClientV3Plugin.lastOperationError = "Previous error"
         sut = TestListenableWorkerBuilder<LoadStatusWorker>(context).build()
 
-        val status = RemoteStatusResponse(
-            status = "ok",
-            name = "Nightscout",
+        val status = Status(
             version = "15.0.0",
-            apiEnabled = true,
-            careportalEnabled = true,
-            apiPermissions = null
+            apiVersion = "1.0",
+            srvDate = now,
+            storage = Storage(storage = "storage", version = "1.0"),
+            apiPermissions = ApiPermissions(
+                deviceStatus = ApiPermission(create = true, read = true, update = true, delete = true),
+                entries = ApiPermission(create = true, read = true, update = true, delete = true),
+                food = ApiPermission(create = true, read = true, update = true, delete = true),
+                profile = ApiPermission(create = true, read = true, update = true, delete = true),
+                settings = ApiPermission(create = true, read = true, update = true, delete = true),
+                treatments = ApiPermission(create = true, read = true, update = true, delete = true)
+            )
         )
         whenever(nsAndroidClient.getStatus()).thenReturn(status)
 
@@ -151,13 +166,19 @@ internal class LoadStatusWorkerTest : TestBaseWithProfile() {
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         sut = TestListenableWorkerBuilder<LoadStatusWorker>(context).build()
 
-        val status = RemoteStatusResponse(
-            status = "ok",
-            name = "Nightscout",
+        val status = Status(
             version = "15.0.0",
-            apiEnabled = true,
-            careportalEnabled = true,
-            apiPermissions = null
+            apiVersion = "1.0",
+            srvDate = now,
+            storage = Storage(storage = "storage", version = "1.0"),
+            apiPermissions = ApiPermissions(
+                deviceStatus = ApiPermission(create = true, read = true, update = true, delete = true),
+                entries = ApiPermission(create = true, read = true, update = true, delete = true),
+                food = ApiPermission(create = true, read = true, update = true, delete = true),
+                profile = ApiPermission(create = true, read = true, update = true, delete = true),
+                settings = ApiPermission(create = true, read = true, update = true, delete = true),
+                treatments = ApiPermission(create = true, read = true, update = true, delete = true)
+            )
         )
         whenever(nsAndroidClient.getStatus()).thenReturn(status)
 
@@ -219,13 +240,19 @@ internal class LoadStatusWorkerTest : TestBaseWithProfile() {
         nsClientV3Plugin.nsAndroidClient = nsAndroidClient
         sut = TestListenableWorkerBuilder<LoadStatusWorker>(context).build()
 
-        val status = RemoteStatusResponse(
-            status = "degraded",
-            name = "Nightscout-Test",
+        val status = Status(
             version = "14.2.6",
-            apiEnabled = false,
-            careportalEnabled = false,
-            apiPermissions = null
+            apiVersion = "1.0",
+            srvDate = now,
+            storage = Storage(storage = "storage", version = "1.0"),
+            apiPermissions = ApiPermissions(
+                deviceStatus = ApiPermission(create = true, read = true, update = true, delete = true),
+                entries = ApiPermission(create = true, read = true, update = true, delete = true),
+                food = ApiPermission(create = true, read = true, update = true, delete = true),
+                profile = ApiPermission(create = true, read = true, update = true, delete = true),
+                settings = ApiPermission(create = true, read = true, update = true, delete = true),
+                treatments = ApiPermission(create = true, read = true, update = true, delete = true)
+            )
         )
         whenever(nsAndroidClient.getStatus()).thenReturn(status)
 
