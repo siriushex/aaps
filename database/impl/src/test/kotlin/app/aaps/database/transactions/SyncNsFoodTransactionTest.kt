@@ -49,7 +49,6 @@ class SyncNsFoodTransactionTest {
         val existing = createFood(id = 1, nsId = "ns-123", name = "Apple", carbs = 15)
 
         `when`(foodDao.findByNSId("ns-123")).thenReturn(existing)
-        `when`(existing.contentEqualsTo(food)).thenReturn(false)
 
         val transaction = SyncNsFoodTransaction(listOf(food))
         transaction.database = database
@@ -70,7 +69,6 @@ class SyncNsFoodTransactionTest {
         val existing = createFood(id = 1, nsId = "ns-123", name = "Apple", carbs = 15, isValid = true)
 
         `when`(foodDao.findByNSId("ns-123")).thenReturn(existing)
-        `when`(existing.contentEqualsTo(food)).thenReturn(false)
 
         val transaction = SyncNsFoodTransaction(listOf(food))
         transaction.database = database
@@ -90,7 +88,6 @@ class SyncNsFoodTransactionTest {
         val existing = createFood(id = 1, nsId = "ns-123", name = "Apple", carbs = 15)
 
         `when`(foodDao.findByNSId("ns-123")).thenReturn(existing)
-        `when`(existing.contentEqualsTo(food)).thenReturn(true)
 
         val transaction = SyncNsFoodTransaction(listOf(food))
         transaction.database = database
