@@ -219,9 +219,10 @@ class PumpEnactResultExtensionTest : TestBase() {
 
         val html = result.toHtml(rh, decimalFormatter)
 
-        // Should show comment but not absolute
-        assertThat(html).contains("<b>Comment</b>: Some action")
+        // When enacted=true but no when case matches, comment is not shown
+        assertThat(html).isEqualTo("<b>Success</b>: true")
         assertThat(html).doesNotContain("<b>Absolute</b>:")
+        assertThat(html).doesNotContain("<b>Comment</b>:")
     }
 
     @Test
@@ -236,9 +237,10 @@ class PumpEnactResultExtensionTest : TestBase() {
 
         val html = result.toHtml(rh, decimalFormatter)
 
-        // Should show comment but not percent
-        assertThat(html).contains("<b>Comment</b>: Some action")
+        // When enacted=true but no when case matches, comment is not shown
+        assertThat(html).isEqualTo("<b>Success</b>: true")
         assertThat(html).doesNotContain("<b>Percent</b>:")
+        assertThat(html).doesNotContain("<b>Comment</b>:")
     }
 
     @Test
