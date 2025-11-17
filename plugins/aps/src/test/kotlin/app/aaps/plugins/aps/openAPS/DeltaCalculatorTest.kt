@@ -1,6 +1,7 @@
 package app.aaps.plugins.aps.openAPS
 
 import app.aaps.core.data.iob.InMemoryGlucoseValue
+import app.aaps.core.data.model.TrendArrow
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -225,8 +226,7 @@ class DeltaCalculatorTest : TestBase() {
         return InMemoryGlucoseValue(
             timestamp = now - millisAgo,
             value = value,
-            trendArrow = null,
-            recalculated = value,
+            trendArrow = TrendArrow.TRIPLE_UP,
             smoothed = value,
             filledGap = false
         )
