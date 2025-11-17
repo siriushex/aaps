@@ -3,6 +3,8 @@ package app.aaps.database.transactions
 import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.EffectiveProfileSwitchDao
 import app.aaps.database.entities.EffectiveProfileSwitch
+import app.aaps.database.entities.data.GlucoseUnit
+import app.aaps.database.entities.embedments.InsulinConfiguration
 import app.aaps.database.entities.embedments.InterfaceIDs
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -84,14 +86,14 @@ class UpdateNsIdEffectiveProfileSwitchTransactionTest {
         isfBlocks = emptyList(),
         icBlocks = emptyList(),
         targetBlocks = emptyList(),
-        glucoseUnit = EffectiveProfileSwitch.GlucoseUnit.MGDL,
+        glucoseUnit = GlucoseUnit.MGDL,
         originalProfileName = "Test",
         originalCustomizedName = "Test",
         originalTimeshift = 0,
         originalPercentage = 100,
         originalDuration = 0,
         originalEnd = 0,
-        insulinConfiguration = EffectiveProfileSwitch.InsulinConfiguration("Test", 0, 0),
+        insulinConfiguration = InsulinConfiguration("some", 600000L, 60000L),
         interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId)
     ).also { it.id = id }
 }

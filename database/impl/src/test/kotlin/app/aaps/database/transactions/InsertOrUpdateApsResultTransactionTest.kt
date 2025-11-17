@@ -4,6 +4,7 @@ import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.APSResultDao
 import app.aaps.database.entities.APSResult
 import com.google.common.truth.Truth.assertThat
+import org.json.JSONObject
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
@@ -11,7 +12,6 @@ import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
-import org.json.JSONObject
 
 class InsertOrUpdateApsResultTransactionTest {
 
@@ -108,10 +108,6 @@ class InsertOrUpdateApsResultTransactionTest {
         profileJson = "{}",
         mealDataJson = "{}",
         resultJson = JSONObject().put("rate", rate).put("targetBG", targetBG).toString(),
-        targetBG = targetBG,
-        isPercent = false,
-        rate = rate,
-        duration = 30,
-        useCase = APSResult.UseCase.OPEN_LOOP_MODE
+        autosensDataJson = null
     ).also { it.id = id }
 }

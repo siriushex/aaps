@@ -3,6 +3,7 @@ package app.aaps.database.transactions
 import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.TherapyEventDao
 import app.aaps.database.entities.TherapyEvent
+import app.aaps.database.entities.data.GlucoseUnit
 import app.aaps.database.entities.embedments.InterfaceIDs
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -211,7 +212,7 @@ class SyncNsTherapyEventTransactionTest {
         note = "Test",
         isValid = isValid,
         duration = duration,
-        glucoseUnit = TherapyEvent.GlucoseUnit.MGDL,
+        glucoseUnit = GlucoseUnit.MGDL,
         interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId)
     ).also { it.id = id }
 }

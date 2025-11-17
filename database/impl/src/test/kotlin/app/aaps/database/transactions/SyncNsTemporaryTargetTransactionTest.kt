@@ -4,8 +4,9 @@ import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.TemporaryTargetDao
 import app.aaps.database.entities.TemporaryTarget
 import app.aaps.database.entities.embedments.InterfaceIDs
+import app.aaps.database.entities.interfaces.end
 import com.google.common.truth.Truth.assertThat
-import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.core.Maybe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
@@ -31,7 +32,7 @@ class SyncNsTemporaryTargetTransactionTest {
         val tempTarget = createTemporaryTarget(id = 0, nsId = "ns-123", timestamp = 1000L, duration = 60_000L)
 
         `when`(temporaryTargetDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(1000L)).thenReturn(Single.just(null))
+        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(1000L)).thenReturn(Maybe.empty())
 
         val transaction = SyncNsTemporaryTargetTransaction(listOf(tempTarget))
         transaction.database = database
@@ -52,7 +53,7 @@ class SyncNsTemporaryTargetTransactionTest {
         val existing = createTemporaryTarget(id = 1, nsId = null, timestamp = 999L, duration = 60_000L)
 
         `when`(temporaryTargetDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(1000L)).thenReturn(Single.just(existing))
+        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(1000L)).thenReturn(Maybe.just(existing))
 
         val transaction = SyncNsTemporaryTargetTransaction(listOf(tempTarget))
         transaction.database = database
@@ -74,7 +75,7 @@ class SyncNsTemporaryTargetTransactionTest {
         val existing = createTemporaryTarget(id = 1, nsId = null, timestamp = 1000L, duration = 60_000L)
 
         `when`(temporaryTargetDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(5000L)).thenReturn(Single.just(existing))
+        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(5000L)).thenReturn(Maybe.just(existing))
 
         val transaction = SyncNsTemporaryTargetTransaction(listOf(tempTarget))
         transaction.database = database
@@ -152,7 +153,7 @@ class SyncNsTemporaryTargetTransactionTest {
         val tempTarget = createTemporaryTarget(id = 0, nsId = "ns-123", timestamp = 61_000L, duration = 0L)
         val existing = createTemporaryTarget(id = 1, nsId = null, timestamp = 1000L, duration = 60_000L)
 
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(61_000L)).thenReturn(Single.just(existing))
+        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(61_000L)).thenReturn(Maybe.just(existing))
 
         val transaction = SyncNsTemporaryTargetTransaction(listOf(tempTarget))
         transaction.database = database
@@ -171,7 +172,7 @@ class SyncNsTemporaryTargetTransactionTest {
     fun `does nothing when ending event but no running target`() {
         val tempTarget = createTemporaryTarget(id = 0, nsId = "ns-123", timestamp = 61_000L, duration = 0L)
 
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(61_000L)).thenReturn(Single.just(null))
+        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(61_000L)).thenReturn(Maybe.empty())
 
         val transaction = SyncNsTemporaryTargetTransaction(listOf(tempTarget))
         transaction.database = database
@@ -191,8 +192,8 @@ class SyncNsTemporaryTargetTransactionTest {
 
         `when`(temporaryTargetDao.findByNSId("ns-1")).thenReturn(null)
         `when`(temporaryTargetDao.findByNSId("ns-2")).thenReturn(null)
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(1000L)).thenReturn(Single.just(null))
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(2000L)).thenReturn(Single.just(null))
+        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(1000L)).thenReturn(Maybe.empty())
+        `when`(temporaryTargetDao.getTemporaryTargetActiveAt(2000L)).thenReturn(Maybe.empty())
 
         val transaction = SyncNsTemporaryTargetTransaction(listOf(tempTarget1, tempTarget2))
         transaction.database = database

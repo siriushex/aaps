@@ -3,14 +3,14 @@ package app.aaps.database.transactions
 import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.ProfileSwitchDao
 import app.aaps.database.entities.ProfileSwitch
+import app.aaps.database.entities.data.GlucoseUnit
+import app.aaps.database.entities.embedments.InsulinConfiguration
 import app.aaps.database.entities.embedments.InterfaceIDs
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 
 class SyncNsProfileSwitchTransactionTest {
@@ -109,11 +109,12 @@ class SyncNsProfileSwitchTransactionTest {
         isfBlocks = emptyList(),
         icBlocks = emptyList(),
         targetBlocks = emptyList(),
-        glucoseUnit = ProfileSwitch.GlucoseUnit.MGDL,
+        glucoseUnit = GlucoseUnit.MGDL,
         profileName = "Test",
         timeshift = 0,
         percentage = 100,
         duration = 0,
-        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId)
+        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId),
+        insulinConfiguration = InsulinConfiguration("some", 600000L, 60000L)
     ).also { it.id = id }
 }

@@ -95,8 +95,8 @@ class InsertOrUpdateStepsCountTransactionTest {
 
     private fun createStepsCount(
         id: Long,
-        steps5min: Long,
-        steps10min: Long
+        steps5min: Int,
+        steps10min: Int
     ): StepsCount = StepsCount(
         timestamp = System.currentTimeMillis(),
         steps5min = steps5min,
@@ -105,6 +105,7 @@ class InsertOrUpdateStepsCountTransactionTest {
         steps30min = steps10min + 200,
         steps60min = steps10min + 500,
         steps180min = steps10min + 1000,
-        device = "TestDevice"
+        device = "TestDevice",
+        duration = 60000L
     ).also { it.id = id }
 }

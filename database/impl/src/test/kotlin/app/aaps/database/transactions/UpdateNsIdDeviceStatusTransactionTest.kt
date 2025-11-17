@@ -87,6 +87,7 @@ class UpdateNsIdDeviceStatusTransactionTest {
         iob = null,
         uploaderBattery = 100,
         configuration = null,
-        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId)
+        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId),
+        isCharging = null
     ).also { it.id = id }
 }

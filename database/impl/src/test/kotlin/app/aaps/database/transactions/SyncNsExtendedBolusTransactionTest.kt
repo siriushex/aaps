@@ -4,8 +4,9 @@ import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.ExtendedBolusDao
 import app.aaps.database.entities.ExtendedBolus
 import app.aaps.database.entities.embedments.InterfaceIDs
+import app.aaps.database.entities.interfaces.end
 import com.google.common.truth.Truth.assertThat
-import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.core.Maybe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
@@ -26,10 +27,10 @@ class SyncNsExtendedBolusTransactionTest {
 
     @Test
     fun `inserts new when nsId not found and no active bolus`() {
-        val eb = createExtendedBolus(id = 0, nsId = "ns-123", timestamp = 1000L, duration = 60_000L)
+        val eb = createExtendedBolus(id = 0, nsId = "ns-123", timestamp = 1000L, duration = 60_000L, amount = 1.0)
 
         `when`(extendedBolusDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(extendedBolusDao.getExtendedBolusActiveAt(1000L)).thenReturn(Single.just(null))
+        `when`(extendedBolusDao.getExtendedBolusActiveAt(1000L)).thenReturn(Maybe.empty())
 
         val transaction = SyncNsExtendedBolusTransaction(listOf(eb), nsClientMode = false)
         transaction.database = database
@@ -47,7 +48,7 @@ class SyncNsExtendedBolusTransactionTest {
         val existing = createExtendedBolus(id = 1, nsId = null, timestamp = 999L, duration = 60_000L, amount = 5.0)
 
         `when`(extendedBolusDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(extendedBolusDao.getExtendedBolusActiveAt(1000L)).thenReturn(Single.just(existing))
+        `when`(extendedBolusDao.getExtendedBolusActiveAt(1000L)).thenReturn(Maybe.just(existing))
 
         val transaction = SyncNsExtendedBolusTransaction(listOf(eb), nsClientMode = false)
         transaction.database = database
@@ -65,7 +66,7 @@ class SyncNsExtendedBolusTransactionTest {
         val existing = createExtendedBolus(id = 1, nsId = null, timestamp = 1000L, duration = 60_000L, amount = 6.0)
 
         `when`(extendedBolusDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(extendedBolusDao.getExtendedBolusActiveAt(31_000L)).thenReturn(Single.just(existing))
+        `when`(extendedBolusDao.getExtendedBolusActiveAt(31_000L)).thenReturn(Maybe.just(existing))
 
         val transaction = SyncNsExtendedBolusTransaction(listOf(eb), nsClientMode = false)
         transaction.database = database
@@ -117,7 +118,7 @@ class SyncNsExtendedBolusTransactionTest {
         val eb = createExtendedBolus(id = 0, nsId = "ns-123", timestamp = 31_000L, duration = 0L, amount = 0.0)
         val existing = createExtendedBolus(id = 1, nsId = null, timestamp = 1000L, duration = 60_000L, amount = 6.0)
 
-        `when`(extendedBolusDao.getExtendedBolusActiveAt(31_000L)).thenReturn(Single.just(existing))
+        `when`(extendedBolusDao.getExtendedBolusActiveAt(31_000L)).thenReturn(Maybe.just(existing))
 
         val transaction = SyncNsExtendedBolusTransaction(listOf(eb), nsClientMode = false)
         transaction.database = database

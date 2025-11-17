@@ -4,8 +4,9 @@ import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.TemporaryBasalDao
 import app.aaps.database.entities.TemporaryBasal
 import app.aaps.database.entities.embedments.InterfaceIDs
+import app.aaps.database.entities.interfaces.end
 import com.google.common.truth.Truth.assertThat
-import io.reactivex.rxjava3.core.Single
+import io.reactivex.rxjava3.core.Maybe
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
@@ -29,7 +30,7 @@ class SyncNsTemporaryBasalTransactionTest {
         val tb = createTemporaryBasal(id = 0, nsId = "ns-123", timestamp = 1000L, duration = 60_000L)
 
         `when`(temporaryBasalDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(temporaryBasalDao.getTemporaryBasalActiveAt(1000L)).thenReturn(Single.just(null))
+        `when`(temporaryBasalDao.getTemporaryBasalActiveAt(1000L)).thenReturn(Maybe.empty())
 
         val transaction = SyncNsTemporaryBasalTransaction(listOf(tb), nsClientMode = false)
         transaction.database = database
@@ -47,7 +48,7 @@ class SyncNsTemporaryBasalTransactionTest {
         val existing = createTemporaryBasal(id = 1, nsId = null, timestamp = 999L, duration = 60_000L)
 
         `when`(temporaryBasalDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(temporaryBasalDao.getTemporaryBasalActiveAt(1000L)).thenReturn(Single.just(existing))
+        `when`(temporaryBasalDao.getTemporaryBasalActiveAt(1000L)).thenReturn(Maybe.empty())
 
         val transaction = SyncNsTemporaryBasalTransaction(listOf(tb), nsClientMode = false)
         transaction.database = database
@@ -65,7 +66,7 @@ class SyncNsTemporaryBasalTransactionTest {
         val existing = createTemporaryBasal(id = 1, nsId = null, timestamp = 1000L, duration = 60_000L)
 
         `when`(temporaryBasalDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(temporaryBasalDao.getTemporaryBasalActiveAt(5000L)).thenReturn(Single.just(existing))
+        `when`(temporaryBasalDao.getTemporaryBasalActiveAt(5000L)).thenReturn(Maybe.just(existing))
 
         val transaction = SyncNsTemporaryBasalTransaction(listOf(tb), nsClientMode = false)
         transaction.database = database

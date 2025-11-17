@@ -81,7 +81,8 @@ class SyncNsRunningModeTransactionTest {
         isValid: Boolean = true
     ): RunningMode = RunningMode(
         timestamp = timestamp,
-        mode = RunningMode.Mode.OPEN,
-        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId)
+        mode = RunningMode.Mode.OPEN_LOOP,
+        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId),
+        duration = 0
     ).also { it.id = id }
 }
