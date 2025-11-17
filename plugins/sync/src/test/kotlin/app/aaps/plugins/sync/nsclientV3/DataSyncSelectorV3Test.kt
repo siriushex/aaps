@@ -748,7 +748,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: new bolus without NS id (should call nsAdd)
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        // Return 5L first, then 6L after preference is updated
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L, 6L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         // Create test bolus without nightscoutId
@@ -778,7 +779,8 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: existing bolus with NS id and changes (should call nsUpdate)
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        // Return 5L first iteration, then 5L again after update (since we update with old id)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L, 5L, 5L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         // Create modified bolus with nightscoutId
@@ -798,8 +800,9 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         )
         val pair = Pair(newBolus, oldBolus)
 
-        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.just(pair))
-        whenever(persistenceLayer.getNextSyncElementBolus(5L)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementBolus(5L))
+            .thenReturn(Maybe.just(pair))
+            .thenReturn(Maybe.empty())
         whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairBolus>(), any(), any())).thenReturn(true)
 
         sut.processChangedBoluses()
@@ -815,7 +818,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: bolus loaded from NS (should ignore)
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L, 6L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         // Create bolus with same id and existing nightscoutId (loaded from NS)
@@ -845,7 +848,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: bolus with only NS id changed (should ignore)
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L, 6L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         // Create bolus where only nightscoutId was added
@@ -910,7 +913,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: multiple boluses to sync
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastBolusId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L)
+        whenever(preferences.get(NsclientLongKey.BolusLastSyncedId)).thenReturn(5L, 6L, 7L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         val bolus1 = BS(id = 6, timestamp = 1000L, amount = 5.0, type = BS.Type.NORMAL, ids = IDs())
@@ -937,7 +940,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: new carbs without NS id (should call nsAdd)
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L, 6L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         val carbs = CA(
@@ -966,7 +969,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: existing carbs with NS id and changes (should call nsUpdate)
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L, 5L, 5L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         val oldCarbs = CA(
@@ -985,8 +988,9 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         )
         val pair = Pair(newCarbs, oldCarbs)
 
-        whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.just(pair))
-        whenever(persistenceLayer.getNextSyncElementCarbs(5L)).thenReturn(Maybe.empty())
+        whenever(persistenceLayer.getNextSyncElementCarbs(5L))
+            .thenReturn(Maybe.just(pair))
+            .thenReturn(Maybe.empty())
         whenever(nsClient.nsUpdate(eq("treatments"), any<DataSyncSelector.PairCarbs>(), any(), any())).thenReturn(true)
 
         sut.processChangedCarbs()
@@ -1037,7 +1041,7 @@ class DataSyncSelectorV3Test : TestBaseWithProfile() {
         // Setup: multiple carbs entries to sync
         whenever(preferences.get(NsclientBooleanKey.NsPaused)).thenReturn(false)
         whenever(persistenceLayer.getLastCarbsId()).thenReturn(10L)
-        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L)
+        whenever(preferences.get(NsclientLongKey.CarbsLastSyncedId)).thenReturn(5L, 6L, 7L, 8L)
         whenever(activePlugin.activeNsClient).thenReturn(nsClient)
 
         val carbs1 = CA(id = 6, timestamp = 1000L, amount = 30.0, duration = 0L, ids = IDs())
