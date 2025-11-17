@@ -110,8 +110,8 @@ class LocalAlertUtilsImplTest : TestBase() {
 
         localAlertUtils.preSnoozeAlarms()
 
-        verify(preferences).put(eq(LocalAlertLongKey.NextMissedReadingsAlarm), now + 5 * 60 * 1000)
-        verify(preferences).put(eq(LocalAlertLongKey.NextPumpDisconnectedAlarm), now + 5 * 60 * 1000)
+        verify(preferences).put(LocalAlertLongKey.NextMissedReadingsAlarm, now + 5 * 60 * 1000)
+        verify(preferences).put(LocalAlertLongKey.NextPumpDisconnectedAlarm, now + 5 * 60 * 1000)
     }
 
     @Test
@@ -126,7 +126,7 @@ class LocalAlertUtilsImplTest : TestBase() {
 
         localAlertUtils.shortenSnoozeInterval()
 
-        verify(preferences).put(eq(LocalAlertLongKey.NextMissedReadingsAlarm), now + T.mins(thresholdMinutes.toLong()).msecs())
+        verify(preferences).put(LocalAlertLongKey.NextMissedReadingsAlarm, now + T.mins(thresholdMinutes.toLong()).msecs())
     }
 
     @Test
@@ -141,7 +141,7 @@ class LocalAlertUtilsImplTest : TestBase() {
 
         localAlertUtils.shortenSnoozeInterval()
 
-        verify(preferences).put(eq(LocalAlertLongKey.NextMissedReadingsAlarm), alarmTime)
+        verify(preferences).put(LocalAlertLongKey.NextMissedReadingsAlarm, alarmTime)
     }
 
     @Test
