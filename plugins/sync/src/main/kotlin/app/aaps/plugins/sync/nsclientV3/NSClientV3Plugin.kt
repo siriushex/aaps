@@ -189,7 +189,7 @@ class NSClientV3Plugin @Inject constructor(
      * Full sync is performed right now
      */
     var doingFullSync = false
-        private set
+        @VisibleForTesting set
 
     private val serviceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceDisconnected(name: ComponentName) {
