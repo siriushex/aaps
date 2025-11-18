@@ -1,23 +1,15 @@
 package app.aaps.pump.eopatch
 
-import app.aaps.core.data.model.BS
 import app.aaps.core.data.plugin.PluginType
 import app.aaps.core.data.pump.defs.ManufacturerType
 import app.aaps.core.data.pump.defs.PumpType
-import app.aaps.core.interfaces.profile.ProfileFunction
-import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
-import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
-import app.aaps.pump.eopatch.code.PatchLifecycle
 import app.aaps.pump.eopatch.core.scan.BleConnectionState
 import app.aaps.pump.eopatch.vo.PatchLifecycleEvent
 import com.google.common.truth.Truth.assertThat
-import io.reactivex.rxjava3.core.Single
-import org.json.JSONObject
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
@@ -27,12 +19,9 @@ import org.mockito.kotlin.whenever
 class EopatchPumpPluginTest : EopatchTestBase() {
 
     @Mock lateinit var commandQueue: CommandQueue
-    @Mock lateinit var aapsSchedulers: AapsSchedulers
     @Mock lateinit var rxBus: RxBus
-    @Mock lateinit var fabricPrivacy: FabricPrivacy
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var uiInteraction: UiInteraction
-    @Mock lateinit var profileFunction: ProfileFunction
     @Mock lateinit var bleConnectionState: BleConnectionState
 
     private lateinit var plugin: EopatchPumpPlugin
@@ -53,6 +42,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         plugin = EopatchPumpPlugin(
             aapsLogger,
             rh,
+            preferences,
             commandQueue,
             aapsSchedulers,
             rxBus,
@@ -64,8 +54,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
             alarmManager,
             preferenceManager,
             uiInteraction,
-            profileFunction,
-            instantiator,
+            pumpEnactResultProvider,
             patchConfig,
             normalBasalManager
         )
