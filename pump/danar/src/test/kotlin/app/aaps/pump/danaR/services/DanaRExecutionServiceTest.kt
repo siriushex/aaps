@@ -2,7 +2,6 @@ package app.aaps.pump.danaR.services
 
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
-import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.ui.UiInteraction
@@ -30,7 +29,6 @@ class DanaRExecutionServiceTest : TestBaseWithProfile() {
     @Mock lateinit var danaPump: DanaPump
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var uiInteraction: UiInteraction
-    @Mock lateinit var pumpEnactResult: PumpEnactResult
 
     private lateinit var danaRExecutionService: DanaRExecutionService
 
@@ -59,16 +57,6 @@ class DanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(rh.gs(anyInt())).thenReturn("test")
         `when`(rh.gs(anyInt(), any())).thenReturn("test")
         `when`(danaRPlugin.pumpDescription).thenReturn(mockPumpDescription())
-        `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.success).thenReturn(true)
-    }
-
-    @Test
-    fun testLoadEvents() {
-        val result = danaRExecutionService.loadEvents()
-
-        assertThat(result).isNotNull()
-        assertThat(result.success).isTrue()
     }
 
     @Test

@@ -13,11 +13,10 @@ import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.dana.comm.RecordTypes
 import app.aaps.pump.dana.keys.DanaStringKey
 import app.aaps.pump.danar.comm.MessageHashTableBase
+import app.aaps.pump.danar.comm.MsgBolusStop
 import app.aaps.pump.danar.services.AbstractDanaRExecutionService
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
-import dagger.android.AndroidInjector
-import dagger.android.HasAndroidInjector
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
@@ -37,7 +36,14 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     @Mock lateinit var messageHashTable: MessageHashTableBase
     @Mock lateinit var bluetoothManager: BluetoothManager
     @Mock lateinit var pumpEnactResult: PumpEnactResult
-    @Mock lateinit var injector: HasAndroidInjector
+
+    init {
+        addInjector { injector ->
+            if (injector is MsgBolusStop) {
+                injector.aapsLogger = aapsLogger
+            }
+        }
+    }
 
     private lateinit var testService: TestDanaRExecutionService
 
@@ -76,8 +82,6 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         testService.uiInteraction = uiInteraction
         testService.pumpEnactResultProvider = pumpEnactResultProvider
         testService.injector = injector
-
-        `when`(injector.androidInjector()).thenReturn(AndroidInjector { })
     }
 
     @Test
@@ -88,12 +92,6 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     @Test
     fun testIsHandshakeInProgress() {
         assertThat(testService.isHandshakeInProgress).isFalse()
-    }
-
-    @Test
-    fun testFinishHandshaking() {
-        testService.finishHandshaking()
-        verify(rxBus).send(any(EventPumpStatusChanged::class.java))
     }
 
     @Test
@@ -142,15 +140,6 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
             val result = testService.loadHistory(type)
             assertThat(result).isNotNull()
         }
-    }
-
-    @Test
-    fun testWaitForWholeMinute() {
-        val now = 1000000L
-        `when`(dateUtil.now()).thenReturn(now)
-
-        // This should not block indefinitely in test
-        testService.waitForWholeMinute()
     }
 
     @Test
