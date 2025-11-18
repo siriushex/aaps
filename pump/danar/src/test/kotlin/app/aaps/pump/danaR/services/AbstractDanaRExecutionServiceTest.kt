@@ -17,6 +17,7 @@ import app.aaps.pump.danar.services.AbstractDanaRExecutionService
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import dagger.android.AndroidInjector
+import dagger.android.HasAndroidInjector
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
@@ -36,6 +37,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     @Mock lateinit var messageHashTable: MessageHashTableBase
     @Mock lateinit var bluetoothManager: BluetoothManager
     @Mock lateinit var pumpEnactResult: PumpEnactResult
+    @Mock lateinit var injector: HasAndroidInjector
 
     private lateinit var testService: TestDanaRExecutionService
 
