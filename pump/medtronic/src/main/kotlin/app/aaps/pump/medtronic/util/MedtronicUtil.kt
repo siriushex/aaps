@@ -190,7 +190,7 @@ class MedtronicUtil @Inject constructor(
             frames.add(frameData)
             frame++
             start += BIG_FRAME_LENGTH - 1
-            if (start == data.size) {
+            if (start >= data.size) {
                 done = true
             }
         } while (!done)
