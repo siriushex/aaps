@@ -25,6 +25,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var bleConnectionState: BleConnectionState
+    @Mock lateinit var profile: Profile
 
     private lateinit var plugin: EopatchPumpPlugin
 
@@ -119,7 +120,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         // isNormalBasalAct will be false
         whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalAbsolute(1.5, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalAbsolute(1.5, 60, profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -131,7 +132,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         patchState.update(ByteArray(20), System.currentTimeMillis())
         whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalPercent(150, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalPercent(150, 60, profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -145,7 +146,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         patchState.update(bytes, System.currentTimeMillis())
         whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalPercent(0, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalPercent(0, 60, profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -154,7 +155,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     @Test
     fun `cancelTempBasal should return success when TBR already false`() {
         whenever(pumpSync.expectedPumpState()).thenReturn(
-            PumpSync.PumpState(null, null, null, validProfile, "")
+            PumpSync.PumpState(null, null, null, profile, "")
         )
 
         val result = plugin.cancelTempBasal(false)
@@ -169,7 +170,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         patchState.update(ByteArray(20), System.currentTimeMillis())
         whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
         whenever(pumpSync.expectedPumpState()).thenReturn(
-            PumpSync.PumpState(null, null, null, validProfile, "")
+            PumpSync.PumpState(null, null, null, profile, "")
         )
 
         val result = plugin.cancelExtendedBolus()
