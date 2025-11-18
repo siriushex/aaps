@@ -149,4 +149,80 @@ class BaseSettingTest : TestBaseWithProfile() {
         assertEquals(15000, testSetting.connectTimeOut)
     }
 
+    @Test
+    fun `multiple getReqData calls should increment index each time`() {
+        val initialIndex = BaseCmd.pumpReqIndex
+        testSetting.getReqData()
+        assertEquals(initialIndex + 1, BaseCmd.pumpReqIndex)
+
+        testSetting.getReqData()
+        assertEquals(initialIndex + 2, BaseCmd.pumpReqIndex)
+    }
+
+    @Test
+    fun `getReqData should call getFirstData`() {
+        val result = testSetting.getReqData()
+
+        assertTrue(testSetting.firstDataCalled)
+        assertNotNull(result)
+    }
+
+    @Test
+    fun `createTime with custom value should be stored`() {
+        val customTime = 987654321L
+        val setting = TestBaseSetting(customTime)
+        assertEquals(customTime, setting.createTime)
+    }
+
+    @Test
+    fun `getNextData should be callable`() {
+        val result = testSetting.getNextData()
+
+        assertTrue(testSetting.nextDataCalled)
+        assertNotNull(result)
+        assertEquals(4, result.size) // Should return the mock data from TestBaseSetting
+    }
+
+    @Test
+    fun `decodeConfirmData should be callable`() {
+        val testData = ByteArray(10)
+        testSetting.decodeConfirmData(testData)
+
+        assertTrue(testSetting.decodeConfirmDataCalled)
+    }
+
+    @Test
+    fun `getEventType should return correct type`() {
+        val eventType = testSetting.getEventType()
+
+        assertNotNull(eventType)
+        assertEquals(EquilHistoryRecord.EventType.SET_BASAL_PROFILE, eventType)
+    }
+
+    @Test
+    fun `port should have default value from BaseCmd`() {
+        assertEquals("0404", testSetting.port)
+    }
+
+    @Test
+    fun `enacted should be true by default`() {
+        assertTrue(testSetting.enacted)
+    }
+
+    @Test
+    fun `cmdSuccess should be false initially`() {
+        assertFalse(testSetting.cmdSuccess)
+    }
+
+    @Test
+    fun `statusDescription should be class name`() {
+        assertTrue(testSetting.statusDescription.contains("TestBaseSetting"))
+    }
+
+    @Test
+    fun `should extend BaseSetting properly`() {
+        assertTrue(testSetting is BaseSetting)
+        assertTrue(testSetting is BaseCmd)
+    }
+
 }

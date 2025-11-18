@@ -94,4 +94,91 @@ class CmdPairTest : TestBaseWithProfile() {
         val cmd = CmdPair("Equil -   TestDevice  ", "00:11:22:33:44:55", "testpass", aapsLogger, preferences, equilManager)
         assertNotNull(cmd.sn)
     }
+
+    @Test
+    fun `multiple getEquilResponse calls should generate different random passwords`() {
+        val cmd = CmdPair("Equil - TestDevice", "00:11:22:33:44:55", "testpass", aapsLogger, preferences, equilManager)
+
+        cmd.getEquilResponse()
+        val pwd1 = cmd.randomPassword?.clone()
+
+        cmd.randomPassword = null
+        cmd.getEquilResponse()
+        val pwd2 = cmd.randomPassword
+
+        assertNotNull(pwd1)
+        assertNotNull(pwd2)
+        // Random passwords should be different
+        assertTrue(!pwd1.contentEquals(pwd2))
+    }
+
+    @Test
+    fun `getEquilResponse should set response field`() {
+        val cmd = CmdPair("Equil - TestDevice", "00:11:22:33:44:55", "testpass", aapsLogger, preferences, equilManager)
+        val response = cmd.getEquilResponse()
+
+        assertNotNull(cmd.response)
+        assertEquals(response.createTime, cmd.createTime)
+    }
+
+    @Test
+    fun `should handle different device names`() {
+        val cmd1 = CmdPair("Equil - Device1", "00:11:22:33:44:55", "pass1", aapsLogger, preferences, equilManager)
+        val cmd2 = CmdPair("Equil - Device2", "AA:BB:CC:DD:EE:FF", "pass2", aapsLogger, preferences, equilManager)
+
+        assertNotNull(cmd1.sn)
+        assertNotNull(cmd2.sn)
+        assertTrue(cmd1.sn != cmd2.sn)
+    }
+
+    @Test
+    fun `createTime should be set`() {
+        val beforeTime = System.currentTimeMillis()
+        val cmd = CmdPair("Equil - TestDevice", "00:11:22:33:44:55", "testpass", aapsLogger, preferences, equilManager)
+        val afterTime = System.currentTimeMillis()
+
+        assertTrue(cmd.createTime >= beforeTime)
+        assertTrue(cmd.createTime <= afterTime)
+    }
+
+    @Test
+    fun `config should be false initially`() {
+        val cmd = CmdPair("Equil - TestDevice", "00:11:22:33:44:55", "testpass", aapsLogger, preferences, equilManager)
+        assertEquals(false, cmd.config)
+    }
+
+    @Test
+    fun `isEnd should be false initially`() {
+        val cmd = CmdPair("Equil - TestDevice", "00:11:22:33:44:55", "testpass", aapsLogger, preferences, equilManager)
+        assertEquals(false, cmd.isEnd)
+    }
+
+    @Test
+    fun `cmdSuccess should be false initially`() {
+        val cmd = CmdPair("Equil - TestDevice", "00:11:22:33:44:55", "testpass", aapsLogger, preferences, equilManager)
+        assertEquals(false, cmd.cmdSuccess)
+    }
+
+    @Test
+    fun `ERROR_PWD should be 64 characters`() {
+        assertEquals(64, CmdPair.ERROR_PWD.length)
+    }
+
+    @Test
+    fun `ERROR_PWD should be all zeros`() {
+        assertTrue(CmdPair.ERROR_PWD.all { it == '0' })
+    }
+
+    @Test
+    fun `address should be stored correctly`() {
+        val address = "12:34:56:78:9A:BC"
+        val cmd = CmdPair("Equil - TestDevice", address, "testpass", aapsLogger, preferences, equilManager)
+        assertEquals(address, cmd.address)
+    }
+
+    @Test
+    fun `should handle empty device name after prefix`() {
+        val cmd = CmdPair("Equil - ", "00:11:22:33:44:55", "testpass", aapsLogger, preferences, equilManager)
+        assertNotNull(cmd.sn)
+    }
 }

@@ -100,4 +100,99 @@ class CmdDevicesOldGetTest : TestBaseWithProfile() {
         // Initially firmware version is 0.0
         assertFalse(cmd.isSupport())
     }
+
+    @Test
+    fun `getFirstData should increment pumpReqIndex`() {
+        val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
+        val initialIndex = BaseCmd.pumpReqIndex
+        cmd.getFirstData()
+        assertEquals(initialIndex + 1, BaseCmd.pumpReqIndex)
+    }
+
+    @Test
+    fun `getNextData should increment pumpReqIndex`() {
+        val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
+        val initialIndex = BaseCmd.pumpReqIndex
+        cmd.getNextData()
+        assertEquals(initialIndex + 1, BaseCmd.pumpReqIndex)
+    }
+
+    @Test
+    fun `getNextData should have correct command bytes`() {
+        val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
+        val data = cmd.getNextData()
+
+        assertEquals(0x00.toByte(), data[4])
+        assertEquals(0x00.toByte(), data[5])
+        assertEquals(0x01.toByte(), data[6])
+    }
+
+    @Test
+    fun `getEquilResponse should initialize response and return non-null`() {
+        val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
+        val response = cmd.getEquilResponse()
+
+        assertNotNull(response)
+        assertNotNull(cmd.response)
+        assertFalse(cmd.config)
+        assertFalse(cmd.isEnd)
+    }
+
+    @Test
+    fun `getEquilResponse should return 14 byte buffer`() {
+        val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
+        val response = cmd.getEquilResponse()
+
+        assertNotNull(response)
+        assertEquals(1, response.send.size)
+        assertEquals(14, response.send[0].array().size)
+    }
+
+    @Test
+    fun `decodeConfirmData should parse firmware version correctly`() {
+        val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
+        val testData = ByteArray(20)
+        testData[18] = 2
+        testData[19] = 10
+
+        val thread = Thread {
+            cmd.decodeConfirmData(testData)
+        }
+        thread.start()
+        thread.join(1000)
+
+        assertTrue(cmd.cmdSuccess)
+        assertTrue(cmd.isSupport()) // 2.10 should be supported
+    }
+
+    @Test
+    fun `should handle different address formats`() {
+        val cmd1 = CmdDevicesOldGet("AA:BB:CC:DD:EE:FF", aapsLogger, preferences, equilManager)
+        assertEquals("AA:BB:CC:DD:EE:FF", cmd1.address)
+
+        val cmd2 = CmdDevicesOldGet("00-11-22-33-44-55", aapsLogger, preferences, equilManager)
+        assertEquals("00-11-22-33-44-55", cmd2.address)
+    }
+
+    @Test
+    fun `multiple getFirstData calls should increment index each time`() {
+        val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
+        val initialIndex = BaseCmd.pumpReqIndex
+
+        cmd.getFirstData()
+        assertEquals(initialIndex + 1, BaseCmd.pumpReqIndex)
+
+        cmd.getFirstData()
+        assertEquals(initialIndex + 2, BaseCmd.pumpReqIndex)
+    }
+
+    @Test
+    fun `createTime should be set`() {
+        val beforeTime = System.currentTimeMillis()
+        val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
+        val afterTime = System.currentTimeMillis()
+
+        assertTrue(cmd.createTime >= beforeTime)
+        assertTrue(cmd.createTime <= afterTime)
+    }
 }

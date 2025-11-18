@@ -113,4 +113,106 @@ class CmdUnPairTest : TestBaseWithProfile() {
         // Should trim and process
         assertNotNull(cmd.sn)
     }
+
+    @Test
+    fun `multiple clear1 calls should generate different random passwords`() {
+        val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
+
+        cmd.clear1()
+        val pwd1 = cmd.randomPassword?.clone()
+
+        cmd.randomPassword = null
+        cmd.clear1()
+        val pwd2 = cmd.randomPassword
+
+        assertNotNull(pwd1)
+        assertNotNull(pwd2)
+        // Random passwords should be different
+        assertTrue(!pwd1.contentEquals(pwd2))
+    }
+
+    @Test
+    fun `clear1 should return non-null response`() {
+        val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
+        val response = cmd.clear1()
+        assertNotNull(response)
+    }
+
+    @Test
+    fun `createTime should be set`() {
+        val beforeTime = System.currentTimeMillis()
+        val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
+        val afterTime = System.currentTimeMillis()
+
+        assertTrue(cmd.createTime >= beforeTime)
+        assertTrue(cmd.createTime <= afterTime)
+    }
+
+    @Test
+    fun `should handle different device names`() {
+        val cmd1 = CmdUnPair("Equil - Device1", "pass1", aapsLogger, preferences, equilManager)
+        val cmd2 = CmdUnPair("Equil - Device2", "pass2", aapsLogger, preferences, equilManager)
+
+        assertNotNull(cmd1.sn)
+        assertNotNull(cmd2.sn)
+        assertTrue(cmd1.sn != cmd2.sn)
+    }
+
+    @Test
+    fun `should handle different passwords`() {
+        val cmd1 = CmdUnPair("Equil - TestDevice", "password1", aapsLogger, preferences, equilManager)
+        val cmd2 = CmdUnPair("Equil - TestDevice", "password2", aapsLogger, preferences, equilManager)
+
+        assertEquals("password1", cmd1.password)
+        assertEquals("password2", cmd2.password)
+    }
+
+    @Test
+    fun `getEquilResponse should set response field`() {
+        val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
+        cmd.getEquilResponse()
+
+        assertNotNull(cmd.response)
+        assertEquals(cmd.createTime, cmd.response!!.createTime)
+    }
+
+    @Test
+    fun `enacted should be true by default`() {
+        val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
+        assertTrue(cmd.enacted)
+    }
+
+    @Test
+    fun `response should be null initially`() {
+        val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
+        assertNull(cmd.response)
+    }
+
+    @Test
+    fun `runPwd should be null initially`() {
+        val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
+        assertNull(cmd.runPwd)
+    }
+
+    @Test
+    fun `runCode should be null initially`() {
+        val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
+        assertNull(cmd.runCode)
+    }
+
+    @Test
+    fun `convertString should process sn correctly`() {
+        val cmd1 = CmdUnPair("Equil - AB", "testpass", aapsLogger, preferences, equilManager)
+        val cmd2 = CmdUnPair("Equil - XYZ", "testpass", aapsLogger, preferences, equilManager)
+
+        // convertString adds "0" before each character, so sn should contain "0"
+        assertTrue(cmd1.sn!!.contains("0"))
+        assertTrue(cmd2.sn!!.contains("0"))
+    }
+
+    @Test
+    fun `should handle empty device name after prefix`() {
+        val cmd = CmdUnPair("Equil - ", "testpass", aapsLogger, preferences, equilManager)
+        assertNotNull(cmd.sn)
+    }
 }
