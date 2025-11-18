@@ -5,9 +5,9 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothManager
 import android.content.Context
+import app.aaps.core.interfaces.configuration.ConfigBuilder
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.keys.interfaces.Preferences
@@ -15,23 +15,21 @@ import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.danars.DanaRSPlugin
 import app.aaps.pump.danars.comm.DanaRSMessageHashTable
 import app.aaps.pump.danars.comm.DanaRSPacket
+import app.aaps.pump.danars.encryption.BleEncryption
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
-import dagger.android.HasAndroidInjector
-import info.nightscout.androidaps.danars.encryption.BleEncryption
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
 
 class BLECommTest : TestBase() {
 
-    @Mock lateinit var injector: HasAndroidInjector
     @Mock lateinit var rh: ResourceHelper
     @Mock lateinit var context: Context
-    @Mock lateinit var rxBus: RxBus
     @Mock lateinit var danaRSMessageHashTable: DanaRSMessageHashTable
     @Mock lateinit var danaPump: DanaPump
     @Mock lateinit var danaRSPlugin: DanaRSPlugin
@@ -45,13 +43,13 @@ class BLECommTest : TestBase() {
     @Mock lateinit var bluetoothDevice: BluetoothDevice
     @Mock lateinit var bluetoothGatt: BluetoothGatt
     @Mock lateinit var danaRSPacket: DanaRSPacket
+    @Mock lateinit var configBuilder: ConfigBuilder
 
     private lateinit var bleComm: BLEComm
 
     @BeforeEach
     fun setup() {
         bleComm = BLEComm(
-            injector,
             aapsLogger,
             rh,
             context,
@@ -63,7 +61,8 @@ class BLECommTest : TestBase() {
             pumpSync,
             dateUtil,
             uiInteraction,
-            preferences
+            preferences,
+            configBuilder
         )
 
         `when`(rh.gs(anyInt())).thenReturn("test")
@@ -151,7 +150,7 @@ class BLECommTest : TestBase() {
     @Test
     fun testSendMessage_notConnected() {
         `when`(danaRSPacket.friendlyName).thenReturn("TestPacket")
-        `when`(danaRSPacket.requestParams).thenReturn(ByteArray(0))
+        //`when`(danaRSPacket.requestParams).thenReturn(ByteArray(0))
 
         bleComm.sendMessage(danaRSPacket)
 

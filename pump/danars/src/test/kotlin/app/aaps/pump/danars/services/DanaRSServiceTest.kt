@@ -1,25 +1,15 @@
 package app.aaps.pump.danars.services
 
-import android.content.Context
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
-import app.aaps.core.interfaces.plugin.ActivePlugin
-import app.aaps.core.interfaces.profile.Profile
-import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
-import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.AapsSchedulers
-import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
-import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.dana.comm.RecordTypes
 import app.aaps.pump.danars.DanaRSPlugin
-import app.aaps.shared.tests.TestBase
+import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import io.reactivex.rxjava3.schedulers.Schedulers
 import org.junit.jupiter.api.BeforeEach
@@ -31,27 +21,15 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 
-class DanaRSServiceTest : TestBase() {
+class DanaRSServiceTest : TestBaseWithProfile() {
 
-    @Mock lateinit var injector: dagger.android.HasAndroidInjector
-    @Mock lateinit var rxBus: RxBus
-    @Mock lateinit var preferences: Preferences
-    @Mock lateinit var rh: ResourceHelper
-    @Mock lateinit var profileFunction: ProfileFunction
     @Mock lateinit var commandQueue: CommandQueue
-    @Mock lateinit var context: Context
     @Mock lateinit var danaRSPlugin: DanaRSPlugin
     @Mock lateinit var danaPump: DanaPump
-    @Mock lateinit var activePlugin: ActivePlugin
     @Mock lateinit var constraintChecker: ConstraintsChecker
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var bleComm: BLEComm
-    @Mock lateinit var fabricPrivacy: FabricPrivacy
     @Mock lateinit var pumpSync: PumpSync
-    @Mock lateinit var dateUtil: DateUtil
-    @Mock lateinit var pumpEnactResultProvider: javax.inject.Provider<PumpEnactResult>
-    @Mock lateinit var aapsSchedulers: AapsSchedulers
-    @Mock latinit var profile: Profile
     @Mock lateinit var pumpEnactResult: PumpEnactResult
 
     private lateinit var danaRSService: DanaRSService
@@ -59,7 +37,6 @@ class DanaRSServiceTest : TestBase() {
     @BeforeEach
     fun setup() {
         danaRSService = DanaRSService()
-        danaRSService.injector = injector
         danaRSService.aapsLogger = aapsLogger
         danaRSService.aapsSchedulers = aapsSchedulers
         danaRSService.rxBus = rxBus
@@ -231,9 +208,9 @@ class DanaRSServiceTest : TestBase() {
     @Test
     fun testUpdateBasalsInPump_notConnected() {
         `when`(bleComm.isConnected).thenReturn(false)
-        `when`(profileFunction.getProfile()).thenReturn(profile)
+        `when`(profileFunction.getProfile()).thenReturn(validProfile)
 
-        val result = danaRSService.updateBasalsInPump(profile)
+        val result = danaRSService.updateBasalsInPump(validProfile)
 
         assertThat(result).isFalse()
     }

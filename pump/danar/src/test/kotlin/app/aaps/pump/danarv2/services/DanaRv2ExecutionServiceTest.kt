@@ -5,8 +5,11 @@ import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
+import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.Command
 import app.aaps.core.interfaces.queue.CommandQueue
+import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.danar.SerialIOThread
 import app.aaps.pump.danarkorean.DanaRKoreanPlugin
 import app.aaps.pump.danarv2.DanaRv2Plugin
@@ -17,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import javax.inject.Provider
@@ -27,12 +31,11 @@ class DanaRv2ExecutionServiceTest : TestBaseWithProfile() {
     @Mock lateinit var danaRv2Plugin: DanaRv2Plugin
     @Mock lateinit var commandQueue: CommandQueue
     @Mock lateinit var messageHashTableRv2: MessageHashTableRv2
-    @Mock lateinit var profileFunction: ProfileFunction
-    @Mock lateinit var serialIOThread: SerialIOThread
-    @Mock lateinit var rfcommSocket: BluetoothSocket
     @Mock lateinit var profile: Profile
     @Mock lateinit var pumpEnactResult: PumpEnactResult
-    @Mock lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
+    @Mock lateinit var danaPump: DanaPump
+    @Mock lateinit var pumpSync: PumpSync
+    @Mock lateinit var uiInteraction: UiInteraction
 
     private lateinit var danaRv2ExecutionService: DanaRv2ExecutionService
 
@@ -60,7 +63,8 @@ class DanaRv2ExecutionServiceTest : TestBaseWithProfile() {
 
         `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
         `when`(pumpEnactResult.success(any())).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.comment(any())).thenReturn(pumpEnactResult)
+        `when`(pumpEnactResult.comment(anyInt())).thenReturn(pumpEnactResult)
+        `when`(pumpEnactResult.comment(anyString())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test")
         `when`(rh.gs(anyInt(), any())).thenReturn("test")
         `when`(activePlugin.activePump).thenReturn(danaRv2Plugin)

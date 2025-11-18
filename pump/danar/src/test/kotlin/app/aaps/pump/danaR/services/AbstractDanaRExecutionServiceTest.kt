@@ -1,83 +1,57 @@
 package app.aaps.pump.danaR.services
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothSocket
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import app.aaps.core.data.pump.defs.PumpType
-import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
-import app.aaps.core.interfaces.pump.TemporaryBasal
 import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.AapsSchedulers
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventBTChange
-import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.keys.interfaces.Preferences
-import javax.inject.Provider
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.dana.comm.RecordTypes
 import app.aaps.pump.dana.keys.DanaStringKey
-import app.aaps.pump.danar.SerialIOThread
-import app.aaps.pump.danar.comm.MessageBase
 import app.aaps.pump.danar.comm.MessageHashTableBase
-import app.aaps.pump.danar.comm.MsgHistoryBolus
 import app.aaps.pump.danar.services.AbstractDanaRExecutionService
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
 import dagger.android.AndroidInjector
 import dagger.android.HasAndroidInjector
-import io.reactivex.rxjava3.core.Scheduler
 import io.reactivex.rxjava3.schedulers.Schedulers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import org.mockito.kotlin.any as kAny
-import java.io.InputStream
-import java.io.OutputStream
-import java.util.UUID
+import javax.inject.Provider
 
 class AbstractDanaRExecutionServiceTest : TestBase() {
 
     @Mock lateinit var injector: HasAndroidInjector
-    @Mock lateinit var rxBus: RxBus
     @Mock lateinit var preferences: Preferences
     @Mock lateinit var context: Context
     @Mock lateinit var rh: ResourceHelper
     @Mock lateinit var danaPump: DanaPump
     @Mock lateinit var fabricPrivacy: FabricPrivacy
     @Mock lateinit var dateUtil: DateUtil
-    @Mock lateinit var aapsSchedulers: AapsSchedulers
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var activePlugin: ActivePlugin
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
     @Mock lateinit var messageHashTable: MessageHashTableBase
     @Mock lateinit var bluetoothManager: BluetoothManager
-    @Mock lateinit var bluetoothAdapter: BluetoothAdapter
-    @Mock lateinit var bluetoothDevice: BluetoothDevice
-    @Mock lateinit var bluetoothSocket: BluetoothSocket
-    @Mock lateinit var profile: Profile
     @Mock lateinit var pumpEnactResult: PumpEnactResult
 
     private lateinit var testService: TestDanaRExecutionService
@@ -155,8 +129,6 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
 
     @Test
     fun testBolusStop_notConnected() {
-        `when`(danaPump.bolusingTreatment).thenReturn(null)
-
         testService.bolusStop()
 
         verify(danaPump).bolusStopForced = true
@@ -202,7 +174,7 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
 
     @Test
     fun testDoSanityCheck_temporaryBasalMismatch() {
-        val temporaryBasal = mock(TemporaryBasal::class.java)
+        val temporaryBasal = mock(PumpSync.PumpState.TemporaryBasal::class.java)
         val pumpState = mock(PumpSync.PumpState::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
@@ -250,7 +222,7 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
 
     @Test
     fun testDoSanityCheck_temporaryBasalInAAPSButNotInPump() {
-        val temporaryBasal = mock(TemporaryBasal::class.java)
+        val temporaryBasal = mock(PumpSync.PumpState.TemporaryBasal::class.java)
         val pumpState = mock(PumpSync.PumpState::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
@@ -273,7 +245,7 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
 
     @Test
     fun testDoSanityCheck_extendedBolusMismatch() {
-        val extendedBolus = mock(app.aaps.core.interfaces.pump.ExtendedBolus::class.java)
+        val extendedBolus = mock(PumpSync.PumpState.ExtendedBolus::class.java)
         val pumpState = mock(PumpSync.PumpState::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
@@ -317,7 +289,7 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
 
     @Test
     fun testGetBTSocketForSelectedPump_noBluetoothAdapter() {
-        `when`(preferences.get(DanaStringKey.DanaRName)).thenReturn("TestPump")
+        `when`(preferences.get(DanaStringKey.RName)).thenReturn("TestPump")
         `when`(context.getSystemService(Context.BLUETOOTH_SERVICE)).thenReturn(bluetoothManager)
         `when`(bluetoothManager.adapter).thenReturn(null)
 

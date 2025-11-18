@@ -1,15 +1,15 @@
 package app.aaps.pump.danaR.services
 
-import android.bluetooth.BluetoothSocket
 import app.aaps.core.interfaces.profile.Profile
-import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
-import app.aaps.core.interfaces.queue.Command
+import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
+import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.danar.DanaRPlugin
-import app.aaps.pump.danar.SerialIOThread
 import app.aaps.pump.danar.comm.MessageHashTableR
+import app.aaps.pump.danar.services.DanaRExecutionService
 import app.aaps.pump.danarkorean.DanaRKoreanPlugin
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
@@ -17,22 +17,21 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import javax.inject.Provider
 
 class DanaRExecutionServiceTest : TestBaseWithProfile() {
 
-    @Mock latinit var danaRPlugin: DanaRPlugin
+    @Mock lateinit var danaRPlugin: DanaRPlugin
     @Mock lateinit var danaRKoreanPlugin: DanaRKoreanPlugin
     @Mock lateinit var commandQueue: CommandQueue
     @Mock lateinit var messageHashTableR: MessageHashTableR
-    @Mock lateinit var profileFunction: ProfileFunction
-    @Mock lateinit var serialIOThread: SerialIOThread
-    @Mock lateinit var rfcommSocket: BluetoothSocket
     @Mock lateinit var profile: Profile
     @Mock lateinit var pumpEnactResult: PumpEnactResult
-    @Mock lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
+    @Mock lateinit var danaPump: DanaPump
+    @Mock lateinit var pumpSync: PumpSync
+    @Mock lateinit var uiInteraction: UiInteraction
 
     private lateinit var danaRExecutionService: DanaRExecutionService
 
@@ -60,7 +59,8 @@ class DanaRExecutionServiceTest : TestBaseWithProfile() {
 
         `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
         `when`(pumpEnactResult.success(any())).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.comment(any())).thenReturn(pumpEnactResult)
+        `when`(pumpEnactResult.comment(anyInt())).thenReturn(pumpEnactResult)
+        `when`(pumpEnactResult.comment(anyString())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test")
         `when`(rh.gs(anyInt(), any())).thenReturn("test")
         `when`(danaRPlugin.pumpDescription).thenReturn(mockPumpDescription())

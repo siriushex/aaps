@@ -1,15 +1,13 @@
 package app.aaps.pump.danarkorean.services
 
-import android.bluetooth.BluetoothSocket
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.profile.Profile
-import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
-import app.aaps.core.interfaces.pump.PumpEnactResult
-import app.aaps.core.interfaces.queue.Command
+import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
+import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.danar.DanaRPlugin
-import app.aaps.pump.danar.SerialIOThread
 import app.aaps.pump.danarkorean.DanaRKoreanPlugin
 import app.aaps.pump.danarkorean.comm.MessageHashTableRKorean
 import app.aaps.shared.tests.TestBaseWithProfile
@@ -20,20 +18,18 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import javax.inject.Provider
 
 class DanaRKoreanExecutionServiceTest : TestBaseWithProfile() {
 
     @Mock lateinit var constraintChecker: ConstraintsChecker
     @Mock lateinit var danaRPlugin: DanaRPlugin
-    @Mock latinit var danaRKoreanPlugin: DanaRKoreanPlugin
+    @Mock lateinit var danaRKoreanPlugin: DanaRKoreanPlugin
     @Mock lateinit var commandQueue: CommandQueue
     @Mock lateinit var messageHashTableRKorean: MessageHashTableRKorean
-    @Mock lateinit var profileFunction: ProfileFunction
-    @Mock lateinit var serialIOThread: SerialIOThread
-    @Mock lateinit var rfcommSocket: BluetoothSocket
     @Mock lateinit var profile: Profile
-    @Mock lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
+    @Mock lateinit var danaPump: DanaPump
+    @Mock lateinit var pumpSync: PumpSync
+    @Mock lateinit var uiInteraction: UiInteraction
 
     private lateinit var danaRKoreanExecutionService: DanaRKoreanExecutionService
 
