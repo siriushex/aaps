@@ -5,7 +5,6 @@
     <string name="ns_client_bg_short">NS BG</string>
     <string name="description_source_ns_client">Pobieraj wartości BG z Nightscout</string>
     <string name="source_xdrip">xDrip+ BG</string>
-    <string name="description_source_xdrip">Pobieraj wartości BG z xDrip+.</string>
     <string name="dexcom_app_patched">Dexcom Patched</string>
     <string name="dexcom_short">DEX.PATCH.</string>
     <string name="description_source_dexcom">Pobieraj glikemię ze spatchowanej aplikacji Dexcom.</string>
@@ -31,6 +30,6 @@
     <string name="ottai_app">Ottai</string>
     <string name="description_source_patched_ottai_app">Otrzymuj dane glikemii z aplikacji Ottai.</string>
     <!-- Patched Syai Tag App -->
-    <string name="syai_tag_app">Syai Tag</string>
-    <string name="description_source_patched_syai_tag_app">Otrzymuj dane glikemii z aplikacji Syai Tag.</string>
+    <string name="syai_tag_app">Syai</string>
+    <string name="description_source_patched_syai_tag_app">Otrzymuj dane glikemii z aplikacji Syai.</string>
 </resources>

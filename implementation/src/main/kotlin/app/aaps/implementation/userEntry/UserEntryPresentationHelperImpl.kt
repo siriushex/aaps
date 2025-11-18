@@ -53,6 +53,7 @@ class UserEntryPresentationHelperImpl @Inject constructor(
         Sources.TempBasalDialog     -> R.drawable.ic_actions_start_temp_basal
         Sources.CalibrationDialog   -> R.drawable.ic_calibration
         Sources.FillDialog          -> R.drawable.ic_cp_pump_cannula
+        Sources.SiteRotationDialog  -> app.aaps.core.ui.R.drawable.ic_site_rotation
         Sources.BgCheck             -> R.drawable.ic_cp_bgcheck
         Sources.SensorInsert        -> R.drawable.ic_cp_cgm_insert
         Sources.BatteryChange       -> R.drawable.ic_cp_pump_battery
@@ -76,6 +77,10 @@ class UserEntryPresentationHelperImpl @Inject constructor(
         Sources.Glunovo             -> R.drawable.ic_glunovo
         Sources.Intelligo           -> app.aaps.core.ui.R.drawable.ic_intelligo
         Sources.Xdrip               -> R.drawable.ic_blooddrop_48
+        Sources.Ottai    -> R.drawable.ic_ottai
+        Sources.SyaiTag  -> R.drawable.ic_syai_tag
+        Sources.SiBionic -> R.drawable.ic_generic_cgm
+        Sources.Sino     -> R.drawable.ic_generic_cgm
         Sources.LocalProfile        -> R.drawable.ic_local_profile
         Sources.Loop                -> R.drawable.ic_loop_closed_white
         Sources.Maintenance         -> app.aaps.core.ui.R.drawable.ic_maintenance
@@ -114,8 +119,6 @@ class UserEntryPresentationHelperImpl @Inject constructor(
         Sources.Unknown             -> app.aaps.core.ui.R.drawable.ic_generic_icon
         Sources.Random              -> R.drawable.ic_aaps
         Sources.BgFragment          -> R.drawable.ic_aaps
-        Sources.Ottai               -> R.drawable.ic_ottai
-        Sources.SyaiTag             -> R.drawable.ic_syai_tag
     }
 
     override fun actionToColoredString(action: Action): Spanned = when (action) {
@@ -139,8 +142,10 @@ class UserEntryPresentationHelperImpl @Inject constructor(
         is ValueWithUnit.SimpleString -> valueWithUnit.value
         is ValueWithUnit.TEMeterType  -> translator.translate(valueWithUnit.value)
         is ValueWithUnit.TETTReason   -> translator.translate(valueWithUnit.value)
-        is ValueWithUnit.OEReason     -> translator.translate(valueWithUnit.value)
+        is ValueWithUnit.RMMode       -> translator.translate(valueWithUnit.value)
         is ValueWithUnit.TEType       -> translator.translate(valueWithUnit.value)
+        is ValueWithUnit.TELocation   -> translator.translate(valueWithUnit.value)
+        is ValueWithUnit.TEArrow      -> translator.translate(valueWithUnit.value)
         is ValueWithUnit.Timestamp    -> dateUtil.dateAndTimeAndSecondsString(valueWithUnit.value)
 
         is ValueWithUnit.Mgdl         -> {
@@ -214,8 +219,10 @@ class UserEntryPresentationHelperImpl @Inject constructor(
                 is ValueWithUnit.SimpleString -> simpleString = simpleString.addWithSeparator(valueWithUnit.value)
                 is ValueWithUnit.TEMeterType  -> therapyEvent = therapyEvent.addWithSeparator(translator.translate(valueWithUnit.value))
                 is ValueWithUnit.TETTReason   -> therapyEvent = therapyEvent.addWithSeparator(translator.translate(valueWithUnit.value))
-                is ValueWithUnit.OEReason     -> therapyEvent = therapyEvent.addWithSeparator(translator.translate(valueWithUnit.value))
+                is ValueWithUnit.RMMode       -> therapyEvent = therapyEvent.addWithSeparator(translator.translate(valueWithUnit.value))
                 is ValueWithUnit.TEType       -> therapyEvent = therapyEvent.addWithSeparator(translator.translate(valueWithUnit.value))
+                is ValueWithUnit.TELocation   -> therapyEvent = therapyEvent.addWithSeparator(translator.translate(valueWithUnit.value))
+                is ValueWithUnit.TEArrow      -> therapyEvent = therapyEvent.addWithSeparator(translator.translate(valueWithUnit.value))
                 is ValueWithUnit.Timestamp    -> timestamp = dateUtil.dateAndTimeAndSecondsString(valueWithUnit.value)
 
                 is ValueWithUnit.Mgdl         ->

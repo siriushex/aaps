@@ -1,21 +1,16 @@
 package app.aaps.pump.medtronic.data.dto
 
 import app.aaps.core.data.pump.defs.PumpType
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.pump.medtronic.MedtronicTestBase
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mock
 
 /**
  * Created by andy on 6/16/18.
  * Updated to JUnit 5 / Kotlin
  */
 class BasalProfileUTest : MedtronicTestBase() {
-
-    @Mock
-    lateinit var aapsLogger: AAPSLogger
 
     @BeforeEach
     fun setup() {

@@ -55,8 +55,10 @@ interface DateUtil {
     fun dateAndTimeRangeString(start: Long, end: Long): String
     fun timeRangeString(start: Long, end: Long): String
     fun dateAndTimeString(mills: Long): String
+    fun dateAndTimeStringNullable(mills: Long?): String?
     fun dateAndTimeAndSecondsString(mills: Long): String
     fun minAgo(rh: ResourceHelper, time: Long?): String
+    fun minOrSecAgo(rh: ResourceHelper, time: Long?): String
     fun minAgoShort(time: Long?): String
     fun minAgoLong(rh: ResourceHelper, time: Long?): String
     fun hourAgo(time: Long, rh: ResourceHelper): String

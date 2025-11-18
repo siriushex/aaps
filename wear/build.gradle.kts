@@ -12,8 +12,8 @@ plugins {
 }
 
 repositories {
-    google()
     mavenCentral()
+    google()
 }
 
 fun generateGitBuild(): String {
@@ -108,8 +108,6 @@ dependencies {
     implementation(libs.androidx.wear)
     implementation(libs.androidx.wear.tiles)
     implementation(libs.androidx.constraintlayout)
-
-    testImplementation(project(":shared:tests"))
 
     compileOnly(libs.com.google.android.wearable)
     implementation(libs.com.google.android.wearable.support)

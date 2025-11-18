@@ -5,7 +5,7 @@
     <string name="ns_client_bg_short">NS BG</string>
     <string name="description_source_ns_client">Recibir los datos de glucosa de Nightscout</string>
     <string name="source_xdrip">xDrip+ BG</string>
-    <string name="description_source_xdrip">Recibir los valores de glucosa de xDrip+</string>
+    <string name="description_source_xdrip">Recibir valores de glucosa de xDrip+ y aplicaciones compatibles (Juggluco etc.).</string>
     <string name="dexcom_app_patched">Dexcom (BYODA)</string>
     <string name="dexcom_short">BYODA</string>
     <string name="description_source_dexcom">Recibir los valores de glucosa de la aplicación Dexcom \'Build Your Own Device\'</string>
@@ -34,6 +34,6 @@
     <string name="ottai_app">Ottai</string>
     <string name="description_source_patched_ottai_app">Recibir datos de glucosa de la aplicación Ottai</string>
     <!-- Patched Syai Tag App -->
-    <string name="syai_tag_app">Syai Tag</string>
-    <string name="description_source_patched_syai_tag_app">Recibir datos de glucosa de la aplicación Syai Tag</string>
+    <string name="syai_tag_app">Syai</string>
+    <string name="description_source_patched_syai_tag_app">Recibir datos de glucosa de la aplicación Syai</string>
 </resources>
