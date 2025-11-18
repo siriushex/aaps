@@ -30,7 +30,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         prepareMocks()
 
         whenever(rh.gs(any<Int>())).thenReturn("MockedString")
-        whenever(rh.gs(any<Int>(), any())).thenReturn("Mocked %s")
+        whenever(rh.gs(any<Int>(), any<Any>())).thenReturn("Mocked %s")
         whenever(patchManagerExecutor.patchConnectionState).thenReturn(bleConnectionState)
         whenever(bleConnectionState.isConnected).thenReturn(true)
         whenever(bleConnectionState.isConnecting).thenReturn(false)
