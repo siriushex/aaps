@@ -2,7 +2,7 @@ package app.aaps.database.transactions
 
 import app.aaps.database.entities.RunningMode
 
-class InsertOrUpdateRunningMode(val runningMode: RunningMode) : Transaction<InsertOrUpdateRunningMode.TransactionResult>() {
+class InsertOrUpdateRunningModeTransaction(val runningMode: RunningMode) : Transaction<InsertOrUpdateRunningModeTransaction.TransactionResult>() {
 
     override fun run(): TransactionResult {
         val result = TransactionResult()

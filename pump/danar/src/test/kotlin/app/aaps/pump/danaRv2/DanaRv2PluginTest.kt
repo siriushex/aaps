@@ -51,8 +51,8 @@ class DanaRv2PluginTest : TestBaseWithProfile() {
 
     @Test
     fun basalRateShouldBeLimited() {
-        danaRv2Plugin.setPluginEnabled(PluginType.PUMP, true)
-        danaRv2Plugin.setPluginEnabled(PluginType.PUMP, true)
+        danaRv2Plugin.setPluginEnabledBlocking(PluginType.PUMP, true)
+        danaRv2Plugin.setPluginEnabledBlocking(PluginType.PUMP, true)
         danaPump.maxBasal = 0.8
         val c = ConstraintObject(Double.MAX_VALUE, aapsLogger)
         danaRv2Plugin.applyBasalConstraints(c, validProfile)
@@ -63,8 +63,8 @@ class DanaRv2PluginTest : TestBaseWithProfile() {
 
     @Test
     fun percentBasalRateShouldBeLimited() {
-        danaRv2Plugin.setPluginEnabled(PluginType.PUMP, true)
-        danaRv2Plugin.setPluginEnabled(PluginType.PUMP, true)
+        danaRv2Plugin.setPluginEnabledBlocking(PluginType.PUMP, true)
+        danaRv2Plugin.setPluginEnabledBlocking(PluginType.PUMP, true)
         danaPump.maxBasal = 0.8
         val c = ConstraintObject(Int.MAX_VALUE, aapsLogger)
         danaRv2Plugin.applyBasalPercentConstraints(c, validProfile)
