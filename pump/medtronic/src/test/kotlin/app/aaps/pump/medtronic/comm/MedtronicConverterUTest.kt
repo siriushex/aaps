@@ -26,7 +26,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeModel with valid 554 pump`() {
-        val data = ByteUtil.createByteArrayFromString("03 16 35 35 34")
+        val data = ByteUtil.createByteArrayFromString("03 35 35 34")
 
         val model = converter.decodeModel(data)
 
@@ -35,7 +35,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeModel with valid 722 pump`() {
-        val data = ByteUtil.createByteArrayFromString("03 16 37 32 32")
+        val data = ByteUtil.createByteArrayFromString("03 37 32 32")
 
         val model = converter.decodeModel(data)
 
@@ -44,7 +44,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeModel with valid 523 pump`() {
-        val data = ByteUtil.createByteArrayFromString("03 16 35 32 33")
+        val data = ByteUtil.createByteArrayFromString("03 35 32 33")
 
         val model = converter.decodeModel(data)
 
@@ -62,7 +62,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeBatteryStatus with normal status`() {
-        val data = ByteUtil.createByteArrayFromString("00 7C 00")
+        val data = ByteUtil.createByteArrayFromString("00 00 7C")
 
         val batteryStatus = converter.decodeBatteryStatus(data)
 
@@ -73,7 +73,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeBatteryStatus with low battery`() {
-        val data = ByteUtil.createByteArrayFromString("01 50 00")
+        val data = ByteUtil.createByteArrayFromString("01 00 50")
 
         val batteryStatus = converter.decodeBatteryStatus(data)
 
@@ -254,15 +254,15 @@ class MedtronicConverterUTest : MedtronicTestBase() {
     @Test
     fun `test decodeBasalProfile with invalid data returns null`() {
         val pumpType = PumpType.MEDTRONIC_522_722
-        // Create invalid data that would result in rates over 35 U/hr
+        // Create invalid data with time interval that would cause exception (99 = 49.5 hours, invalid)
         val data = ByteUtil.createByteArrayFromString(
-            "FF FF 00 " +  // Extremely high rate
+            "32 00 63 " +  // rate=0x0032, start=0x63 (99 intervals = invalid time)
             "00 00 00"
         )
 
         val basalProfile = converter.decodeBasalProfile(pumpType, data)
 
-        // Should return null for invalid profile
+        // Should return null for invalid profile that throws exception during parsing
         assertThat(basalProfile).isNull()
     }
 

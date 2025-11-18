@@ -116,14 +116,14 @@ class MedtronicDTOUTest : MedtronicTestBase() {
 
     @Test
     fun `test TempBasalPair with percent rate`() {
-        // Rate byte 0x96 = 150%
+        // Rate byte 0x4B = 75% (signed byte range)
         // Time byte 0x02 = 2, 2 * 30 = 60 minutes
-        val tempBasal = TempBasalPair(0x96.toByte(), 2, isPercent = true)
+        val tempBasal = TempBasalPair(0x4B.toByte(), 2, isPercent = true)
 
-        assertThat(tempBasal.insulinRate).isWithin(0.01).of(150.0)
+        assertThat(tempBasal.insulinRate).isWithin(0.01).of(75.0)
         assertThat(tempBasal.durationMinutes).isEqualTo(60)
         assertThat(tempBasal.isPercent).isTrue()
-        assertThat(tempBasal.description).contains("Rate: 150%")
+        assertThat(tempBasal.description).contains("Rate: 75%")
     }
 
     @Test
@@ -152,13 +152,13 @@ class MedtronicDTOUTest : MedtronicTestBase() {
     @Test
     fun `test TempBasalPair from pump response with percent rate`() {
         // Response: [type, percent_value, stroke_hi, stroke_lo, duration]
-        // Type 0x01 = percent, value 200%, duration 60 min
-        val response = ByteUtil.createByteArrayFromString("01 C8 00 00 3C")
+        // Type 0x01 = percent, value 120%, duration 60 min
+        val response = ByteUtil.createByteArrayFromString("01 78 00 00 3C")
 
         val tempBasal = TempBasalPair(aapsLogger, response)
 
         assertThat(tempBasal.isPercent).isTrue()
-        assertThat(tempBasal.insulinRate).isWithin(0.01).of(200.0)
+        assertThat(tempBasal.insulinRate).isWithin(0.01).of(120.0)
         assertThat(tempBasal.durationMinutes).isEqualTo(60)
     }
 
@@ -207,28 +207,28 @@ class MedtronicDTOUTest : MedtronicTestBase() {
     @Test
     fun `test BatteryStatusDTO calculated percent for alkaline battery`() {
         val batteryStatus = BatteryStatusDTO()
-        batteryStatus.voltage = 1.35 // Mid-range for alkaline
+        batteryStatus.voltage = 1.335 // Mid-range for alkaline
         batteryStatus.batteryStatusType = BatteryStatusDTO.BatteryStatusType.Normal
 
         val percent = batteryStatus.getCalculatedPercent(BatteryType.Alkaline)
 
-        // Alkaline: lowVoltage=1.20, highVoltage=1.50
-        // Expected: (1.35 - 1.20) / (1.50 - 1.20) = 0.15 / 0.30 = 0.5 = 50%
+        // Alkaline: lowVoltage=1.20, highVoltage=1.47
+        // Expected: (1.335 - 1.20) / (1.47 - 1.20) = 0.135 / 0.27 = 0.5 = 50%
         assertThat(percent).isEqualTo(50)
     }
 
     @Test
     fun `test BatteryStatusDTO calculated percent for lithium battery`() {
         val batteryStatus = BatteryStatusDTO()
-        batteryStatus.voltage = 1.65
+        batteryStatus.voltage = 1.59
         batteryStatus.batteryStatusType = BatteryStatusDTO.BatteryStatusType.Normal
 
         val percent = batteryStatus.getCalculatedPercent(BatteryType.Lithium)
 
-        // Lithium: lowVoltage=1.30, highVoltage=1.70
-        // Expected: (1.65 - 1.30) / (1.70 - 1.30) = 0.35 / 0.40 = 0.875 = 87%
-        assertThat(percent).isAtLeast(85)
-        assertThat(percent).isAtMost(90)
+        // Lithium: lowVoltage=1.22, highVoltage=1.64
+        // Expected: (1.59 - 1.22) / (1.64 - 1.22) = 0.37 / 0.42 = 0.88 = 88%
+        assertThat(percent).isAtLeast(87)
+        assertThat(percent).isAtMost(89)
     }
 
     @Test
@@ -338,7 +338,7 @@ class MedtronicDTOUTest : MedtronicTestBase() {
         val entry = BasalProfileEntry()
 
         assertThat(entry.rate).isWithin(0.01).of(-9.999E6)
-        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(0, 0))
+        assertThat(entry.startTime).isEqualTo(org.joda.time.LocalTime(0))
         assertThat(entry.startTime_raw).isEqualTo(0xFF.toByte())
     }
 
