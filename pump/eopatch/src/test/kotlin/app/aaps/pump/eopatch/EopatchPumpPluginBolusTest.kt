@@ -1,11 +1,14 @@
 package app.aaps.pump.eopatch
 
+import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.ui.UiInteraction
+import app.aaps.pump.eopatch.core.response.BolusStopResponse
 import app.aaps.pump.eopatch.core.scan.BleConnectionState
 import app.aaps.pump.eopatch.vo.PatchLifecycleEvent
+import app.aaps.pump.eopatch.vo.PatchState
 import com.google.common.truth.Truth.assertThat
 import io.reactivex.rxjava3.core.Single
 import org.junit.jupiter.api.BeforeEach
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
 class EopatchPumpPluginBolusTest : EopatchTestBase() {
@@ -99,7 +103,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     @Test
     fun `stopBolusDelivering should call patch executor`() {
         whenever(patchManagerExecutor.stopNowBolus()).thenReturn(
-            Single.just(app.aaps.pump.eopatch.core.response.BaseResponse(0))
+            Single.just(mock<BolusStopResponse>())
         )
         whenever(aapsSchedulers.io).thenReturn(io.reactivex.rxjava3.schedulers.Schedulers.trampoline())
         whenever(aapsSchedulers.main).thenReturn(io.reactivex.rxjava3.schedulers.Schedulers.trampoline())
@@ -115,7 +119,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         // isNormalBasalAct will be false
         whenever(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalAbsolute(1.5, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalAbsolute(1.5, 60, validProfile as Profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -127,7 +131,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         patchState.update(ByteArray(20), System.currentTimeMillis())
         whenever(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalPercent(150, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalPercent(150, 60, validProfile as Profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -141,7 +145,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         patchState.update(bytes, System.currentTimeMillis())
         whenever(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalPercent(0, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalPercent(0, 60, validProfile as Profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -150,7 +154,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     @Test
     fun `cancelTempBasal should return success when TBR already false`() {
         whenever(pumpSync.expectedPumpState()).thenReturn(
-            PumpSync.PumpState(null, null, null, validProfile)
+            PumpSync.PumpState(null, null, null, validProfile as Profile, "")
         )
 
         val result = plugin.cancelTempBasal(false)
@@ -165,7 +169,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         patchState.update(ByteArray(20), System.currentTimeMillis())
         whenever(preferenceManager.patchState).thenReturn(patchState)
         whenever(pumpSync.expectedPumpState()).thenReturn(
-            PumpSync.PumpState(null, null, null, validProfile)
+            PumpSync.PumpState(null, null, null, validProfile as Profile, "")
         )
 
         val result = plugin.cancelExtendedBolus()
@@ -182,7 +186,9 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
 
     @Test
     fun `executeCustomCommand should return null`() {
-        val result = plugin.executeCustomCommand(object : app.aaps.core.interfaces.queue.CustomCommand {})
+        val result = plugin.executeCustomCommand(object : app.aaps.core.interfaces.queue.CustomCommand {
+            override val statusDescription: String = "TEST"
+        })
 
         assertThat(result).isNull()
     }
@@ -191,7 +197,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     fun `timezoneOrDSTChanged should not throw exception`() {
         // Should not throw
         plugin.timezoneOrDSTChanged(app.aaps.core.data.pump.defs.TimeChangeType.TimezoneChanged)
-        plugin.timezoneOrDSTChanged(app.aaps.core.data.pump.defs.TimeChangeType.DST)
+        plugin.timezoneOrDSTChanged(app.aaps.core.data.pump.defs.TimeChangeType.DSTStarted)
     }
 
     @Test
@@ -214,13 +220,13 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
 
     @Test
     fun `getPumpStatus should update last data time when activated`() {
-        whenever(patchManagerExecutor.updateConnection()).thenReturn(Single.just(true))
+        whenever(patchManagerExecutor.updateConnection()).thenReturn(Single.just(mock<PatchState>()))
 
         val beforeTime = System.currentTimeMillis()
         plugin.getPumpStatus("test")
 
         // Last data time should be updated
-        assertThat(plugin.lastDataTime()).isAtLeast(beforeTime)
+        assertThat(plugin.lastDataTime).isAtLeast(beforeTime)
     }
 
     @Test
