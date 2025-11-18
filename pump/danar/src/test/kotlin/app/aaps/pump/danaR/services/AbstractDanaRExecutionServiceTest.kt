@@ -30,12 +30,14 @@ import org.mockito.Mockito.`when`
 
 class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
 
-    @Mock lateinit var danaPump: DanaPump
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var messageHashTable: MessageHashTableBase
     @Mock lateinit var bluetoothManager: BluetoothManager
     @Mock lateinit var pumpEnactResult: PumpEnactResult
+    @Mock lateinit var injector: HasAndroidInjector
+
+    lateinit var danaPump: DanaPump
 
     init {
         addInjector { injector ->
@@ -66,7 +68,9 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     fun setup() {
         `when`(rh.gs(anyInt())).thenReturn("test string")
         `when`(rh.gs(anyInt(), any())).thenReturn("test string")
+        `when`(injector.androidInjector()).thenReturn(AndroidInjector { })
 
+        danaPump = DanaPump(aapsLogger, preferences, dateUtil, decimalFormatter, profileStoreProvider)
         testService = TestDanaRExecutionService()
         testService.aapsLogger = aapsLogger
         testService.rxBus = rxBus
