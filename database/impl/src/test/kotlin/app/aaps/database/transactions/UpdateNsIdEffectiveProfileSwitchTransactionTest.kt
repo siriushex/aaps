@@ -11,9 +11,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdEffectiveProfileSwitchTransactionTest {
 
@@ -24,7 +24,7 @@ class UpdateNsIdEffectiveProfileSwitchTransactionTest {
     fun setup() {
         effectiveProfileSwitchDao = mock()
         database = mock()
-        `when`(database.effectiveProfileSwitchDao).thenReturn(effectiveProfileSwitchDao)
+        whenever(database.effectiveProfileSwitchDao).thenReturn(effectiveProfileSwitchDao)
     }
 
     @Test
@@ -33,7 +33,7 @@ class UpdateNsIdEffectiveProfileSwitchTransactionTest {
         val current = createEffectiveProfileSwitch(id = 1, nsId = "old-ns")
         val update = createEffectiveProfileSwitch(id = 1, nsId = newNsId)
 
-        `when`(effectiveProfileSwitchDao.findById(1)).thenReturn(current)
+        whenever(effectiveProfileSwitchDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdEffectiveProfileSwitchTransaction(listOf(update))
         transaction.database = database
@@ -51,7 +51,7 @@ class UpdateNsIdEffectiveProfileSwitchTransactionTest {
         val current = createEffectiveProfileSwitch(id = 1, nsId = sameNsId)
         val update = createEffectiveProfileSwitch(id = 1, nsId = sameNsId)
 
-        `when`(effectiveProfileSwitchDao.findById(1)).thenReturn(current)
+        whenever(effectiveProfileSwitchDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdEffectiveProfileSwitchTransaction(listOf(update))
         transaction.database = database
@@ -66,7 +66,7 @@ class UpdateNsIdEffectiveProfileSwitchTransactionTest {
     fun `skips when effective profile switch not found`() {
         val update = createEffectiveProfileSwitch(id = 999, nsId = "new-ns")
 
-        `when`(effectiveProfileSwitchDao.findById(999)).thenReturn(null)
+        whenever(effectiveProfileSwitchDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdEffectiveProfileSwitchTransaction(listOf(update))
         transaction.database = database

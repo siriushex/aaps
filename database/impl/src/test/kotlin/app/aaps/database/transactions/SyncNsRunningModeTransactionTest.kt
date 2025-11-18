@@ -8,8 +8,8 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class SyncNsRunningModeTransactionTest {
 
@@ -20,15 +20,15 @@ class SyncNsRunningModeTransactionTest {
     fun setup() {
         runningModeDao = mock()
         database = mock()
-        `when`(database.runningModeDao).thenReturn(runningModeDao)
+        whenever(database.runningModeDao).thenReturn(runningModeDao)
     }
 
     @Test
     fun `inserts new when nsId not found and no timestamp match`() {
         val runningMode = createRunningMode(id = 0, nsId = "ns-123", timestamp = 1000L)
 
-        `when`(runningModeDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(runningModeDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(runningModeDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(runningModeDao.findByTimestamp(1000L)).thenReturn(null)
 
         val transaction = SyncNsRunningModeTransaction(listOf(runningMode))
         transaction.database = database
@@ -46,8 +46,8 @@ class SyncNsRunningModeTransactionTest {
         val runningMode = createRunningMode(id = 0, nsId = "ns-123", timestamp = 1000L)
         val existing = createRunningMode(id = 1, nsId = null, timestamp = 1000L)
 
-        `when`(runningModeDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(runningModeDao.findByTimestamp(1000L)).thenReturn(existing)
+        whenever(runningModeDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(runningModeDao.findByTimestamp(1000L)).thenReturn(existing)
 
         val transaction = SyncNsRunningModeTransaction(listOf(runningMode))
         transaction.database = database
@@ -64,7 +64,7 @@ class SyncNsRunningModeTransactionTest {
         val runningMode = createRunningMode(id = 0, nsId = "ns-123", isValid = false)
         val existing = createRunningMode(id = 1, nsId = "ns-123", isValid = true)
 
-        `when`(runningModeDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(runningModeDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsRunningModeTransaction(listOf(runningMode))
         transaction.database = database
@@ -85,6 +85,7 @@ class SyncNsRunningModeTransactionTest {
         timestamp = timestamp,
         mode = RunningMode.Mode.OPEN_LOOP,
         interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId),
-        duration = 0
+        duration = 0,
+        isValid = isValid
     ).also { it.id = id }
 }

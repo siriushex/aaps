@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateApsResultTransactionTest {
 
@@ -22,14 +22,14 @@ class InsertOrUpdateApsResultTransactionTest {
     fun setup() {
         apsResultDao = mock()
         database = mock()
-        `when`(database.apsResultDao).thenReturn(apsResultDao)
+        whenever(database.apsResultDao).thenReturn(apsResultDao)
     }
 
     @Test
     fun `inserts new APS result when id not found`() {
         val apsResult = createApsResult(id = 1, targetBG = 100.0)
 
-        `when`(apsResultDao.findById(1)).thenReturn(null)
+        whenever(apsResultDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateApsResultTransaction(apsResult)
         transaction.database = database
@@ -48,7 +48,7 @@ class InsertOrUpdateApsResultTransactionTest {
         val apsResult = createApsResult(id = 1, targetBG = 110.0)
         val existing = createApsResult(id = 1, targetBG = 100.0)
 
-        `when`(apsResultDao.findById(1)).thenReturn(existing)
+        whenever(apsResultDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateApsResultTransaction(apsResult)
         transaction.database = database
@@ -67,7 +67,7 @@ class InsertOrUpdateApsResultTransactionTest {
         val existing = createApsResult(id = 1, targetBG = 90.0)
         val updated = createApsResult(id = 1, targetBG = 120.0)
 
-        `when`(apsResultDao.findById(1)).thenReturn(existing)
+        whenever(apsResultDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateApsResultTransaction(updated)
         transaction.database = database
@@ -83,7 +83,7 @@ class InsertOrUpdateApsResultTransactionTest {
     fun `inserts APS result with rate`() {
         val apsResult = createApsResult(id = 1, targetBG = 100.0, rate = 0.85)
 
-        `when`(apsResultDao.findById(1)).thenReturn(null)
+        whenever(apsResultDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateApsResultTransaction(apsResult)
         transaction.database = database

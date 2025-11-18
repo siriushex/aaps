@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdExtendedBolusTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdExtendedBolusTransactionTest {
     fun setup() {
         extendedBolusDao = mock()
         database = mock()
-        `when`(database.extendedBolusDao).thenReturn(extendedBolusDao)
+        whenever(database.extendedBolusDao).thenReturn(extendedBolusDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdExtendedBolusTransactionTest {
         val current = createExtendedBolus(id = 1, nsId = "old-ns")
         val update = createExtendedBolus(id = 1, nsId = newNsId)
 
-        `when`(extendedBolusDao.findById(1)).thenReturn(current)
+        whenever(extendedBolusDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdExtendedBolusTransaction(listOf(update))
         transaction.database = database
@@ -49,7 +49,7 @@ class UpdateNsIdExtendedBolusTransactionTest {
         val current = createExtendedBolus(id = 1, nsId = sameNsId)
         val update = createExtendedBolus(id = 1, nsId = sameNsId)
 
-        `when`(extendedBolusDao.findById(1)).thenReturn(current)
+        whenever(extendedBolusDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdExtendedBolusTransaction(listOf(update))
         transaction.database = database
@@ -64,7 +64,7 @@ class UpdateNsIdExtendedBolusTransactionTest {
     fun `skips when extended bolus not found`() {
         val update = createExtendedBolus(id = 999, nsId = "new-ns")
 
-        `when`(extendedBolusDao.findById(999)).thenReturn(null)
+        whenever(extendedBolusDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdExtendedBolusTransaction(listOf(update))
         transaction.database = database

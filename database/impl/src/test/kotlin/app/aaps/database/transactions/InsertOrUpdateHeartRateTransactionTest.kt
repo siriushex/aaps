@@ -8,9 +8,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateHeartRateTransactionTest {
 
@@ -21,7 +21,7 @@ class InsertOrUpdateHeartRateTransactionTest {
     fun setup() {
         heartRateDao = mock()
         database = mock()
-        `when`(database.heartRateDao).thenReturn(heartRateDao)
+        whenever(database.heartRateDao).thenReturn(heartRateDao)
     }
 
     @Test
@@ -44,7 +44,7 @@ class InsertOrUpdateHeartRateTransactionTest {
     fun `inserts new heart rate when id not found`() {
         val heartRate = createHeartRate(id = 1, beatsPerMinute = 75.0)
 
-        `when`(heartRateDao.findById(1)).thenReturn(null)
+        whenever(heartRateDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateHeartRateTransaction(heartRate)
         transaction.database = database
@@ -63,7 +63,7 @@ class InsertOrUpdateHeartRateTransactionTest {
         val heartRate = createHeartRate(id = 1, beatsPerMinute = 85.0)
         val existing = createHeartRate(id = 1, beatsPerMinute = 75.0)
 
-        `when`(heartRateDao.findById(1)).thenReturn(existing)
+        whenever(heartRateDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateHeartRateTransaction(heartRate)
         transaction.database = database
@@ -82,7 +82,7 @@ class InsertOrUpdateHeartRateTransactionTest {
         val existing = createHeartRate(id = 1, beatsPerMinute = 70.0)
         val updated = createHeartRate(id = 1, beatsPerMinute = 90.0)
 
-        `when`(heartRateDao.findById(1)).thenReturn(existing)
+        whenever(heartRateDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateHeartRateTransaction(updated)
         transaction.database = database

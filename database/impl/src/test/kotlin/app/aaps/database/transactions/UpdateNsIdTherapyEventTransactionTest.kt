@@ -10,9 +10,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdTherapyEventTransactionTest {
 
@@ -23,7 +23,7 @@ class UpdateNsIdTherapyEventTransactionTest {
     fun setup() {
         therapyEventDao = mock()
         database = mock()
-        `when`(database.therapyEventDao).thenReturn(therapyEventDao)
+        whenever(database.therapyEventDao).thenReturn(therapyEventDao)
     }
 
     @Test
@@ -32,7 +32,7 @@ class UpdateNsIdTherapyEventTransactionTest {
         val current = createTherapyEvent(id = 1, nsId = "old-ns")
         val update = createTherapyEvent(id = 1, nsId = newNsId)
 
-        `when`(therapyEventDao.findById(1)).thenReturn(current)
+        whenever(therapyEventDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdTherapyEventTransaction(listOf(update))
         transaction.database = database
@@ -50,7 +50,7 @@ class UpdateNsIdTherapyEventTransactionTest {
         val current = createTherapyEvent(id = 1, nsId = sameNsId)
         val update = createTherapyEvent(id = 1, nsId = sameNsId)
 
-        `when`(therapyEventDao.findById(1)).thenReturn(current)
+        whenever(therapyEventDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdTherapyEventTransaction(listOf(update))
         transaction.database = database
@@ -65,7 +65,7 @@ class UpdateNsIdTherapyEventTransactionTest {
     fun `skips when therapy event not found`() {
         val update = createTherapyEvent(id = 999, nsId = "new-ns")
 
-        `when`(therapyEventDao.findById(999)).thenReturn(null)
+        whenever(therapyEventDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdTherapyEventTransaction(listOf(update))
         transaction.database = database

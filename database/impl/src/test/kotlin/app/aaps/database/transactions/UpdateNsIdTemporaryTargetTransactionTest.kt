@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdTemporaryTargetTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdTemporaryTargetTransactionTest {
     fun setup() {
         temporaryTargetDao = mock()
         database = mock()
-        `when`(database.temporaryTargetDao).thenReturn(temporaryTargetDao)
+        whenever(database.temporaryTargetDao).thenReturn(temporaryTargetDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdTemporaryTargetTransactionTest {
         val current = createTemporaryTarget(id = 1, nsId = "old-ns")
         val update = createTemporaryTarget(id = 1, nsId = newNsId)
 
-        `when`(temporaryTargetDao.findById(1)).thenReturn(current)
+        whenever(temporaryTargetDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdTemporaryTargetTransaction(listOf(update))
         transaction.database = database
@@ -49,7 +49,7 @@ class UpdateNsIdTemporaryTargetTransactionTest {
         val current = createTemporaryTarget(id = 1, nsId = sameNsId)
         val update = createTemporaryTarget(id = 1, nsId = sameNsId)
 
-        `when`(temporaryTargetDao.findById(1)).thenReturn(current)
+        whenever(temporaryTargetDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdTemporaryTargetTransaction(listOf(update))
         transaction.database = database
@@ -64,7 +64,7 @@ class UpdateNsIdTemporaryTargetTransactionTest {
     fun `skips when temporary target not found`() {
         val update = createTemporaryTarget(id = 999, nsId = "new-ns")
 
-        `when`(temporaryTargetDao.findById(999)).thenReturn(null)
+        whenever(temporaryTargetDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdTemporaryTargetTransaction(listOf(update))
         transaction.database = database
@@ -82,8 +82,8 @@ class UpdateNsIdTemporaryTargetTransactionTest {
         val update1 = createTemporaryTarget(id = 1, nsId = "new-1")
         val update2 = createTemporaryTarget(id = 2, nsId = "new-2")
 
-        `when`(temporaryTargetDao.findById(1)).thenReturn(tt1)
-        `when`(temporaryTargetDao.findById(2)).thenReturn(tt2)
+        whenever(temporaryTargetDao.findById(1)).thenReturn(tt1)
+        whenever(temporaryTargetDao.findById(2)).thenReturn(tt2)
 
         val transaction = UpdateNsIdTemporaryTargetTransaction(listOf(update1, update2))
         transaction.database = database
@@ -113,7 +113,7 @@ class UpdateNsIdTemporaryTargetTransactionTest {
         val current = createTemporaryTarget(id = 1, nsId = null)
         val update = createTemporaryTarget(id = 1, nsId = "new-ns")
 
-        `when`(temporaryTargetDao.findById(1)).thenReturn(current)
+        whenever(temporaryTargetDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdTemporaryTargetTransaction(listOf(update))
         transaction.database = database

@@ -11,9 +11,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateEffectiveProfileSwitchTransactionTest {
 
@@ -24,14 +24,14 @@ class InvalidateEffectiveProfileSwitchTransactionTest {
     fun setup() {
         effectiveProfileSwitchDao = mock()
         database = mock()
-        `when`(database.effectiveProfileSwitchDao).thenReturn(effectiveProfileSwitchDao)
+        whenever(database.effectiveProfileSwitchDao).thenReturn(effectiveProfileSwitchDao)
     }
 
     @Test
     fun `invalidates valid effective profile switch`() {
         val eps = createEffectiveProfileSwitch(id = 1, isValid = true)
 
-        `when`(effectiveProfileSwitchDao.findById(1)).thenReturn(eps)
+        whenever(effectiveProfileSwitchDao.findById(1)).thenReturn(eps)
 
         val transaction = InvalidateEffectiveProfileSwitchTransaction(id = 1)
         transaction.database = database
@@ -47,7 +47,7 @@ class InvalidateEffectiveProfileSwitchTransactionTest {
     fun `does not update already invalid effective profile switch`() {
         val eps = createEffectiveProfileSwitch(id = 1, isValid = false)
 
-        `when`(effectiveProfileSwitchDao.findById(1)).thenReturn(eps)
+        whenever(effectiveProfileSwitchDao.findById(1)).thenReturn(eps)
 
         val transaction = InvalidateEffectiveProfileSwitchTransaction(id = 1)
         transaction.database = database
@@ -60,7 +60,7 @@ class InvalidateEffectiveProfileSwitchTransactionTest {
 
     @Test
     fun `throws exception when effective profile switch not found`() {
-        `when`(effectiveProfileSwitchDao.findById(999)).thenReturn(null)
+        whenever(effectiveProfileSwitchDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateEffectiveProfileSwitchTransaction(id = 999)
         transaction.database = database

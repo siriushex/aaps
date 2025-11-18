@@ -10,9 +10,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class SyncNsTherapyEventTransactionTest {
 
@@ -23,15 +23,15 @@ class SyncNsTherapyEventTransactionTest {
     fun setup() {
         therapyEventDao = mock()
         database = mock()
-        `when`(database.therapyEventDao).thenReturn(therapyEventDao)
+        whenever(database.therapyEventDao).thenReturn(therapyEventDao)
     }
 
     @Test
     fun `inserts new therapy event when nsId not found and no timestamp match`() {
         val therapyEvent = createTherapyEvent(id = 0, nsId = "ns-123", timestamp = 1000L)
 
-        `when`(therapyEventDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(null)
+        whenever(therapyEventDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(null)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent), nsClientMode = false)
         transaction.database = database
@@ -51,8 +51,8 @@ class SyncNsTherapyEventTransactionTest {
         val therapyEvent = createTherapyEvent(id = 0, nsId = "ns-123", timestamp = 1000L)
         val existing = createTherapyEvent(id = 1, nsId = null, timestamp = 1000L)
 
-        `when`(therapyEventDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(existing)
+        whenever(therapyEventDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(existing)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent), nsClientMode = false)
         transaction.database = database
@@ -73,8 +73,8 @@ class SyncNsTherapyEventTransactionTest {
         val therapyEvent = createTherapyEvent(id = 0, nsId = "ns-123", timestamp = 1000L)
         val existing = createTherapyEvent(id = 1, nsId = "other-ns", timestamp = 1000L)
 
-        `when`(therapyEventDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(existing)
+        whenever(therapyEventDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(existing)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent), nsClientMode = false)
         transaction.database = database
@@ -92,7 +92,7 @@ class SyncNsTherapyEventTransactionTest {
         val therapyEvent = createTherapyEvent(id = 0, nsId = "ns-123", isValid = false)
         val existing = createTherapyEvent(id = 1, nsId = "ns-123", isValid = true)
 
-        `when`(therapyEventDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(therapyEventDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent), nsClientMode = false)
         transaction.database = database
@@ -113,7 +113,7 @@ class SyncNsTherapyEventTransactionTest {
         val therapyEvent = createTherapyEvent(id = 0, nsId = "ns-123", isValid = false)
         val existing = createTherapyEvent(id = 1, nsId = "ns-123", isValid = false)
 
-        `when`(therapyEventDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(therapyEventDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent), nsClientMode = false)
         transaction.database = database
@@ -133,7 +133,7 @@ class SyncNsTherapyEventTransactionTest {
         val therapyEvent = createTherapyEvent(id = 0, nsId = "ns-123", duration = 120_000L)
         val existing = createTherapyEvent(id = 1, nsId = "ns-123", duration = 60_000L)
 
-        `when`(therapyEventDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(therapyEventDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent), nsClientMode = true)
         transaction.database = database
@@ -153,7 +153,7 @@ class SyncNsTherapyEventTransactionTest {
         val therapyEvent = createTherapyEvent(id = 0, nsId = "ns-123", duration = 120_000L)
         val existing = createTherapyEvent(id = 1, nsId = "ns-123", duration = 60_000L)
 
-        `when`(therapyEventDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(therapyEventDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent), nsClientMode = false)
         transaction.database = database
@@ -171,10 +171,10 @@ class SyncNsTherapyEventTransactionTest {
         val therapyEvent1 = createTherapyEvent(id = 0, nsId = "ns-1", timestamp = 1000L)
         val therapyEvent2 = createTherapyEvent(id = 0, nsId = "ns-2", timestamp = 2000L)
 
-        `when`(therapyEventDao.findByNSId("ns-1")).thenReturn(null)
-        `when`(therapyEventDao.findByNSId("ns-2")).thenReturn(null)
-        `when`(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(null)
-        `when`(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 2000L)).thenReturn(null)
+        whenever(therapyEventDao.findByNSId("ns-1")).thenReturn(null)
+        whenever(therapyEventDao.findByNSId("ns-2")).thenReturn(null)
+        whenever(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(null)
+        whenever(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 2000L)).thenReturn(null)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent1, therapyEvent2), nsClientMode = false)
         transaction.database = database
@@ -188,8 +188,8 @@ class SyncNsTherapyEventTransactionTest {
         val therapyEvent = createTherapyEvent(id = 0, nsId = "ns-123", timestamp = 1000L, isValid = false)
         val existing = createTherapyEvent(id = 1, nsId = null, timestamp = 1000L, isValid = true)
 
-        `when`(therapyEventDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(existing)
+        whenever(therapyEventDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(therapyEventDao.findByTimestamp(TherapyEvent.Type.NOTE, 1000L)).thenReturn(existing)
 
         val transaction = SyncNsTherapyEventTransaction(listOf(therapyEvent), nsClientMode = false)
         transaction.database = database

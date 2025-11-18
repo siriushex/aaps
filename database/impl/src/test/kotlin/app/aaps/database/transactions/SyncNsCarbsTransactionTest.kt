@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class SyncNsCarbsTransactionTest {
 
@@ -23,15 +23,15 @@ class SyncNsCarbsTransactionTest {
     fun setup() {
         carbsDao = mock()
         database = mock()
-        `when`(database.carbsDao).thenReturn(carbsDao)
+        whenever(database.carbsDao).thenReturn(carbsDao)
     }
 
     @Test
     fun `inserts new carbs when nsId not found and no timestamp match`() {
         val carbs = createCarbs(id = 0, nsId = "ns-123", amount = 50.0, timestamp = 1000L)
 
-        `when`(carbsDao.getByNSId("ns-123")).thenReturn(null)
-        `when`(carbsDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(carbsDao.getByNSId("ns-123")).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(1000L)).thenReturn(null)
 
         val transaction = SyncNsCarbsTransaction(listOf(carbs), nsClientMode = false)
         transaction.database = database
@@ -53,8 +53,8 @@ class SyncNsCarbsTransactionTest {
         val existing = createCarbs(id = 1, nsId = null, amount = 50.0, timestamp = timestamp)
         val incoming = createCarbs(id = 0, nsId = nsId, amount = 50.0, timestamp = timestamp)
 
-        `when`(carbsDao.getByNSId(nsId)).thenReturn(null)
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
+        whenever(carbsDao.getByNSId(nsId)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
 
         val transaction = SyncNsCarbsTransaction(listOf(incoming), nsClientMode = false)
         transaction.database = database
@@ -75,7 +75,7 @@ class SyncNsCarbsTransactionTest {
         val existing = createCarbs(id = 1, nsId = nsId, amount = 50.0, isValid = true)
         val incoming = createCarbs(id = 0, nsId = nsId, amount = 50.0, isValid = false)
 
-        `when`(carbsDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(carbsDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsCarbsTransaction(listOf(incoming), nsClientMode = false)
         transaction.database = database
@@ -94,7 +94,7 @@ class SyncNsCarbsTransactionTest {
         val existing = createCarbs(id = 1, nsId = nsId, amount = 50.0, isValid = false)
         val incoming = createCarbs(id = 0, nsId = nsId, amount = 50.0, isValid = false)
 
-        `when`(carbsDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(carbsDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsCarbsTransaction(listOf(incoming), nsClientMode = false)
         transaction.database = database
@@ -110,7 +110,7 @@ class SyncNsCarbsTransactionTest {
         val existing = createCarbs(id = 1, nsId = nsId, amount = 50.0, duration = 60_000L)
         val incoming = createCarbs(id = 0, nsId = nsId, amount = 75.0, duration = 120_000L)
 
-        `when`(carbsDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(carbsDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsCarbsTransaction(listOf(incoming), nsClientMode = true)
         transaction.database = database
@@ -130,7 +130,7 @@ class SyncNsCarbsTransactionTest {
         val existing = createCarbs(id = 1, nsId = nsId, amount = 50.0, duration = 60_000L)
         val incoming = createCarbs(id = 0, nsId = nsId, amount = 75.0, duration = 120_000L)
 
-        `when`(carbsDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(carbsDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsCarbsTransaction(listOf(incoming), nsClientMode = false)
         transaction.database = database
@@ -150,7 +150,7 @@ class SyncNsCarbsTransactionTest {
         val existing = createCarbs(id = 1, nsId = nsId, amount = 50.0, duration = duration)
         val incoming = createCarbs(id = 0, nsId = nsId, amount = 50.0, duration = duration)
 
-        `when`(carbsDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(carbsDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsCarbsTransaction(listOf(incoming), nsClientMode = true)
         transaction.database = database
@@ -166,7 +166,7 @@ class SyncNsCarbsTransactionTest {
         val existing = createCarbs(id = 1, nsId = nsId, amount = 50.0, duration = 60_000L, isValid = true)
         val incoming = createCarbs(id = 0, nsId = nsId, amount = 75.0, duration = 120_000L, isValid = false)
 
-        `when`(carbsDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(carbsDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsCarbsTransaction(listOf(incoming), nsClientMode = true)
         transaction.database = database
@@ -186,10 +186,10 @@ class SyncNsCarbsTransactionTest {
         val carbs1 = createCarbs(id = 0, nsId = "ns-1", amount = 50.0, timestamp = 1000L)
         val carbs2 = createCarbs(id = 0, nsId = "ns-2", amount = 30.0, timestamp = 2000L)
 
-        `when`(carbsDao.getByNSId("ns-1")).thenReturn(null)
-        `when`(carbsDao.getByNSId("ns-2")).thenReturn(null)
-        `when`(carbsDao.findByTimestamp(1000L)).thenReturn(null)
-        `when`(carbsDao.findByTimestamp(2000L)).thenReturn(null)
+        whenever(carbsDao.getByNSId("ns-1")).thenReturn(null)
+        whenever(carbsDao.getByNSId("ns-2")).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(2000L)).thenReturn(null)
 
         val transaction = SyncNsCarbsTransaction(listOf(carbs1, carbs2), nsClientMode = false)
         transaction.database = database
@@ -223,8 +223,8 @@ class SyncNsCarbsTransactionTest {
         val existing = createCarbs(id = 1, nsId = null, amount = 50.0, timestamp = timestamp, isValid = true)
         val incoming = createCarbs(id = 0, nsId = nsId, amount = 50.0, timestamp = timestamp, isValid = false)
 
-        `when`(carbsDao.getByNSId(nsId)).thenReturn(null)
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
+        whenever(carbsDao.getByNSId(nsId)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
 
         val transaction = SyncNsCarbsTransaction(listOf(incoming), nsClientMode = false)
         transaction.database = database

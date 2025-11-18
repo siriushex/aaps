@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdDeviceStatusTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdDeviceStatusTransactionTest {
     fun setup() {
         deviceStatusDao = mock()
         database = mock()
-        `when`(database.deviceStatusDao).thenReturn(deviceStatusDao)
+        whenever(database.deviceStatusDao).thenReturn(deviceStatusDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdDeviceStatusTransactionTest {
         val current = createDeviceStatus(id = 1, nsId = "old-ns")
         val update = createDeviceStatus(id = 1, nsId = newNsId)
 
-        `when`(deviceStatusDao.findById(1)).thenReturn(current)
+        whenever(deviceStatusDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdDeviceStatusTransaction(listOf(update))
         transaction.database = database
@@ -49,7 +49,7 @@ class UpdateNsIdDeviceStatusTransactionTest {
         val current = createDeviceStatus(id = 1, nsId = sameNsId)
         val update = createDeviceStatus(id = 1, nsId = sameNsId)
 
-        `when`(deviceStatusDao.findById(1)).thenReturn(current)
+        whenever(deviceStatusDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdDeviceStatusTransaction(listOf(update))
         transaction.database = database
@@ -64,7 +64,7 @@ class UpdateNsIdDeviceStatusTransactionTest {
     fun `skips when device status not found`() {
         val update = createDeviceStatus(id = 999, nsId = "new-ns")
 
-        `when`(deviceStatusDao.findById(999)).thenReturn(null)
+        whenever(deviceStatusDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdDeviceStatusTransaction(listOf(update))
         transaction.database = database

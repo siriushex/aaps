@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateFoodTransactionTest {
 
@@ -22,14 +22,14 @@ class InvalidateFoodTransactionTest {
     fun setup() {
         foodDao = mock()
         database = mock()
-        `when`(database.foodDao).thenReturn(foodDao)
+        whenever(database.foodDao).thenReturn(foodDao)
     }
 
     @Test
     fun `invalidates valid food`() {
         val food = createFood(id = 1, isValid = true)
 
-        `when`(foodDao.findById(1)).thenReturn(food)
+        whenever(foodDao.findById(1)).thenReturn(food)
 
         val transaction = InvalidateFoodTransaction(id = 1)
         transaction.database = database
@@ -45,7 +45,7 @@ class InvalidateFoodTransactionTest {
     fun `does not update already invalid food`() {
         val food = createFood(id = 1, isValid = false)
 
-        `when`(foodDao.findById(1)).thenReturn(food)
+        whenever(foodDao.findById(1)).thenReturn(food)
 
         val transaction = InvalidateFoodTransaction(id = 1)
         transaction.database = database
@@ -58,7 +58,7 @@ class InvalidateFoodTransactionTest {
 
     @Test
     fun `throws exception when food not found`() {
-        `when`(foodDao.findById(999)).thenReturn(null)
+        whenever(foodDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateFoodTransaction(id = 999)
         transaction.database = database

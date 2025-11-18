@@ -10,8 +10,8 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class SyncNsEffectiveProfileSwitchTransactionTest {
 
@@ -22,15 +22,15 @@ class SyncNsEffectiveProfileSwitchTransactionTest {
     fun setup() {
         effectiveProfileSwitchDao = mock()
         database = mock()
-        `when`(database.effectiveProfileSwitchDao).thenReturn(effectiveProfileSwitchDao)
+        whenever(database.effectiveProfileSwitchDao).thenReturn(effectiveProfileSwitchDao)
     }
 
     @Test
     fun `inserts new when nsId not found and no timestamp match`() {
         val eps = createEffectiveProfileSwitch(id = 0, nsId = "ns-123", timestamp = 1000L)
 
-        `when`(effectiveProfileSwitchDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(effectiveProfileSwitchDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(effectiveProfileSwitchDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(effectiveProfileSwitchDao.findByTimestamp(1000L)).thenReturn(null)
 
         val transaction = SyncNsEffectiveProfileSwitchTransaction(listOf(eps))
         transaction.database = database
@@ -48,8 +48,8 @@ class SyncNsEffectiveProfileSwitchTransactionTest {
         val eps = createEffectiveProfileSwitch(id = 0, nsId = "ns-123", timestamp = 1000L)
         val existing = createEffectiveProfileSwitch(id = 1, nsId = null, timestamp = 1000L)
 
-        `when`(effectiveProfileSwitchDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(effectiveProfileSwitchDao.findByTimestamp(1000L)).thenReturn(existing)
+        whenever(effectiveProfileSwitchDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(effectiveProfileSwitchDao.findByTimestamp(1000L)).thenReturn(existing)
 
         val transaction = SyncNsEffectiveProfileSwitchTransaction(listOf(eps))
         transaction.database = database
@@ -66,7 +66,7 @@ class SyncNsEffectiveProfileSwitchTransactionTest {
         val eps = createEffectiveProfileSwitch(id = 0, nsId = "ns-123", isValid = false)
         val existing = createEffectiveProfileSwitch(id = 1, nsId = "ns-123", isValid = true)
 
-        `when`(effectiveProfileSwitchDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(effectiveProfileSwitchDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsEffectiveProfileSwitchTransaction(listOf(eps))
         transaction.database = database
@@ -95,6 +95,7 @@ class SyncNsEffectiveProfileSwitchTransactionTest {
         originalDuration = 0,
         originalEnd = 0,
         insulinConfiguration = InsulinConfiguration("Test", 0, 0),
-        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId)
+        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId),
+        isValid = isValid
     ).also { it.id = id }
 }

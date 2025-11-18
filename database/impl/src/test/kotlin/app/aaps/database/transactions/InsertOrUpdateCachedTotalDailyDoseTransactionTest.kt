@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateCachedTotalDailyDoseTransactionTest {
 
@@ -22,14 +22,14 @@ class InsertOrUpdateCachedTotalDailyDoseTransactionTest {
     fun setup() {
         totalDailyDoseDao = mock()
         database = mock()
-        `when`(database.totalDailyDoseDao).thenReturn(totalDailyDoseDao)
+        whenever(database.totalDailyDoseDao).thenReturn(totalDailyDoseDao)
     }
 
     @Test
     fun `inserts new TDD when not found by timestamp`() {
         val tdd = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0)
 
-        `when`(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(null)
+        whenever(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(null)
 
         val transaction = InsertOrUpdateCachedTotalDailyDoseTransaction(tdd)
         transaction.database = database
@@ -49,7 +49,7 @@ class InsertOrUpdateCachedTotalDailyDoseTransactionTest {
         val tdd = createTotalDailyDose(timestamp = 1000L, basalAmount = 12.0, bolusAmount = 15.0)
         val existing = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0)
 
-        `when`(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
+        whenever(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCachedTotalDailyDoseTransaction(tdd)
         transaction.database = database
@@ -69,7 +69,7 @@ class InsertOrUpdateCachedTotalDailyDoseTransactionTest {
         val tdd = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 20.0)
         val existing = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0)
 
-        `when`(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
+        whenever(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCachedTotalDailyDoseTransaction(tdd)
         transaction.database = database
@@ -86,7 +86,7 @@ class InsertOrUpdateCachedTotalDailyDoseTransactionTest {
         val tdd = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0, totalAmount = 30.0)
         val existing = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0, totalAmount = 25.0)
 
-        `when`(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
+        whenever(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCachedTotalDailyDoseTransaction(tdd)
         transaction.database = database
@@ -103,7 +103,7 @@ class InsertOrUpdateCachedTotalDailyDoseTransactionTest {
         val tdd = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0, carbs = 200.0)
         val existing = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0, carbs = 150.0)
 
-        `when`(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
+        whenever(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCachedTotalDailyDoseTransaction(tdd)
         transaction.database = database
@@ -120,7 +120,7 @@ class InsertOrUpdateCachedTotalDailyDoseTransactionTest {
         val tdd = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0, totalAmount = 25.0, carbs = 150.0)
         val existing = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0, totalAmount = 25.0, carbs = 150.0)
 
-        `when`(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
+        whenever(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCachedTotalDailyDoseTransaction(tdd)
         transaction.database = database
@@ -139,7 +139,7 @@ class InsertOrUpdateCachedTotalDailyDoseTransactionTest {
         val tdd = createTotalDailyDose(timestamp = 1000L, basalAmount = 12.0, bolusAmount = 18.0, totalAmount = 30.0, carbs = 200.0)
         val existing = createTotalDailyDose(timestamp = 1000L, basalAmount = 10.0, bolusAmount = 15.0, totalAmount = 25.0, carbs = 150.0)
 
-        `when`(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
+        whenever(totalDailyDoseDao.findByPumpTimestamp(1000L, InterfaceIDs.PumpType.CACHE)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCachedTotalDailyDoseTransaction(tdd)
         transaction.database = database

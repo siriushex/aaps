@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateBolusTransactionTest {
 
@@ -22,14 +22,14 @@ class InvalidateBolusTransactionTest {
     fun setup() {
         bolusDao = mock()
         database = mock()
-        `when`(database.bolusDao).thenReturn(bolusDao)
+        whenever(database.bolusDao).thenReturn(bolusDao)
     }
 
     @Test
     fun `invalidates valid bolus`() {
         val bolus = createBolus(id = 1, isValid = true)
 
-        `when`(bolusDao.findById(1)).thenReturn(bolus)
+        whenever(bolusDao.findById(1)).thenReturn(bolus)
 
         val transaction = InvalidateBolusTransaction(id = 1)
         transaction.database = database
@@ -46,7 +46,7 @@ class InvalidateBolusTransactionTest {
     fun `does not update already invalid bolus`() {
         val bolus = createBolus(id = 1, isValid = false)
 
-        `when`(bolusDao.findById(1)).thenReturn(bolus)
+        whenever(bolusDao.findById(1)).thenReturn(bolus)
 
         val transaction = InvalidateBolusTransaction(id = 1)
         transaction.database = database
@@ -60,7 +60,7 @@ class InvalidateBolusTransactionTest {
 
     @Test
     fun `throws exception when bolus not found`() {
-        `when`(bolusDao.findById(999)).thenReturn(null)
+        whenever(bolusDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateBolusTransaction(id = 999)
         transaction.database = database
@@ -78,7 +78,7 @@ class InvalidateBolusTransactionTest {
         val amount = 5.5
         val bolus = createBolus(id = 1, isValid = true, amount = amount)
 
-        `when`(bolusDao.findById(1)).thenReturn(bolus)
+        whenever(bolusDao.findById(1)).thenReturn(bolus)
 
         val transaction = InvalidateBolusTransaction(id = 1)
         transaction.database = database
@@ -92,7 +92,7 @@ class InvalidateBolusTransactionTest {
     fun `invalidates normal bolus`() {
         val bolus = createBolus(id = 1, type = Bolus.Type.NORMAL, isValid = true)
 
-        `when`(bolusDao.findById(1)).thenReturn(bolus)
+        whenever(bolusDao.findById(1)).thenReturn(bolus)
 
         val transaction = InvalidateBolusTransaction(id = 1)
         transaction.database = database
@@ -106,7 +106,7 @@ class InvalidateBolusTransactionTest {
     fun `invalidates SMB bolus`() {
         val bolus = createBolus(id = 2, type = Bolus.Type.SMB, isValid = true)
 
-        `when`(bolusDao.findById(2)).thenReturn(bolus)
+        whenever(bolusDao.findById(2)).thenReturn(bolus)
 
         val transaction = InvalidateBolusTransaction(id = 2)
         transaction.database = database

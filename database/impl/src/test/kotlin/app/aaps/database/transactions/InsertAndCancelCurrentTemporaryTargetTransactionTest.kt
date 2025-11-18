@@ -10,9 +10,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertAndCancelCurrentTemporaryTargetTransactionTest {
 
@@ -23,7 +23,7 @@ class InsertAndCancelCurrentTemporaryTargetTransactionTest {
     fun setup() {
         temporaryTargetDao = mock()
         database = mock()
-        `when`(database.temporaryTargetDao).thenReturn(temporaryTargetDao)
+        whenever(database.temporaryTargetDao).thenReturn(temporaryTargetDao)
     }
 
     @Test
@@ -32,7 +32,7 @@ class InsertAndCancelCurrentTemporaryTargetTransactionTest {
         val activeTarget = createTemporaryTarget(id = 1, timestamp = 5000L, duration = 30_000L)
         val newTarget = createTemporaryTarget(id = 0, timestamp = timestamp, duration = 60_000L)
 
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(activeTarget)
+        whenever(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(activeTarget)
 
         val transaction = InsertAndCancelCurrentTemporaryTargetTransaction(newTarget)
         transaction.database = database
@@ -53,7 +53,7 @@ class InsertAndCancelCurrentTemporaryTargetTransactionTest {
         val timestamp = 10000L
         val newTarget = createTemporaryTarget(id = 0, timestamp = timestamp, duration = 60_000L)
 
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(null)
+        whenever(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(null)
 
         val transaction = InsertAndCancelCurrentTemporaryTargetTransaction(newTarget)
         transaction.database = database
@@ -73,7 +73,7 @@ class InsertAndCancelCurrentTemporaryTargetTransactionTest {
         val activeTarget = createTemporaryTarget(id = 1, timestamp = 10000L, duration = 20_000L)
         val newTarget = createTemporaryTarget(id = 0, timestamp = timestamp, duration = 30_000L)
 
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(activeTarget)
+        whenever(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(activeTarget)
 
         val transaction = InsertAndCancelCurrentTemporaryTargetTransaction(newTarget)
         transaction.database = database
@@ -98,7 +98,7 @@ class InsertAndCancelCurrentTemporaryTargetTransactionTest {
             reason = reason
         )
 
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(null)
+        whenever(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(null)
 
         val transaction = InsertAndCancelCurrentTemporaryTargetTransaction(newTarget)
         transaction.database = database
@@ -138,7 +138,7 @@ class InsertAndCancelCurrentTemporaryTargetTransactionTest {
             reason = TemporaryTarget.Reason.ACTIVITY
         )
 
-        `when`(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(activeTarget)
+        whenever(temporaryTargetDao.getTemporaryTargetActiveAtLegacy(timestamp)).thenReturn(activeTarget)
 
         val transaction = InsertAndCancelCurrentTemporaryTargetTransaction(newTarget)
         transaction.database = database

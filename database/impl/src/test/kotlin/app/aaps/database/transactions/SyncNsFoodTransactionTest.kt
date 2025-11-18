@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class SyncNsFoodTransactionTest {
 
@@ -22,14 +22,14 @@ class SyncNsFoodTransactionTest {
     fun setup() {
         foodDao = mock()
         database = mock()
-        `when`(database.foodDao).thenReturn(foodDao)
+        whenever(database.foodDao).thenReturn(foodDao)
     }
 
     @Test
     fun `inserts new food when nsId not found`() {
         val food = createFood(id = 0, nsId = "ns-123", name = "Apple", carbs = 15)
 
-        `when`(foodDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(foodDao.findByNSId("ns-123")).thenReturn(null)
 
         val transaction = SyncNsFoodTransaction(listOf(food))
         transaction.database = database
@@ -48,7 +48,7 @@ class SyncNsFoodTransactionTest {
         val food = createFood(id = 0, nsId = "ns-123", name = "Apple", carbs = 20)
         val existing = createFood(id = 1, nsId = "ns-123", name = "Apple", carbs = 15)
 
-        `when`(foodDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(foodDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsFoodTransaction(listOf(food))
         transaction.database = database
@@ -68,7 +68,7 @@ class SyncNsFoodTransactionTest {
         val food = createFood(id = 0, nsId = "ns-123", name = "Apple", carbs = 15, isValid = false)
         val existing = createFood(id = 1, nsId = "ns-123", name = "Apple", carbs = 15, isValid = true)
 
-        `when`(foodDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(foodDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsFoodTransaction(listOf(food))
         transaction.database = database
@@ -87,7 +87,7 @@ class SyncNsFoodTransactionTest {
         val food = createFood(id = 0, nsId = "ns-123", name = "Apple", carbs = 15)
         val existing = createFood(id = 1, nsId = "ns-123", name = "Apple", carbs = 15)
 
-        `when`(foodDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(foodDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsFoodTransaction(listOf(food))
         transaction.database = database
@@ -106,8 +106,8 @@ class SyncNsFoodTransactionTest {
         val food1 = createFood(id = 0, nsId = "ns-1", name = "Apple", carbs = 15)
         val food2 = createFood(id = 0, nsId = "ns-2", name = "Banana", carbs = 25)
 
-        `when`(foodDao.findByNSId("ns-1")).thenReturn(null)
-        `when`(foodDao.findByNSId("ns-2")).thenReturn(null)
+        whenever(foodDao.findByNSId("ns-1")).thenReturn(null)
+        whenever(foodDao.findByNSId("ns-2")).thenReturn(null)
 
         val transaction = SyncNsFoodTransaction(listOf(food1, food2))
         transaction.database = database
@@ -134,6 +134,6 @@ class SyncNsFoodTransactionTest {
         unit = "g",
         gi = null,
         isValid = isValid,
-        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId)
+        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId),
     ).also { it.id = id }
 }

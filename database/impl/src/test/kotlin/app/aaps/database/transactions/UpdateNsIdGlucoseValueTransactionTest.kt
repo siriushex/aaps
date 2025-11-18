@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdGlucoseValueTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdGlucoseValueTransactionTest {
     fun setup() {
         glucoseValueDao = mock()
         database = mock()
-        `when`(database.glucoseValueDao).thenReturn(glucoseValueDao)
+        whenever(database.glucoseValueDao).thenReturn(glucoseValueDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdGlucoseValueTransactionTest {
         val current = createGlucoseValue(id = 1, nsId = "old-ns")
         val update = createGlucoseValue(id = 1, nsId = newNsId)
 
-        `when`(glucoseValueDao.findById(1)).thenReturn(current)
+        whenever(glucoseValueDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdGlucoseValueTransaction(listOf(update))
         transaction.database = database
@@ -49,7 +49,7 @@ class UpdateNsIdGlucoseValueTransactionTest {
         val current = createGlucoseValue(id = 1, nsId = sameNsId)
         val update = createGlucoseValue(id = 1, nsId = sameNsId)
 
-        `when`(glucoseValueDao.findById(1)).thenReturn(current)
+        whenever(glucoseValueDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdGlucoseValueTransaction(listOf(update))
         transaction.database = database
@@ -64,7 +64,7 @@ class UpdateNsIdGlucoseValueTransactionTest {
     fun `skips when glucose value not found`() {
         val update = createGlucoseValue(id = 999, nsId = "new-ns")
 
-        `when`(glucoseValueDao.findById(999)).thenReturn(null)
+        whenever(glucoseValueDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdGlucoseValueTransaction(listOf(update))
         transaction.database = database

@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdBolusCalculatorResultTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdBolusCalculatorResultTransactionTest {
     fun setup() {
         bolusCalculatorResultDao = mock()
         database = mock()
-        `when`(database.bolusCalculatorResultDao).thenReturn(bolusCalculatorResultDao)
+        whenever(database.bolusCalculatorResultDao).thenReturn(bolusCalculatorResultDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdBolusCalculatorResultTransactionTest {
         val current = createBolusCalculatorResult(id = 1, nsId = "old-ns")
         val update = createBolusCalculatorResult(id = 1, nsId = newNsId)
 
-        `when`(bolusCalculatorResultDao.findById(1)).thenReturn(current)
+        whenever(bolusCalculatorResultDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdBolusCalculatorResultTransaction(listOf(update))
         transaction.database = database
@@ -49,7 +49,7 @@ class UpdateNsIdBolusCalculatorResultTransactionTest {
         val current = createBolusCalculatorResult(id = 1, nsId = sameNsId)
         val update = createBolusCalculatorResult(id = 1, nsId = sameNsId)
 
-        `when`(bolusCalculatorResultDao.findById(1)).thenReturn(current)
+        whenever(bolusCalculatorResultDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdBolusCalculatorResultTransaction(listOf(update))
         transaction.database = database
@@ -64,7 +64,7 @@ class UpdateNsIdBolusCalculatorResultTransactionTest {
     fun `skips when bolus calculator result not found`() {
         val update = createBolusCalculatorResult(id = 999, nsId = "new-ns")
 
-        `when`(bolusCalculatorResultDao.findById(999)).thenReturn(null)
+        whenever(bolusCalculatorResultDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdBolusCalculatorResultTransaction(listOf(update))
         transaction.database = database

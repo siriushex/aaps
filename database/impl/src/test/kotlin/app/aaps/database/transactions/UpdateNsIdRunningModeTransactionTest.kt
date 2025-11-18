@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdRunningModeTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdRunningModeTransactionTest {
     fun setup() {
         runningModeDao = mock()
         database = mock()
-        `when`(database.runningModeDao).thenReturn(runningModeDao)
+        whenever(database.runningModeDao).thenReturn(runningModeDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdRunningModeTransactionTest {
         val current = createRunningMode(id = 1, nsId = "old-ns")
         val update = createRunningMode(id = 1, nsId = newNsId)
 
-        `when`(runningModeDao.findById(1)).thenReturn(current)
+        whenever(runningModeDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdRunningModeTransaction(listOf(update))
         transaction.database = database
@@ -49,7 +49,7 @@ class UpdateNsIdRunningModeTransactionTest {
         val current = createRunningMode(id = 1, nsId = sameNsId)
         val update = createRunningMode(id = 1, nsId = sameNsId)
 
-        `when`(runningModeDao.findById(1)).thenReturn(current)
+        whenever(runningModeDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdRunningModeTransaction(listOf(update))
         transaction.database = database
@@ -64,7 +64,7 @@ class UpdateNsIdRunningModeTransactionTest {
     fun `skips when running mode not found`() {
         val update = createRunningMode(id = 999, nsId = "new-ns")
 
-        `when`(runningModeDao.findById(999)).thenReturn(null)
+        whenever(runningModeDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdRunningModeTransaction(listOf(update))
         transaction.database = database

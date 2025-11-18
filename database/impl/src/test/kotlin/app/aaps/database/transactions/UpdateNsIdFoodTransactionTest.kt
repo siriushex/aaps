@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdFoodTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdFoodTransactionTest {
     fun setup() {
         foodDao = mock()
         database = mock()
-        `when`(database.foodDao).thenReturn(foodDao)
+        whenever(database.foodDao).thenReturn(foodDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdFoodTransactionTest {
         val current = createFood(id = 1, nsId = "old-ns")
         val update = createFood(id = 1, nsId = newNsId)
 
-        `when`(foodDao.findById(1)).thenReturn(current)
+        whenever(foodDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdFoodTransaction(listOf(update))
         transaction.database = database
@@ -49,7 +49,7 @@ class UpdateNsIdFoodTransactionTest {
         val current = createFood(id = 1, nsId = sameNsId)
         val update = createFood(id = 1, nsId = sameNsId)
 
-        `when`(foodDao.findById(1)).thenReturn(current)
+        whenever(foodDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdFoodTransaction(listOf(update))
         transaction.database = database
@@ -64,7 +64,7 @@ class UpdateNsIdFoodTransactionTest {
     fun `skips when food not found`() {
         val update = createFood(id = 999, nsId = "new-ns")
 
-        `when`(foodDao.findById(999)).thenReturn(null)
+        whenever(foodDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdFoodTransaction(listOf(update))
         transaction.database = database

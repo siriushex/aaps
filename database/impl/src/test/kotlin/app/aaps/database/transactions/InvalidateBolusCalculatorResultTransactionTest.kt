@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateBolusCalculatorResultTransactionTest {
 
@@ -22,14 +22,14 @@ class InvalidateBolusCalculatorResultTransactionTest {
     fun setup() {
         bolusCalculatorResultDao = mock()
         database = mock()
-        `when`(database.bolusCalculatorResultDao).thenReturn(bolusCalculatorResultDao)
+        whenever(database.bolusCalculatorResultDao).thenReturn(bolusCalculatorResultDao)
     }
 
     @Test
     fun `invalidates valid bolus calculator result`() {
         val bcr = createBolusCalculatorResult(id = 1, isValid = true)
 
-        `when`(bolusCalculatorResultDao.findById(1)).thenReturn(bcr)
+        whenever(bolusCalculatorResultDao.findById(1)).thenReturn(bcr)
 
         val transaction = InvalidateBolusCalculatorResultTransaction(id = 1)
         transaction.database = database
@@ -45,7 +45,7 @@ class InvalidateBolusCalculatorResultTransactionTest {
     fun `does not update already invalid bolus calculator result`() {
         val bcr = createBolusCalculatorResult(id = 1, isValid = false)
 
-        `when`(bolusCalculatorResultDao.findById(1)).thenReturn(bcr)
+        whenever(bolusCalculatorResultDao.findById(1)).thenReturn(bcr)
 
         val transaction = InvalidateBolusCalculatorResultTransaction(id = 1)
         transaction.database = database
@@ -58,7 +58,7 @@ class InvalidateBolusCalculatorResultTransactionTest {
 
     @Test
     fun `throws exception when bolus calculator result not found`() {
-        `when`(bolusCalculatorResultDao.findById(999)).thenReturn(null)
+        whenever(bolusCalculatorResultDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateBolusCalculatorResultTransaction(id = 999)
         transaction.database = database

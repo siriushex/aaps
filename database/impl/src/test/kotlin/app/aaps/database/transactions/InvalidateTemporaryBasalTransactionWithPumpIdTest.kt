@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateTemporaryBasalTransactionWithPumpIdTest {
 
@@ -22,7 +22,7 @@ class InvalidateTemporaryBasalTransactionWithPumpIdTest {
     fun setup() {
         temporaryBasalDao = mock()
         database = mock()
-        `when`(database.temporaryBasalDao).thenReturn(temporaryBasalDao)
+        whenever(database.temporaryBasalDao).thenReturn(temporaryBasalDao)
     }
 
     @Test
@@ -32,7 +32,7 @@ class InvalidateTemporaryBasalTransactionWithPumpIdTest {
         val pumpSerial = "ABC123"
         val tb = createTemporaryBasal(id = 1, isValid = true)
 
-        `when`(temporaryBasalDao.findByPumpIds(pumpId, pumpType, pumpSerial)).thenReturn(tb)
+        whenever(temporaryBasalDao.findByPumpIds(pumpId, pumpType, pumpSerial)).thenReturn(tb)
 
         val transaction = InvalidateTemporaryBasalTransactionWithPumpId(pumpId, pumpType, pumpSerial)
         transaction.database = database
@@ -51,7 +51,7 @@ class InvalidateTemporaryBasalTransactionWithPumpIdTest {
         val pumpSerial = "ABC123"
         val tb = createTemporaryBasal(id = 1, isValid = false)
 
-        `when`(temporaryBasalDao.findByPumpIds(pumpId, pumpType, pumpSerial)).thenReturn(tb)
+        whenever(temporaryBasalDao.findByPumpIds(pumpId, pumpType, pumpSerial)).thenReturn(tb)
 
         val transaction = InvalidateTemporaryBasalTransactionWithPumpId(pumpId, pumpType, pumpSerial)
         transaction.database = database
@@ -68,7 +68,7 @@ class InvalidateTemporaryBasalTransactionWithPumpIdTest {
         val pumpType = InterfaceIDs.PumpType.DANA_I
         val pumpSerial = "ABC123"
 
-        `when`(temporaryBasalDao.findByPumpIds(pumpId, pumpType, pumpSerial)).thenReturn(null)
+        whenever(temporaryBasalDao.findByPumpIds(pumpId, pumpType, pumpSerial)).thenReturn(null)
 
         val transaction = InvalidateTemporaryBasalTransactionWithPumpId(pumpId, pumpType, pumpSerial)
         transaction.database = database

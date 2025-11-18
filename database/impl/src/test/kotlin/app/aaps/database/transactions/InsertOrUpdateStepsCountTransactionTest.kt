@@ -8,9 +8,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateStepsCountTransactionTest {
 
@@ -21,7 +21,7 @@ class InsertOrUpdateStepsCountTransactionTest {
     fun setup() {
         stepsCountDao = mock()
         database = mock()
-        `when`(database.stepsCountDao).thenReturn(stepsCountDao)
+        whenever(database.stepsCountDao).thenReturn(stepsCountDao)
     }
 
     @Test
@@ -44,7 +44,7 @@ class InsertOrUpdateStepsCountTransactionTest {
     fun `inserts new steps count when id not found`() {
         val stepsCount = createStepsCount(id = 1, steps5min = 100, steps10min = 200)
 
-        `when`(stepsCountDao.findById(1)).thenReturn(null)
+        whenever(stepsCountDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateStepsCountTransaction(stepsCount)
         transaction.database = database
@@ -63,7 +63,7 @@ class InsertOrUpdateStepsCountTransactionTest {
         val stepsCount = createStepsCount(id = 1, steps5min = 150, steps10min = 300)
         val existing = createStepsCount(id = 1, steps5min = 100, steps10min = 200)
 
-        `when`(stepsCountDao.findById(1)).thenReturn(existing)
+        whenever(stepsCountDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateStepsCountTransaction(stepsCount)
         transaction.database = database
@@ -82,7 +82,7 @@ class InsertOrUpdateStepsCountTransactionTest {
         val existing = createStepsCount(id = 1, steps5min = 50, steps10min = 100)
         val updated = createStepsCount(id = 1, steps5min = 200, steps10min = 400)
 
-        `when`(stepsCountDao.findById(1)).thenReturn(existing)
+        whenever(stepsCountDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateStepsCountTransaction(updated)
         transaction.database = database

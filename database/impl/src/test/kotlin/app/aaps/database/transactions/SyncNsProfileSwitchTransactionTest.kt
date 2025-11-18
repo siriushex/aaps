@@ -10,8 +10,8 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class SyncNsProfileSwitchTransactionTest {
 
@@ -22,15 +22,15 @@ class SyncNsProfileSwitchTransactionTest {
     fun setup() {
         profileSwitchDao = mock()
         database = mock()
-        `when`(database.profileSwitchDao).thenReturn(profileSwitchDao)
+        whenever(database.profileSwitchDao).thenReturn(profileSwitchDao)
     }
 
     @Test
     fun `inserts new profile switch when nsId not found and no timestamp match`() {
         val profileSwitch = createProfileSwitch(id = 0, nsId = "ns-123", timestamp = 1000L)
 
-        `when`(profileSwitchDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(profileSwitchDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(profileSwitchDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(profileSwitchDao.findByTimestamp(1000L)).thenReturn(null)
 
         val transaction = SyncNsProfileSwitchTransaction(listOf(profileSwitch))
         transaction.database = database
@@ -48,8 +48,8 @@ class SyncNsProfileSwitchTransactionTest {
         val profileSwitch = createProfileSwitch(id = 0, nsId = "ns-123", timestamp = 1000L)
         val existing = createProfileSwitch(id = 1, nsId = null, timestamp = 1000L)
 
-        `when`(profileSwitchDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(profileSwitchDao.findByTimestamp(1000L)).thenReturn(existing)
+        whenever(profileSwitchDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(profileSwitchDao.findByTimestamp(1000L)).thenReturn(existing)
 
         val transaction = SyncNsProfileSwitchTransaction(listOf(profileSwitch))
         transaction.database = database
@@ -64,12 +64,12 @@ class SyncNsProfileSwitchTransactionTest {
 
     @Test
     fun `invalidates profile switch when valid becomes invalid`() {
-        val profileSwitch = createProfileSwitch(id = 0, nsId = "ns-123", isValid = false)
+        val profileSwitches = listOf(createProfileSwitch(id = 0, nsId = "ns-123", isValid = false))
         val existing = createProfileSwitch(id = 1, nsId = "ns-123", isValid = true)
 
-        `when`(profileSwitchDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(profileSwitchDao.findByNSId("ns-123")).thenReturn(existing)
 
-        val transaction = SyncNsProfileSwitchTransaction(listOf(profileSwitch))
+        val transaction = SyncNsProfileSwitchTransaction(profileSwitches)
         transaction.database = database
         val result = transaction.run()
 
@@ -85,8 +85,8 @@ class SyncNsProfileSwitchTransactionTest {
         val profileSwitch = createProfileSwitch(id = 0, nsId = "ns-123", timestamp = 1000L)
         val existing = createProfileSwitch(id = 1, nsId = "other-ns", timestamp = 1000L)
 
-        `when`(profileSwitchDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(profileSwitchDao.findByTimestamp(1000L)).thenReturn(existing)
+        whenever(profileSwitchDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(profileSwitchDao.findByTimestamp(1000L)).thenReturn(existing)
 
         val transaction = SyncNsProfileSwitchTransaction(listOf(profileSwitch))
         transaction.database = database
@@ -115,6 +115,7 @@ class SyncNsProfileSwitchTransactionTest {
         percentage = 100,
         duration = 0,
         interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId),
-        insulinConfiguration = InsulinConfiguration("some", 600000L, 60000L)
+        insulinConfiguration = InsulinConfiguration("some", 600000L, 60000L),
+        isValid = isValid
     ).also { it.id = id }
 }

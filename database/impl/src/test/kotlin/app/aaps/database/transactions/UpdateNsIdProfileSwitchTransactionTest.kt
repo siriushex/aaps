@@ -11,9 +11,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdProfileSwitchTransactionTest {
 
@@ -24,7 +24,7 @@ class UpdateNsIdProfileSwitchTransactionTest {
     fun setup() {
         profileSwitchDao = mock()
         database = mock()
-        `when`(database.profileSwitchDao).thenReturn(profileSwitchDao)
+        whenever(database.profileSwitchDao).thenReturn(profileSwitchDao)
     }
 
     @Test
@@ -33,7 +33,7 @@ class UpdateNsIdProfileSwitchTransactionTest {
         val current = createProfileSwitch(id = 1, nsId = "old-ns")
         val update = createProfileSwitch(id = 1, nsId = newNsId)
 
-        `when`(profileSwitchDao.findById(1)).thenReturn(current)
+        whenever(profileSwitchDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdProfileSwitchTransaction(listOf(update))
         transaction.database = database
@@ -51,7 +51,7 @@ class UpdateNsIdProfileSwitchTransactionTest {
         val current = createProfileSwitch(id = 1, nsId = sameNsId)
         val update = createProfileSwitch(id = 1, nsId = sameNsId)
 
-        `when`(profileSwitchDao.findById(1)).thenReturn(current)
+        whenever(profileSwitchDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdProfileSwitchTransaction(listOf(update))
         transaction.database = database
@@ -66,7 +66,7 @@ class UpdateNsIdProfileSwitchTransactionTest {
     fun `skips when profile switch not found`() {
         val update = createProfileSwitch(id = 999, nsId = "new-ns")
 
-        `when`(profileSwitchDao.findById(999)).thenReturn(null)
+        whenever(profileSwitchDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdProfileSwitchTransaction(listOf(update))
         transaction.database = database

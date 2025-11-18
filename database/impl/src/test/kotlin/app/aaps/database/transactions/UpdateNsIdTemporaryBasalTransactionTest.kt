@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdTemporaryBasalTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdTemporaryBasalTransactionTest {
     fun setup() {
         temporaryBasalDao = mock()
         database = mock()
-        `when`(database.temporaryBasalDao).thenReturn(temporaryBasalDao)
+        whenever(database.temporaryBasalDao).thenReturn(temporaryBasalDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdTemporaryBasalTransactionTest {
         val current = createTemporaryBasal(id = 1, nsId = "old-ns")
         val update = createTemporaryBasal(id = 1, nsId = newNsId)
 
-        `when`(temporaryBasalDao.findById(1)).thenReturn(current)
+        whenever(temporaryBasalDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdTemporaryBasalTransaction(listOf(update))
         transaction.database = database
@@ -49,7 +49,7 @@ class UpdateNsIdTemporaryBasalTransactionTest {
         val current = createTemporaryBasal(id = 1, nsId = sameNsId)
         val update = createTemporaryBasal(id = 1, nsId = sameNsId)
 
-        `when`(temporaryBasalDao.findById(1)).thenReturn(current)
+        whenever(temporaryBasalDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdTemporaryBasalTransaction(listOf(update))
         transaction.database = database
@@ -64,7 +64,7 @@ class UpdateNsIdTemporaryBasalTransactionTest {
     fun `skips when temporary basal not found`() {
         val update = createTemporaryBasal(id = 999, nsId = "new-ns")
 
-        `when`(temporaryBasalDao.findById(999)).thenReturn(null)
+        whenever(temporaryBasalDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdTemporaryBasalTransaction(listOf(update))
         transaction.database = database

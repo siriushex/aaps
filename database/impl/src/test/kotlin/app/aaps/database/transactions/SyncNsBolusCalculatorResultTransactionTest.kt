@@ -8,8 +8,8 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class SyncNsBolusCalculatorResultTransactionTest {
 
@@ -20,15 +20,15 @@ class SyncNsBolusCalculatorResultTransactionTest {
     fun setup() {
         bolusCalculatorResultDao = mock()
         database = mock()
-        `when`(database.bolusCalculatorResultDao).thenReturn(bolusCalculatorResultDao)
+        whenever(database.bolusCalculatorResultDao).thenReturn(bolusCalculatorResultDao)
     }
 
     @Test
     fun `inserts new when nsId not found and no timestamp match`() {
         val bcr = createBolusCalculatorResult(id = 0, nsId = "ns-123", timestamp = 1000L)
 
-        `when`(bolusCalculatorResultDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(bolusCalculatorResultDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(bolusCalculatorResultDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(bolusCalculatorResultDao.findByTimestamp(1000L)).thenReturn(null)
 
         val transaction = SyncNsBolusCalculatorResultTransaction(listOf(bcr))
         transaction.database = database
@@ -46,8 +46,8 @@ class SyncNsBolusCalculatorResultTransactionTest {
         val bcr = createBolusCalculatorResult(id = 0, nsId = "ns-123", timestamp = 1000L)
         val existing = createBolusCalculatorResult(id = 1, nsId = null, timestamp = 1000L)
 
-        `when`(bolusCalculatorResultDao.findByNSId("ns-123")).thenReturn(null)
-        `when`(bolusCalculatorResultDao.findByTimestamp(1000L)).thenReturn(existing)
+        whenever(bolusCalculatorResultDao.findByNSId("ns-123")).thenReturn(null)
+        whenever(bolusCalculatorResultDao.findByTimestamp(1000L)).thenReturn(existing)
 
         val transaction = SyncNsBolusCalculatorResultTransaction(listOf(bcr))
         transaction.database = database
@@ -64,7 +64,7 @@ class SyncNsBolusCalculatorResultTransactionTest {
         val bcr = createBolusCalculatorResult(id = 0, nsId = "ns-123", isValid = false)
         val existing = createBolusCalculatorResult(id = 1, nsId = "ns-123", isValid = true)
 
-        `when`(bolusCalculatorResultDao.findByNSId("ns-123")).thenReturn(existing)
+        whenever(bolusCalculatorResultDao.findByNSId("ns-123")).thenReturn(existing)
 
         val transaction = SyncNsBolusCalculatorResultTransaction(listOf(bcr))
         transaction.database = database
@@ -110,6 +110,7 @@ class SyncNsBolusCalculatorResultTransactionTest {
         percentageCorrection = 100,
         profileName = "Test",
         note = "",
-        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId)
+        interfaceIDs_backing = InterfaceIDs(nightscoutId = nsId),
+        isValid = isValid
     ).also { it.id = id }
 }

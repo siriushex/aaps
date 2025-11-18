@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateBolusCalculatorResultTransactionTest {
 
@@ -22,14 +22,14 @@ class InsertOrUpdateBolusCalculatorResultTransactionTest {
     fun setup() {
         bolusCalculatorResultDao = mock()
         database = mock()
-        `when`(database.bolusCalculatorResultDao).thenReturn(bolusCalculatorResultDao)
+        whenever(database.bolusCalculatorResultDao).thenReturn(bolusCalculatorResultDao)
     }
 
     @Test
     fun `inserts new bolus calculator result when id not found`() {
         val result = createBolusCalculatorResult(id = 1, totalInsulin = 5.0)
 
-        `when`(bolusCalculatorResultDao.findById(1)).thenReturn(null)
+        whenever(bolusCalculatorResultDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateBolusCalculatorResultTransaction(result)
         transaction.database = database
@@ -48,7 +48,7 @@ class InsertOrUpdateBolusCalculatorResultTransactionTest {
         val result = createBolusCalculatorResult(id = 1, totalInsulin = 7.5)
         val existing = createBolusCalculatorResult(id = 1, totalInsulin = 5.0)
 
-        `when`(bolusCalculatorResultDao.findById(1)).thenReturn(existing)
+        whenever(bolusCalculatorResultDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateBolusCalculatorResultTransaction(result)
         transaction.database = database
@@ -67,7 +67,7 @@ class InsertOrUpdateBolusCalculatorResultTransactionTest {
         val existing = createBolusCalculatorResult(id = 1, totalInsulin = 3.0)
         val updated = createBolusCalculatorResult(id = 1, totalInsulin = 8.0)
 
-        `when`(bolusCalculatorResultDao.findById(1)).thenReturn(existing)
+        whenever(bolusCalculatorResultDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateBolusCalculatorResultTransaction(updated)
         transaction.database = database
@@ -81,7 +81,7 @@ class InsertOrUpdateBolusCalculatorResultTransactionTest {
     fun `inserts bolus calculator result with carbs`() {
         val result = createBolusCalculatorResult(id = 1, totalInsulin = 4.0, carbs = 50.0)
 
-        `when`(bolusCalculatorResultDao.findById(1)).thenReturn(null)
+        whenever(bolusCalculatorResultDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateBolusCalculatorResultTransaction(result)
         transaction.database = database

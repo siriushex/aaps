@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateFoodTransactionTest {
 
@@ -22,14 +22,14 @@ class InsertOrUpdateFoodTransactionTest {
     fun setup() {
         foodDao = mock()
         database = mock()
-        `when`(database.foodDao).thenReturn(foodDao)
+        whenever(database.foodDao).thenReturn(foodDao)
     }
 
     @Test
     fun `inserts new food when id not found`() {
         val food = createFood(id = 1, name = "Apple", carbs = 15)
 
-        `when`(foodDao.findById(1)).thenReturn(null)
+        whenever(foodDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateFoodTransaction(food)
         transaction.database = database
@@ -48,7 +48,7 @@ class InsertOrUpdateFoodTransactionTest {
         val food = createFood(id = 1, name = "Apple", carbs = 20)
         val existing = createFood(id = 1, name = "Apple", carbs = 15)
 
-        `when`(foodDao.findById(1)).thenReturn(existing)
+        whenever(foodDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateFoodTransaction(food)
         transaction.database = database
@@ -67,7 +67,7 @@ class InsertOrUpdateFoodTransactionTest {
         val existing = createFood(id = 1, name = "Banana", carbs = 25)
         val updated = createFood(id = 1, name = "Banana", carbs = 30)
 
-        `when`(foodDao.findById(1)).thenReturn(existing)
+        whenever(foodDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateFoodTransaction(updated)
         transaction.database = database
@@ -81,7 +81,7 @@ class InsertOrUpdateFoodTransactionTest {
     fun `inserts invalid food`() {
         val food = createFood(id = 1, name = "Test", carbs = 10, isValid = false)
 
-        `when`(foodDao.findById(1)).thenReturn(null)
+        whenever(foodDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateFoodTransaction(food)
         transaction.database = database
