@@ -18,6 +18,12 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
+import app.aaps.pump.danars.comm.DanaRSPacketGeneralInitialScreenInformation
+import app.aaps.pump.danars.comm.DanaRSPacketOptionSetUserOption
+import app.aaps.pump.danars.comm.DanaRSPacketBolusSetStepBolusStop
+import app.aaps.pump.danars.comm.DanaRSPacketAPSBasalSetTemporaryBasal
+import app.aaps.pump.danars.comm.DanaRSPacketBasalSetCancelTemporaryBasal
+import javax.inject.Provider
 
 class DanaRSServiceTest : TestBaseWithProfile() {
 
@@ -29,6 +35,16 @@ class DanaRSServiceTest : TestBaseWithProfile() {
     @Mock lateinit var bleComm: BLEComm
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var pumpEnactResult: PumpEnactResult
+    @Mock lateinit var danaRSPacketGeneralInitialScreenInformationProvider: Provider<DanaRSPacketGeneralInitialScreenInformation>
+    @Mock lateinit var danaRSPacketOptionSetUserOptionProvider: Provider<DanaRSPacketOptionSetUserOption>
+    @Mock lateinit var danaRSPacketBolusSetStepBolusStopProvider: Provider<DanaRSPacketBolusSetStepBolusStop>
+    @Mock lateinit var danaRSPacketAPSBasalSetTemporaryBasalProvider: Provider<DanaRSPacketAPSBasalSetTemporaryBasal>
+    @Mock lateinit var danaRSPacketBasalSetCancelTemporaryBasalProvider: Provider<DanaRSPacketBasalSetCancelTemporaryBasal>
+    @Mock lateinit var packetGeneralInitialScreenInfo: DanaRSPacketGeneralInitialScreenInformation
+    @Mock lateinit var packetOptionSetUserOption: DanaRSPacketOptionSetUserOption
+    @Mock lateinit var packetBolusSetStepBolusStop: DanaRSPacketBolusSetStepBolusStop
+    @Mock lateinit var packetAPSBasalSetTemporaryBasal: DanaRSPacketAPSBasalSetTemporaryBasal
+    @Mock lateinit var packetBasalSetCancelTemporaryBasal: DanaRSPacketBasalSetCancelTemporaryBasal
 
     private lateinit var danaRSService: DanaRSService
 
@@ -53,11 +69,29 @@ class DanaRSServiceTest : TestBaseWithProfile() {
         danaRSService.pumpSync = pumpSync
         danaRSService.dateUtil = dateUtil
         danaRSService.pumpEnactResultProvider = pumpEnactResultProvider
+        danaRSService.danaRSPacketGeneralInitialScreenInformation = danaRSPacketGeneralInitialScreenInformationProvider
+        danaRSService.danaRSPacketOptionSetUserOption = danaRSPacketOptionSetUserOptionProvider
+        danaRSService.danaRSPacketBolusSetStepBolusStop = danaRSPacketBolusSetStepBolusStopProvider
+        danaRSService.danaRSPacketAPSBasalSetTemporaryBasal = danaRSPacketAPSBasalSetTemporaryBasalProvider
+        danaRSService.danaRSPacketBasalSetCancelTemporaryBasal = danaRSPacketBasalSetCancelTemporaryBasalProvider
 
         `when`(rh.gs(anyInt())).thenReturn("test string")
         `when`(rh.gs(anyInt(), any())).thenReturn("test string")
         `when`(activePlugin.activePump).thenReturn(danaRSPlugin)
         `when`(danaRSPlugin.pumpDescription).thenReturn(mockPumpDescription())
+
+        // Setup packet providers
+        `when`(danaRSPacketGeneralInitialScreenInformationProvider.get()).thenReturn(packetGeneralInitialScreenInfo)
+        `when`(danaRSPacketOptionSetUserOptionProvider.get()).thenReturn(packetOptionSetUserOption)
+        `when`(danaRSPacketBolusSetStepBolusStopProvider.get()).thenReturn(packetBolusSetStepBolusStop)
+        `when`(danaRSPacketAPSBasalSetTemporaryBasalProvider.get()).thenReturn(packetAPSBasalSetTemporaryBasal)
+        `when`(danaRSPacketBasalSetCancelTemporaryBasalProvider.get()).thenReturn(packetBasalSetCancelTemporaryBasal)
+
+        // Setup packet behavior
+        `when`(packetGeneralInitialScreenInfo.failed).thenReturn(true)
+        `when`(packetOptionSetUserOption.success()).thenReturn(true)
+        `when`(packetAPSBasalSetTemporaryBasal.with(anyInt())).thenReturn(packetAPSBasalSetTemporaryBasal)
+        `when`(packetAPSBasalSetTemporaryBasal.success()).thenReturn(false)
     }
 
     @Test
