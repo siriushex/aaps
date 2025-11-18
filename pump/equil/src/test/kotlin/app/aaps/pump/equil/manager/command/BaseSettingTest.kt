@@ -2,6 +2,7 @@ package app.aaps.pump.equil.manager.command
 
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.keys.interfaces.Preferences
+import app.aaps.core.keys.interfaces.StringPreferenceKey
 import app.aaps.pump.equil.database.EquilHistoryRecord
 import app.aaps.pump.equil.manager.AESUtil
 import app.aaps.pump.equil.manager.EquilManager
@@ -63,7 +64,7 @@ class BaseSettingTest {
         MockitoAnnotations.openMocks(this)
 
         // Mock preferences to return test values
-        `when`(preferences.get(any())).thenReturn("")
+        `when`(preferences.get(any<StringPreferenceKey>())).thenReturn("")
 
         testSetting = TestBaseSetting()
     }

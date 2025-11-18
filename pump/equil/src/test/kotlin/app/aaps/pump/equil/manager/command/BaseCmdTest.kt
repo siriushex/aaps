@@ -1,10 +1,10 @@
 package app.aaps.pump.equil.manager.command
 
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.equil.database.EquilHistoryRecord
 import app.aaps.pump.equil.manager.EquilManager
 import app.aaps.pump.equil.manager.EquilResponse
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -13,16 +13,10 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 
-class BaseCmdTest {
+class BaseCmdTest : TestBase() {
 
-    @Mock
-    private lateinit var aapsLogger: AAPSLogger
-
-    @Mock
-    private lateinit var preferences: Preferences
-
-    @Mock
-    private lateinit var equilManager: EquilManager
+    @Mock private lateinit var preferences: Preferences
+    @Mock private lateinit var equilManager: EquilManager
 
     private lateinit var testCmd: TestCmd
 
