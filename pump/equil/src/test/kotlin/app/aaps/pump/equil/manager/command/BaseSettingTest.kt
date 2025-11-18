@@ -160,10 +160,10 @@ class BaseSettingTest : TestBaseWithProfile() {
     }
 
     @Test
-    fun `getReqData should call getFirstData`() {
+    fun `getReqData should not call getFirstData`() {
         val result = testSetting.getReqData()
 
-        assertTrue(testSetting.firstDataCalled)
+        assertFalse(testSetting.firstDataCalled)
         assertNotNull(result)
     }
 
