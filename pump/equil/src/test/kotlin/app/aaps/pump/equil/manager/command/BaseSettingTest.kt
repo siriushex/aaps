@@ -1,7 +1,7 @@
 package app.aaps.pump.equil.manager.command
 
-import app.aaps.core.keys.interfaces.StringPreferenceKey
 import app.aaps.pump.equil.database.EquilHistoryRecord
+import app.aaps.pump.equil.keys.EquilStringKey
 import app.aaps.pump.equil.manager.EquilManager
 import app.aaps.shared.tests.TestBaseWithProfile
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -50,8 +50,10 @@ class BaseSettingTest : TestBaseWithProfile() {
 
     @BeforeEach
     fun setUp() {
-        // Mock preferences to return test values
-        whenever(preferences.get(any<StringPreferenceKey>())).thenReturn("")
+        // Mock preferences to return valid hex strings for device and password
+        // Device needs to be a valid hex string, Password needs to be 64 chars (32 bytes)
+        whenever(preferences.get(EquilStringKey.Device)).thenReturn("0123456789ABCDEF")
+        whenever(preferences.get(EquilStringKey.Password)).thenReturn("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF")
 
         testSetting = TestBaseSetting()
     }
@@ -147,9 +149,4 @@ class BaseSettingTest : TestBaseWithProfile() {
         assertEquals(15000, testSetting.connectTimeOut)
     }
 
-    // Helper method for mockito any() matcher
-    private fun <T> any(): T {
-        org.mockito.Mockito.any<T>()
-        return null as T
-    }
 }
