@@ -64,7 +64,7 @@ class CancelCurrentTemporaryRunningModeIfAnyTransactionTest {
         duration: Long
     ): RunningMode = RunningMode(
         timestamp = timestamp,
-        mode = RunningMode.Mode.OPEN,
+        mode = RunningMode.Mode.OPEN_LOOP,
         duration = duration,
         interfaceIDs_backing = InterfaceIDs()
     )
