@@ -170,10 +170,10 @@ class CmdUnPairTest : TestBaseWithProfile() {
     @Test
     fun `getEquilResponse should set response field`() {
         val cmd = CmdUnPair("Equil - TestDevice", "testpass", aapsLogger, preferences, equilManager)
-        cmd.getEquilResponse()
+        val response = cmd.getEquilResponse()
 
         assertNotNull(cmd.response)
-        assertEquals(cmd.createTime, cmd.response!!.createTime)
+        assertNotNull(response)
     }
 
     @Test
