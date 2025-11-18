@@ -22,6 +22,9 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
     implementation(project(":pump:eopatch:core"))
+    implementation(project(":core:validators"))
+
+    testImplementation(project(":shared:tests"))
 
     api(libs.com.google.guava)
 
@@ -29,7 +32,6 @@ dependencies {
     api(libs.io.reactivex.rxjava3.rxandroid)
     api(libs.com.polidea.rxandroidble3)
     api(libs.com.jakewharton.rx3.replaying.share)
-    implementation(project(":core:validators"))
 
     kapt(libs.com.google.dagger.compiler)
     kapt(libs.com.google.dagger.android.processor)
