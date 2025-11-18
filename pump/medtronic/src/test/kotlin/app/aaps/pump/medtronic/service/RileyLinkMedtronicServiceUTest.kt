@@ -73,7 +73,7 @@ class RileyLinkMedtronicServiceUTest : TestBaseWithProfile() {
     private fun setupValidConfiguration() {
         whenever(preferences.get(MedtronicStringPreferenceKey.Serial)).thenReturn("123456")
         whenever(preferences.get(MedtronicStringPreferenceKey.PumpType)).thenReturn("522")
-        whenever(preferences.get(MedtronicStringPreferenceKey.PumpFrequency)).thenReturn("US & Canada (916 MHz)")
+        whenever(preferences.get(MedtronicStringPreferenceKey.PumpFrequency)).thenReturn("medtronic_pump_frequency_us_ca")
         whenever(preferences.get(RileyLinkStringPreferenceKey.MacAddress)).thenReturn("AA:BB:CC:DD:EE:FF")
         whenever(preferences.get(RileyLinkStringKey.Name)).thenReturn("RileyLink")
         whenever(preferences.get(MedtronicIntPreferenceKey.MaxBolus)).thenReturn(10)
@@ -309,12 +309,12 @@ class RileyLinkMedtronicServiceUTest : TestBaseWithProfile() {
         setupValidConfiguration()
 
         // Test US frequency
-        whenever(preferences.get(MedtronicStringPreferenceKey.PumpFrequency)).thenReturn("US & Canada (916 MHz)")
+        whenever(preferences.get(MedtronicStringPreferenceKey.PumpFrequency)).thenReturn("medtronic_pump_frequency_us_ca")
         service.verifyConfiguration(forceRileyLinkAddressRenewal = false)
         assertThat(rileyLinkServiceData.rileyLinkTargetFrequency).isEqualTo(RileyLinkTargetFrequency.MedtronicUS)
 
         // Test Worldwide frequency
-        whenever(preferences.get(MedtronicStringPreferenceKey.PumpFrequency)).thenReturn("Worldwide (868 Mhz)")
+        whenever(preferences.get(MedtronicStringPreferenceKey.PumpFrequency)).thenReturn("medtronic_pump_frequency_worldwide")
         service.verifyConfiguration(forceRileyLinkAddressRenewal = false)
         assertThat(rileyLinkServiceData.rileyLinkTargetFrequency).isEqualTo(RileyLinkTargetFrequency.MedtronicWorldWide)
     }
