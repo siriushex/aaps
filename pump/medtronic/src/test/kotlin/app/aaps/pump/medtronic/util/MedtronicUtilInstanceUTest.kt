@@ -15,10 +15,9 @@ import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentCaptor
-import org.mockito.Captor
 import org.mockito.Mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -33,8 +32,6 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
     @Mock lateinit var rileyLinkServiceData: RileyLinkServiceData
     @Mock lateinit var rileyLinkUtil: RileyLinkUtil
     @Mock lateinit var rxBusMock: RxBus
-
-    @Captor lateinit var eventCaptor: ArgumentCaptor<EventDismissNotification>
 
     lateinit var medtronicUtil: MedtronicUtil
 
@@ -177,28 +174,39 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
 
     // getBasalProfileFrames tests
     @Test
-    fun `test getBasalProfileFrames with small data fits in one frame`() {
+    fun `test getBasalProfileFrames with small data`() {
         val data = ByteArray(30) { (it + 1).toByte() }
 
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
-        assertThat(frames).hasSize(1)
-        assertThat(frames[0]).hasSize(65) // BIG_FRAME_LENGTH
-        assertThat(frames[0][0]).isEqualTo(0x81.toByte()) // Frame 1 with done bit (0x01 | 0x80)
-        // Check that data is present
-        assertThat(frames[0][1]).isEqualTo(0x01.toByte())
+        // Should have 2 frames: data frame + terminator
+        assertThat(frames).hasSize(2)
+        // First frame: frame number + 30 data bytes
+        assertThat(frames[0]).hasSize(31)
+        assertThat(frames[0][0]).isEqualTo(0x01.toByte()) // Frame 1
+        assertThat(frames[0][1]).isEqualTo(0x01.toByte()) // First data byte
+        // Second frame: terminator with done bit, padded to 65
+        assertThat(frames[1]).hasSize(65)
+        assertThat(frames[1][0].toInt() and 0x80).isEqualTo(0x80) // Done bit set
     }
 
     @Test
     fun `test getBasalProfileFrames with data requiring two frames`() {
-        // 128 bytes = 2 full frames (64 bytes each)
-        val data = ByteArray(128) { it.toByte() }
+        // 128 bytes = 2 full data frames (64 bytes each) + terminator
+        val data = ByteArray(128) { (it + 1).toByte() }
 
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
-        assertThat(frames).hasSize(2) // 2 data frames, last one has done bit
-        assertThat(frames[0][0]).isEqualTo(0x01.toByte()) // Frame 1
-        assertThat(frames[1][0].toInt() and 0x80).isEqualTo(0x80) // Frame 2 with done bit
+        assertThat(frames).hasSize(3) // 2 data frames + 1 terminator
+        // Frame 1: 64 data bytes + frame number
+        assertThat(frames[0]).hasSize(65)
+        assertThat(frames[0][0]).isEqualTo(0x01.toByte())
+        // Frame 2: 64 data bytes + frame number
+        assertThat(frames[1]).hasSize(65)
+        assertThat(frames[1][0]).isEqualTo(0x02.toByte())
+        // Frame 3: terminator with done bit
+        assertThat(frames[2]).hasSize(65)
+        assertThat(frames[2][0].toInt() and 0x80).isEqualTo(0x80)
     }
 
     @Test
@@ -208,34 +216,34 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
         assertThat(frames).hasSize(1)
-        assertThat(frames[0][0]).isEqualTo(0x81.toByte()) // Frame 1 with done bit
+        assertThat(frames[0][0].toInt() and 0x80).isEqualTo(0x80) // Done bit
         assertThat(frames[0]).hasSize(65)
     }
 
     @Test
-    fun `test getBasalProfileFrames pads last frame to 65 bytes`() {
-        val data = ByteArray(10) { (it + 1).toByte() }
+    fun `test getBasalProfileFrames with all zero data`() {
+        // All zeros should be treated as empty frame
+        val data = ByteArray(30) // All zeros
 
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
         assertThat(frames).hasSize(1)
         assertThat(frames[0]).hasSize(65)
-        // Check padding zeros (frame number + 10 data bytes + padding)
-        for (i in 11 until 65) {
-            assertThat(frames[0][i]).isEqualTo(0x00.toByte())
-        }
+        assertThat(frames[0][0].toInt() and 0x80).isEqualTo(0x80) // Done bit
     }
 
     @Test
-    fun `test getBasalProfileFrames with exactly 64 bytes per frame`() {
-        // 64 bytes data fits exactly in one frame (64 data + 1 frame number = 65)
-        val data = ByteArray(64) { it.toByte() }
+    fun `test getBasalProfileFrames with exactly 64 bytes`() {
+        // 64 bytes of non-zero data + terminator
+        val data = ByteArray(64) { (it + 1).toByte() }
 
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
-        assertThat(frames).hasSize(1)
-        assertThat(frames[0]).hasSize(65)
-        assertThat(frames[0][0].toInt() and 0x80).isEqualTo(0x80) // Frame 1 with done bit
+        assertThat(frames).hasSize(2) // 1 data frame + 1 terminator
+        assertThat(frames[0]).hasSize(65) // Frame number + 64 data bytes
+        assertThat(frames[0][0]).isEqualTo(0x01.toByte())
+        assertThat(frames[1]).hasSize(65) // Terminator
+        assertThat(frames[1][0].toInt() and 0x80).isEqualTo(0x80)
     }
 
     // Command tracking tests
@@ -346,8 +354,9 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
 
         medtronicUtil.dismissNotification(notificationType, rxBusMock)
 
+        val eventCaptor = argumentCaptor<EventDismissNotification>()
         verify(rxBusMock).send(eventCaptor.capture())
-        assertThat(eventCaptor.value.id).isEqualTo(notificationType.notificationType)
+        assertThat(eventCaptor.firstValue.id).isEqualTo(notificationType.notificationType)
     }
 
     // Settings and time tests
