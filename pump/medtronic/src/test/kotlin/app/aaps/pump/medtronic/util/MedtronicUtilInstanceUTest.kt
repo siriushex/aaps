@@ -362,13 +362,21 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
         assertThat(medtronicUtil.settings).isNull()
 
         val settings = mapOf(
-            "maxBolus" to app.aaps.pump.medtronic.data.dto.PumpSettingDTO("id1", "Max Bolus", "10.0"),
-            "maxBasal" to app.aaps.pump.medtronic.data.dto.PumpSettingDTO("id2", "Max Basal", "5.0")
+            "PCFG_MAX_BOLUS" to app.aaps.pump.medtronic.data.dto.PumpSettingDTO(
+                "PCFG_MAX_BOLUS",
+                "10.0",
+                app.aaps.pump.medtronic.defs.PumpConfigurationGroup.Insulin
+            ),
+            "PCFG_MAX_BASAL" to app.aaps.pump.medtronic.data.dto.PumpSettingDTO(
+                "PCFG_MAX_BASAL",
+                "5.0",
+                app.aaps.pump.medtronic.defs.PumpConfigurationGroup.Basal
+            )
         )
         medtronicUtil.settings = settings
 
         assertThat(medtronicUtil.settings).isEqualTo(settings)
-        assertThat(medtronicUtil.settings!!["maxBolus"]?.value).isEqualTo("10.0")
+        assertThat(medtronicUtil.settings!!["PCFG_MAX_BOLUS"]?.value).isEqualTo("10.0")
     }
 
     @Test
