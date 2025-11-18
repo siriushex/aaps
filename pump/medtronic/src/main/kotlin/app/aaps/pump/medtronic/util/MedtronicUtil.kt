@@ -201,6 +201,7 @@ class MedtronicUtil @Inject constructor(
             // b |= doneBit;
             frameData.add(b)
             checkAndAppendLastFrame(frameData)
+            frames.add(frameData)
         }
         return frames
     }

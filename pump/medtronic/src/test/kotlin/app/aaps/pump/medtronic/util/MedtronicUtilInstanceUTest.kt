@@ -323,7 +323,7 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
     @Test
     fun `test sendNotification calls uiInteraction`() {
         val notificationType = MedtronicNotificationType.PumpUnreachable
-        whenever(rh.gs(eq(notificationType.resourceId), eq("param1"), eq("param2"))).thenReturn("Test notification")
+        whenever(rh.gs(notificationType.resourceId, "param1", "param2")).thenReturn("Test notification")
 
         medtronicUtil.sendNotification(notificationType, rh, "param1", "param2")
 
@@ -337,7 +337,9 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
     @Test
     fun `test sendNotification with no parameters`() {
         val notificationType = MedtronicNotificationType.PumpUnreachable
-        whenever(rh.gs(eq(notificationType.resourceId))).thenReturn("Simple notification")
+        // When no varargs are passed, the method is called with just the resourceId
+        // But since the signature has vararg, we need to mock it without matchers
+        whenever(rh.gs(notificationType.resourceId)).thenReturn("Simple notification")
 
         medtronicUtil.sendNotification(notificationType, rh)
 
