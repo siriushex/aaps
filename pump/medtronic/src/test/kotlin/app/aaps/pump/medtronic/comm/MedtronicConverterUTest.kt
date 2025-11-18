@@ -106,7 +106,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
     @Test
     fun `test decodeRemainingInsulin with 10 stroke pump`() {
         whenever(medtronicUtil.medtronicPumpModel).thenReturn(MedtronicDeviceType.Medtronic_522_722)
-        val data = ByteUtil.createByteArrayFromString("32 00") // 0x32 = 50
+        val data = ByteUtil.createByteArrayFromString("00 32") // 0x0032 = 50
 
         val remaining = converter.decodeRemainingInsulin(data)
 
@@ -116,7 +116,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
     @Test
     fun `test decodeRemainingInsulin with 40 stroke pump`() {
         whenever(medtronicUtil.medtronicPumpModel).thenReturn(MedtronicDeviceType.Medtronic_554_Veo)
-        val data = ByteUtil.createByteArrayFromString("00 00 C8 00") // Skip 2 bytes, 0x00C8 = 200
+        val data = ByteUtil.createByteArrayFromString("00 00 00 C8") // Skip 2 bytes, 0x00C8 = 200
 
         val remaining = converter.decodeRemainingInsulin(data)
 
@@ -210,14 +210,14 @@ class MedtronicConverterUTest : MedtronicTestBase() {
         val data = ByteUtil.createByteArrayFromString(
             "08 02 01 0A 01 32 00 28 01 00 01 00 01 00 " +
             "01 " +      // [14] Temp basal type: Percent (1 = percent)
-            "C8 " +      // [15] Temp basal percent: 200%
+            "78 " +      // [15] Temp basal percent: 120%
             "01 00 00 0A 00 01 00 01 00"
         )
 
         val settings = converter.decodeSettings(data)
 
         assertThat(settings["PCFG_TEMP_BASAL_TYPE"]?.value).isEqualTo("Percent")
-        assertThat(settings["PCFG_TEMP_BASAL_PERCENT"]?.value).isEqualTo("200")
+        assertThat(settings["PCFG_TEMP_BASAL_PERCENT"]?.value).isEqualTo("120")
     }
 
     @Test
