@@ -100,8 +100,8 @@ class PumpEventTest : TestBaseWithProfile() {
     fun `init should populate lists with correct number of events`() {
         PumpEvent.init(rh)
 
-        // Should have 18 events (based on init method)
-        assertEquals(18, PumpEvent.lists.size)
+        // Should have 19 events (1 default event + 18 resource string events)
+        assertEquals(19, PumpEvent.lists.size)
     }
 
     @Test
@@ -189,7 +189,7 @@ class PumpEventTest : TestBaseWithProfile() {
         val size2 = PumpEvent.lists.size
 
         assertEquals(size1, size2)
-        assertEquals(18, size2)
+        assertEquals(19, size2)
     }
 
     @Test
