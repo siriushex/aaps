@@ -152,8 +152,8 @@ class CmdDevicesOldGetTest : TestBaseWithProfile() {
     fun `decodeConfirmData should parse firmware version correctly`() {
         val cmd = CmdDevicesOldGet("00:11:22:33:44:55", aapsLogger, preferences, equilManager)
         val testData = ByteArray(20)
-        testData[18] = 2
-        testData[19] = 10
+        testData[18] = 5
+        testData[19] = 5
 
         val thread = Thread {
             cmd.decodeConfirmData(testData)
@@ -162,7 +162,7 @@ class CmdDevicesOldGetTest : TestBaseWithProfile() {
         thread.join(1000)
 
         assertTrue(cmd.cmdSuccess)
-        assertTrue(cmd.isSupport()) // 2.10 should be supported
+        assertTrue(cmd.isSupport()) // 5.5 should be supported (>= 5.3)
     }
 
     @Test
