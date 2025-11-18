@@ -98,7 +98,7 @@ class SmsCommunicatorPluginTest : TestBaseWithProfile() {
             otp, config, dateUtilMocked, uel,
             smbGlucoseStatusProvider, persistenceLayer, decimalFormatter, configBuilder, authRequestProvider, pumpStatusProvider
         )
-        smsCommunicatorPlugin.setPluginEnabled(PluginType.GENERAL, true)
+        smsCommunicatorPlugin.setPluginEnabledBlocking(PluginType.GENERAL, true)
         doAnswer { invocation: InvocationOnMock ->
             val callback = invocation.getArgument<Callback>(2)
             callback.result = pumpEnactResultProvider.get().success(true)

@@ -696,7 +696,7 @@ internal class NSClientV3PluginTest : TestBaseWithProfile() {
         // Assert
         // Verify that the call was passed through to the nsClientV3Service with the correct parameters.
         verify(nsClientV3Service).handleClearAlarm(mockAlarm, silenceDuration)
-        sut.setPluginEnabled(PluginType.SYNC, false)
+        sut.setPluginEnabledBlocking(PluginType.SYNC, false)
     }
 
     @Test
@@ -710,7 +710,7 @@ internal class NSClientV3PluginTest : TestBaseWithProfile() {
         whenever(preferences.get(NsclientStringKey.V3LastModified)).thenReturn(lastModified)
         whenever(preferences.get(BooleanKey.NsClientUploadData)).thenReturn(true) // Upload is still enabled
         whenever(receiverDelegate.blockingReason).thenReturn("Block")
-        sut.setPluginEnabled(PluginType.SYNC, false)
+        sut.setPluginEnabledBlocking(PluginType.SYNC, false)
 
         // Act
         sut.handleClearAlarm(mockAlarm, silenceDuration)

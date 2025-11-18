@@ -192,7 +192,7 @@ Safety: Limiting max basal rate to 500.00 U/h because of pump limit
         whenever(preferences.get(DoubleKey.ApsMaxCurrentBasalMultiplier)).thenReturn(4.0)
         whenever(preferences.get(DoubleKey.ApsMaxDailyMultiplier)).thenReturn(3.0)
         whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
-        openAPSSMBPlugin.setPluginEnabled(PluginType.APS, true)
+        openAPSSMBPlugin.setPluginEnabledBlocking(PluginType.APS, true)
         val i = ConstraintObject(Double.MAX_VALUE, aapsLogger)
         openAPSSMBPlugin.applyBasalConstraints(i, validProfile)
         assertThat(i.value()).isWithin(0.01).of(1.0)
@@ -260,8 +260,8 @@ Safety: Limiting max basal rate to 500.00 U/h because of pump limit
 
     @Test
     fun iobShouldBeLimited() {
-        openAPSAMAPlugin.setPluginEnabled(PluginType.APS, true)
-        openAPSSMBPlugin.setPluginEnabled(PluginType.APS, true)
+        openAPSAMAPlugin.setPluginEnabledBlocking(PluginType.APS, true)
+        openAPSSMBPlugin.setPluginEnabledBlocking(PluginType.APS, true)
         //whenever(openAPSSMBPlugin.isEnabled()).thenReturn(true)
         //whenever(openAPSAMAPlugin.isEnabled()).thenReturn(false)
         whenever(loop.runningMode).thenReturn(RM.Mode.CLOSED_LOOP_LGS)
