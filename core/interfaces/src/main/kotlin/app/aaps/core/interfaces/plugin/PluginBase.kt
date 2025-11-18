@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import org.jetbrains.annotations.TestOnly
 
 /**
  * Created by mike on 09.06.2016.
@@ -102,6 +103,7 @@ abstract class PluginBase(
      * Version of setPluginEnabled used for testing only.
      * OnStart/OnStop is called directly.
      */
+    @TestOnly
     fun setPluginEnabledBlocking(type: PluginType, newState: Boolean) {
         if (type == pluginDescription.mainType) {
             if (newState) { // enabling plugin
