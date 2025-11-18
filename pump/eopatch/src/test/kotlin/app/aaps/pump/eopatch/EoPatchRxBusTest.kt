@@ -85,14 +85,14 @@ class EoPatchRxBusTest {
     @Test
     fun `should not receive events after unsubscribe`() {
         val testObserver = TestObserver<TestEvent1>()
-        val disposable = EoPatchRxBus.listen(TestEvent1::class.java).subscribe(testObserver)
+        EoPatchRxBus.listen(TestEvent1::class.java).subscribe(testObserver)
 
         val event1 = TestEvent1("before unsubscribe")
         EoPatchRxBus.publish(event1)
 
         testObserver.assertValue(event1)
 
-        disposable.dispose()
+        testObserver.dispose()
 
         val event2 = TestEvent1("after unsubscribe")
         EoPatchRxBus.publish(event2)
