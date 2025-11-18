@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateGlucoseValueTransactionTest {
 
@@ -22,14 +22,14 @@ class InvalidateGlucoseValueTransactionTest {
     fun setup() {
         glucoseValueDao = mock()
         database = mock()
-        `when`(database.glucoseValueDao).thenReturn(glucoseValueDao)
+        whenever(database.glucoseValueDao).thenReturn(glucoseValueDao)
     }
 
     @Test
     fun `invalidates valid glucose value`() {
         val gv = createGlucoseValue(id = 1, isValid = true)
 
-        `when`(glucoseValueDao.findById(1)).thenReturn(gv)
+        whenever(glucoseValueDao.findById(1)).thenReturn(gv)
 
         val transaction = InvalidateGlucoseValueTransaction(id = 1)
         transaction.database = database
@@ -45,7 +45,7 @@ class InvalidateGlucoseValueTransactionTest {
     fun `does not update already invalid glucose value`() {
         val gv = createGlucoseValue(id = 1, isValid = false)
 
-        `when`(glucoseValueDao.findById(1)).thenReturn(gv)
+        whenever(glucoseValueDao.findById(1)).thenReturn(gv)
 
         val transaction = InvalidateGlucoseValueTransaction(id = 1)
         transaction.database = database
@@ -58,7 +58,7 @@ class InvalidateGlucoseValueTransactionTest {
 
     @Test
     fun `throws exception when glucose value not found`() {
-        `when`(glucoseValueDao.findById(999)).thenReturn(null)
+        whenever(glucoseValueDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateGlucoseValueTransaction(id = 999)
         transaction.database = database

@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdCarbsTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdCarbsTransactionTest {
     fun setup() {
         carbsDao = mock()
         database = mock()
-        `when`(database.carbsDao).thenReturn(carbsDao)
+        whenever(database.carbsDao).thenReturn(carbsDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdCarbsTransactionTest {
         val current = createCarbs(id = 1, nsId = "old-ns")
         val update = createCarbs(id = 1, nsId = newNsId)
 
-        `when`(carbsDao.findById(1)).thenReturn(current)
+        whenever(carbsDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdCarbsTransaction(listOf(update))
         transaction.database = database
@@ -50,7 +50,7 @@ class UpdateNsIdCarbsTransactionTest {
         val current = createCarbs(id = 1, nsId = sameNsId)
         val update = createCarbs(id = 1, nsId = sameNsId)
 
-        `when`(carbsDao.findById(1)).thenReturn(current)
+        whenever(carbsDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdCarbsTransaction(listOf(update))
         transaction.database = database
@@ -65,7 +65,7 @@ class UpdateNsIdCarbsTransactionTest {
     fun `skips when carbs not found`() {
         val update = createCarbs(id = 999, nsId = "new-ns")
 
-        `when`(carbsDao.findById(999)).thenReturn(null)
+        whenever(carbsDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdCarbsTransaction(listOf(update))
         transaction.database = database
@@ -83,8 +83,8 @@ class UpdateNsIdCarbsTransactionTest {
         val update1 = createCarbs(id = 1, nsId = "new-1")
         val update2 = createCarbs(id = 2, nsId = "new-2")
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs1)
-        `when`(carbsDao.findById(2)).thenReturn(carbs2)
+        whenever(carbsDao.findById(1)).thenReturn(carbs1)
+        whenever(carbsDao.findById(2)).thenReturn(carbs2)
 
         val transaction = UpdateNsIdCarbsTransaction(listOf(update1, update2))
         transaction.database = database
@@ -115,7 +115,7 @@ class UpdateNsIdCarbsTransactionTest {
         val current = createCarbs(id = 1, nsId = "old", amount = amount)
         val update = createCarbs(id = 1, nsId = "new")
 
-        `when`(carbsDao.findById(1)).thenReturn(current)
+        whenever(carbsDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdCarbsTransaction(listOf(update))
         transaction.database = database
@@ -129,7 +129,7 @@ class UpdateNsIdCarbsTransactionTest {
         val current = createCarbs(id = 1, nsId = null)
         val update = createCarbs(id = 1, nsId = "new-ns")
 
-        `when`(carbsDao.findById(1)).thenReturn(current)
+        whenever(carbsDao.findById(1)).thenReturn(current)
 
         val transaction = UpdateNsIdCarbsTransaction(listOf(update))
         transaction.database = database

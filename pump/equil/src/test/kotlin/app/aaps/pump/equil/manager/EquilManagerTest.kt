@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 
 class EquilManagerTest : TestBaseWithProfile() {
 
@@ -33,12 +33,12 @@ class EquilManagerTest : TestBaseWithProfile() {
     fun setUp() {
 
         // Mock resource strings
-        `when`(rh.gs(R.string.equil_history_item3)).thenReturn("Error 1")
-        `when`(rh.gs(R.string.equil_history_item4)).thenReturn("Error 2")
-        `when`(rh.gs(R.string.equil_history_item5)).thenReturn("Error 3")
-        `when`(rh.gs(R.string.equil_shutdown_be)).thenReturn("Shutdown BE")
-        `when`(rh.gs(R.string.equil_shutdown)).thenReturn("Shutdown")
-        `when`(rh.gs(R.string.equil_history_item18)).thenReturn("Error 6")
+        whenever(rh.gs(R.string.equil_history_item3)).thenReturn("Error 1")
+        whenever(rh.gs(R.string.equil_history_item4)).thenReturn("Error 2")
+        whenever(rh.gs(R.string.equil_history_item5)).thenReturn("Error 3")
+        whenever(rh.gs(R.string.equil_shutdown_be)).thenReturn("Shutdown BE")
+        whenever(rh.gs(R.string.equil_shutdown)).thenReturn("Shutdown")
+        whenever(rh.gs(R.string.equil_history_item18)).thenReturn("Error 6")
 
         equilManager = EquilManager(
             aapsLogger,

@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateCarbsTransactionTest {
 
@@ -22,14 +22,14 @@ class InvalidateCarbsTransactionTest {
     fun setup() {
         carbsDao = mock()
         database = mock()
-        `when`(database.carbsDao).thenReturn(carbsDao)
+        whenever(database.carbsDao).thenReturn(carbsDao)
     }
 
     @Test
     fun `invalidates valid carbs`() {
         val carbs = createCarbs(id = 1, isValid = true, amount = 50.0)
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val transaction = InvalidateCarbsTransaction(id = 1)
         transaction.database = database
@@ -46,7 +46,7 @@ class InvalidateCarbsTransactionTest {
     fun `does not update already invalid carbs`() {
         val carbs = createCarbs(id = 1, isValid = false, amount = 50.0)
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val transaction = InvalidateCarbsTransaction(id = 1)
         transaction.database = database
@@ -60,7 +60,7 @@ class InvalidateCarbsTransactionTest {
 
     @Test
     fun `throws exception when carbs not found`() {
-        `when`(carbsDao.findById(999)).thenReturn(null)
+        whenever(carbsDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateCarbsTransaction(id = 999)
         transaction.database = database
@@ -87,7 +87,7 @@ class InvalidateCarbsTransactionTest {
         val timestamp = 123456789L
         val carbs = createCarbs(id = 1, isValid = true, amount = amount, timestamp = timestamp)
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val transaction = InvalidateCarbsTransaction(id = 1)
         transaction.database = database
@@ -102,7 +102,7 @@ class InvalidateCarbsTransactionTest {
     fun `invalidates extended carbs with duration`() {
         val carbs = createCarbs(id = 1, isValid = true, amount = 50.0, duration = 120_000L)
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val transaction = InvalidateCarbsTransaction(id = 1)
         transaction.database = database

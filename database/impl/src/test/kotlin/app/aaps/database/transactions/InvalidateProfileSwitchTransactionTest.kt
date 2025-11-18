@@ -11,9 +11,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateProfileSwitchTransactionTest {
 
@@ -24,14 +24,14 @@ class InvalidateProfileSwitchTransactionTest {
     fun setup() {
         profileSwitchDao = mock()
         database = mock()
-        `when`(database.profileSwitchDao).thenReturn(profileSwitchDao)
+        whenever(database.profileSwitchDao).thenReturn(profileSwitchDao)
     }
 
     @Test
     fun `invalidates valid profile switch`() {
         val ps = createProfileSwitch(id = 1, isValid = true)
 
-        `when`(profileSwitchDao.findById(1)).thenReturn(ps)
+        whenever(profileSwitchDao.findById(1)).thenReturn(ps)
 
         val transaction = InvalidateProfileSwitchTransaction(id = 1)
         transaction.database = database
@@ -47,7 +47,7 @@ class InvalidateProfileSwitchTransactionTest {
     fun `does not update already invalid profile switch`() {
         val ps = createProfileSwitch(id = 1, isValid = false)
 
-        `when`(profileSwitchDao.findById(1)).thenReturn(ps)
+        whenever(profileSwitchDao.findById(1)).thenReturn(ps)
 
         val transaction = InvalidateProfileSwitchTransaction(id = 1)
         transaction.database = database
@@ -60,7 +60,7 @@ class InvalidateProfileSwitchTransactionTest {
 
     @Test
     fun `throws exception when profile switch not found`() {
-        `when`(profileSwitchDao.findById(999)).thenReturn(null)
+        whenever(profileSwitchDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateProfileSwitchTransaction(id = 999)
         transaction.database = database

@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertIfNewByTimestampCarbsTransactionTest {
 
@@ -22,7 +22,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
     fun setup() {
         carbsDao = mock()
         database = mock()
-        `when`(database.carbsDao).thenReturn(carbsDao)
+        whenever(database.carbsDao).thenReturn(carbsDao)
     }
 
     @Test
@@ -30,7 +30,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val timestamp = 123456789L
         val carbs = createCarbs(timestamp = timestamp, amount = 50.0)
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(carbs)
         transaction.database = database
@@ -49,7 +49,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val existing = createCarbs(timestamp = timestamp, amount = 30.0)
         val incoming = createCarbs(timestamp = timestamp, amount = 50.0)
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(incoming)
         transaction.database = database
@@ -68,7 +68,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val existing = createCarbs(timestamp = timestamp, amount = 30.0)
         val incoming = createCarbs(timestamp = timestamp, amount = 50.0)
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(incoming)
         transaction.database = database
@@ -84,7 +84,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val timestamp = 123456789L
         val carbs = createCarbs(timestamp = timestamp, amount = 50.0, duration = 120_000L)
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(carbs)
         transaction.database = database
@@ -99,7 +99,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val timestamp = 123456789L
         val carbs = createCarbs(timestamp = timestamp, amount = 0.0)
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(carbs)
         transaction.database = database
@@ -115,7 +115,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val existing = createCarbs(timestamp = timestamp, amount = 30.0, isValid = true)
         val incoming = createCarbs(timestamp = timestamp, amount = 50.0, isValid = false)
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(existing)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(incoming)
         transaction.database = database
@@ -130,7 +130,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val timestamp = 123456789L
         val carbs = createCarbs(timestamp = timestamp, amount = 50.0, isValid = false)
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(carbs)
         transaction.database = database
@@ -153,7 +153,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
             notes = notes
         )
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(carbs)
         transaction.database = database
@@ -181,7 +181,7 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val timestamp = 123456789L
         val carbs = createCarbs(timestamp = timestamp, amount = 50.0, notes = "Dinner")
 
-        `when`(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp)).thenReturn(null)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(carbs)
         transaction.database = database
@@ -198,8 +198,8 @@ class InsertIfNewByTimestampCarbsTransactionTest {
         val existing = createCarbs(timestamp = timestamp1, amount = 30.0)
         val incoming = createCarbs(timestamp = timestamp2, amount = 50.0)
 
-        `when`(carbsDao.findByTimestamp(timestamp1)).thenReturn(existing)
-        `when`(carbsDao.findByTimestamp(timestamp2)).thenReturn(null)
+        whenever(carbsDao.findByTimestamp(timestamp1)).thenReturn(existing)
+        whenever(carbsDao.findByTimestamp(timestamp2)).thenReturn(null)
 
         val transaction = InsertIfNewByTimestampCarbsTransaction(incoming)
         transaction.database = database

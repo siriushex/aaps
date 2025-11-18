@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateRunningModeTransactionTest {
 
@@ -22,14 +22,14 @@ class InvalidateRunningModeTransactionTest {
     fun setup() {
         runningModeDao = mock()
         database = mock()
-        `when`(database.runningModeDao).thenReturn(runningModeDao)
+        whenever(database.runningModeDao).thenReturn(runningModeDao)
     }
 
     @Test
     fun `invalidates valid running mode`() {
         val rm = createRunningMode(id = 1, isValid = true)
 
-        `when`(runningModeDao.findById(1)).thenReturn(rm)
+        whenever(runningModeDao.findById(1)).thenReturn(rm)
 
         val transaction = InvalidateRunningModeTransaction(id = 1)
         transaction.database = database
@@ -45,7 +45,7 @@ class InvalidateRunningModeTransactionTest {
     fun `does not update already invalid running mode`() {
         val rm = createRunningMode(id = 1, isValid = false)
 
-        `when`(runningModeDao.findById(1)).thenReturn(rm)
+        whenever(runningModeDao.findById(1)).thenReturn(rm)
 
         val transaction = InvalidateRunningModeTransaction(id = 1)
         transaction.database = database
@@ -58,7 +58,7 @@ class InvalidateRunningModeTransactionTest {
 
     @Test
     fun `throws exception when running mode not found`() {
-        `when`(runningModeDao.findById(999)).thenReturn(null)
+        whenever(runningModeDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateRunningModeTransaction(id = 999)
         transaction.database = database

@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class UpdateNsIdBolusTransactionTest {
 
@@ -22,7 +22,7 @@ class UpdateNsIdBolusTransactionTest {
     fun setup() {
         bolusDao = mock()
         database = mock()
-        `when`(database.bolusDao).thenReturn(bolusDao)
+        whenever(database.bolusDao).thenReturn(bolusDao)
     }
 
     @Test
@@ -31,7 +31,7 @@ class UpdateNsIdBolusTransactionTest {
         val currentBolus = createBolus(id = 1, nsId = "old-ns-id")
         val updateBolus = createBolus(id = 1, nsId = newNsId)
 
-        `when`(bolusDao.findById(1)).thenReturn(currentBolus)
+        whenever(bolusDao.findById(1)).thenReturn(currentBolus)
 
         val transaction = UpdateNsIdBolusTransaction(listOf(updateBolus))
         transaction.database = database
@@ -50,7 +50,7 @@ class UpdateNsIdBolusTransactionTest {
         val currentBolus = createBolus(id = 1, nsId = sameNsId)
         val updateBolus = createBolus(id = 1, nsId = sameNsId)
 
-        `when`(bolusDao.findById(1)).thenReturn(currentBolus)
+        whenever(bolusDao.findById(1)).thenReturn(currentBolus)
 
         val transaction = UpdateNsIdBolusTransaction(listOf(updateBolus))
         transaction.database = database
@@ -65,7 +65,7 @@ class UpdateNsIdBolusTransactionTest {
     fun `skips when bolus not found`() {
         val updateBolus = createBolus(id = 999, nsId = "new-ns-id")
 
-        `when`(bolusDao.findById(999)).thenReturn(null)
+        whenever(bolusDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdBolusTransaction(listOf(updateBolus))
         transaction.database = database
@@ -83,8 +83,8 @@ class UpdateNsIdBolusTransactionTest {
         val update1 = createBolus(id = 1, nsId = "new-1")
         val update2 = createBolus(id = 2, nsId = "new-2")
 
-        `when`(bolusDao.findById(1)).thenReturn(bolus1)
-        `when`(bolusDao.findById(2)).thenReturn(bolus2)
+        whenever(bolusDao.findById(1)).thenReturn(bolus1)
+        whenever(bolusDao.findById(2)).thenReturn(bolus2)
 
         val transaction = UpdateNsIdBolusTransaction(listOf(update1, update2))
         transaction.database = database
@@ -104,8 +104,8 @@ class UpdateNsIdBolusTransactionTest {
         val update1 = createBolus(id = 1, nsId = "new")
         val update2 = createBolus(id = 999, nsId = "new-missing")
 
-        `when`(bolusDao.findById(1)).thenReturn(currentBolus)
-        `when`(bolusDao.findById(999)).thenReturn(null)
+        whenever(bolusDao.findById(1)).thenReturn(currentBolus)
+        whenever(bolusDao.findById(999)).thenReturn(null)
 
         val transaction = UpdateNsIdBolusTransaction(listOf(update1, update2))
         transaction.database = database
@@ -140,7 +140,7 @@ class UpdateNsIdBolusTransactionTest {
         )
         val updateBolus = createBolus(id = 1, nsId = "new")
 
-        `when`(bolusDao.findById(1)).thenReturn(currentBolus)
+        whenever(bolusDao.findById(1)).thenReturn(currentBolus)
 
         val transaction = UpdateNsIdBolusTransaction(listOf(updateBolus))
         transaction.database = database
@@ -156,7 +156,7 @@ class UpdateNsIdBolusTransactionTest {
         val currentBolus = createBolus(id = 1, nsId = null)
         val updateBolus = createBolus(id = 1, nsId = "new-ns-id")
 
-        `when`(bolusDao.findById(1)).thenReturn(currentBolus)
+        whenever(bolusDao.findById(1)).thenReturn(currentBolus)
 
         val transaction = UpdateNsIdBolusTransaction(listOf(updateBolus))
         transaction.database = database
@@ -173,7 +173,7 @@ class UpdateNsIdBolusTransactionTest {
         val currentBolus = createBolus(id = 1, nsId = "existing-id")
         val updateBolus = createBolus(id = 1, nsId = null)
 
-        `when`(bolusDao.findById(1)).thenReturn(currentBolus)
+        whenever(bolusDao.findById(1)).thenReturn(currentBolus)
 
         val transaction = UpdateNsIdBolusTransaction(listOf(updateBolus))
         transaction.database = database

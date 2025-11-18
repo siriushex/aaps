@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 
 class PumpEventTest : TestBaseWithProfile() {
 
@@ -14,24 +14,24 @@ class PumpEventTest : TestBaseWithProfile() {
     fun setUp() {
 
         // Mock all resource strings
-        `when`(rh.gs(R.string.equil_history_item1)).thenReturn("Item 1")
-        `when`(rh.gs(R.string.equil_history_item2)).thenReturn("Item 2")
-        `when`(rh.gs(R.string.equil_history_item3)).thenReturn("Item 3")
-        `when`(rh.gs(R.string.equil_history_item4)).thenReturn("Item 4")
-        `when`(rh.gs(R.string.equil_history_item5)).thenReturn("Item 5")
-        `when`(rh.gs(R.string.equil_history_item6)).thenReturn("Item 6")
-        `when`(rh.gs(R.string.equil_history_item7)).thenReturn("Item 7")
-        `when`(rh.gs(R.string.equil_history_item8)).thenReturn("Item 8")
-        `when`(rh.gs(R.string.equil_history_item9)).thenReturn("Item 9")
-        `when`(rh.gs(R.string.equil_history_item10)).thenReturn("Item 10")
-        `when`(rh.gs(R.string.equil_history_item11)).thenReturn("Item 11")
-        `when`(rh.gs(R.string.equil_history_item12)).thenReturn("Item 12")
-        `when`(rh.gs(R.string.equil_history_item13)).thenReturn("Item 13")
-        `when`(rh.gs(R.string.equil_history_item14)).thenReturn("Item 14")
-        `when`(rh.gs(R.string.equil_history_item15)).thenReturn("Item 15")
-        `when`(rh.gs(R.string.equil_history_item16)).thenReturn("Item 16")
-        `when`(rh.gs(R.string.equil_history_item17)).thenReturn("Item 17")
-        `when`(rh.gs(R.string.equil_history_item18)).thenReturn("Item 18")
+        whenever(rh.gs(R.string.equil_history_item1)).thenReturn("Item 1")
+        whenever(rh.gs(R.string.equil_history_item2)).thenReturn("Item 2")
+        whenever(rh.gs(R.string.equil_history_item3)).thenReturn("Item 3")
+        whenever(rh.gs(R.string.equil_history_item4)).thenReturn("Item 4")
+        whenever(rh.gs(R.string.equil_history_item5)).thenReturn("Item 5")
+        whenever(rh.gs(R.string.equil_history_item6)).thenReturn("Item 6")
+        whenever(rh.gs(R.string.equil_history_item7)).thenReturn("Item 7")
+        whenever(rh.gs(R.string.equil_history_item8)).thenReturn("Item 8")
+        whenever(rh.gs(R.string.equil_history_item9)).thenReturn("Item 9")
+        whenever(rh.gs(R.string.equil_history_item10)).thenReturn("Item 10")
+        whenever(rh.gs(R.string.equil_history_item11)).thenReturn("Item 11")
+        whenever(rh.gs(R.string.equil_history_item12)).thenReturn("Item 12")
+        whenever(rh.gs(R.string.equil_history_item13)).thenReturn("Item 13")
+        whenever(rh.gs(R.string.equil_history_item14)).thenReturn("Item 14")
+        whenever(rh.gs(R.string.equil_history_item15)).thenReturn("Item 15")
+        whenever(rh.gs(R.string.equil_history_item16)).thenReturn("Item 16")
+        whenever(rh.gs(R.string.equil_history_item17)).thenReturn("Item 17")
+        whenever(rh.gs(R.string.equil_history_item18)).thenReturn("Item 18")
     }
 
     @Test
@@ -109,9 +109,11 @@ class PumpEventTest : TestBaseWithProfile() {
         PumpEvent.init(rh)
 
         // Count port 4 events
-        val port4Count = PumpEvent.lists.count { it.equals(PumpEvent(4, 0, 0, "")) ||
-                                                   it.equals(PumpEvent(4, 1, 0, "")) ||
-                                                   it.equals(PumpEvent(4, 2, 0, "")) }
+        val port4Count = PumpEvent.lists.count {
+            it.equals(PumpEvent(4, 0, 0, "")) ||
+                it.equals(PumpEvent(4, 1, 0, "")) ||
+                it.equals(PumpEvent(4, 2, 0, ""))
+        }
         // Most events should be port 4
         assert(port4Count > 0)
     }

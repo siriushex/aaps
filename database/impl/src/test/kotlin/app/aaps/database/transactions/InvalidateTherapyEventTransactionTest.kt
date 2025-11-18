@@ -10,9 +10,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateTherapyEventTransactionTest {
 
@@ -23,14 +23,14 @@ class InvalidateTherapyEventTransactionTest {
     fun setup() {
         therapyEventDao = mock()
         database = mock()
-        `when`(database.therapyEventDao).thenReturn(therapyEventDao)
+        whenever(database.therapyEventDao).thenReturn(therapyEventDao)
     }
 
     @Test
     fun `invalidates valid therapy event`() {
         val event = createTherapyEvent(id = 1, isValid = true)
 
-        `when`(therapyEventDao.findById(1)).thenReturn(event)
+        whenever(therapyEventDao.findById(1)).thenReturn(event)
 
         val transaction = InvalidateTherapyEventTransaction(id = 1)
         transaction.database = database
@@ -47,7 +47,7 @@ class InvalidateTherapyEventTransactionTest {
     fun `does not update already invalid therapy event`() {
         val event = createTherapyEvent(id = 1, isValid = false)
 
-        `when`(therapyEventDao.findById(1)).thenReturn(event)
+        whenever(therapyEventDao.findById(1)).thenReturn(event)
 
         val transaction = InvalidateTherapyEventTransaction(id = 1)
         transaction.database = database
@@ -61,7 +61,7 @@ class InvalidateTherapyEventTransactionTest {
 
     @Test
     fun `throws exception when therapy event not found`() {
-        `when`(therapyEventDao.findById(999)).thenReturn(null)
+        whenever(therapyEventDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateTherapyEventTransaction(id = 999)
         transaction.database = database
@@ -79,7 +79,7 @@ class InvalidateTherapyEventTransactionTest {
         val type = TherapyEvent.Type.CANNULA_CHANGE
         val event = createTherapyEvent(id = 1, isValid = true, type = type)
 
-        `when`(therapyEventDao.findById(1)).thenReturn(event)
+        whenever(therapyEventDao.findById(1)).thenReturn(event)
 
         val transaction = InvalidateTherapyEventTransaction(id = 1)
         transaction.database = database

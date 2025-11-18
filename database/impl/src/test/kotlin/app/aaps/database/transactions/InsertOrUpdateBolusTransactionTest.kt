@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateBolusTransactionTest {
 
@@ -22,14 +22,14 @@ class InsertOrUpdateBolusTransactionTest {
     fun setup() {
         bolusDao = mock()
         database = mock()
-        `when`(database.bolusDao).thenReturn(bolusDao)
+        whenever(database.bolusDao).thenReturn(bolusDao)
     }
 
     @Test
     fun `inserts new bolus when id not found`() {
         val bolus = createBolus(id = 1, amount = 5.0)
 
-        `when`(bolusDao.findById(1)).thenReturn(null)
+        whenever(bolusDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateBolusTransaction(bolus)
         transaction.database = database
@@ -48,7 +48,7 @@ class InsertOrUpdateBolusTransactionTest {
         val bolus = createBolus(id = 1, amount = 5.0)
         val existing = createBolus(id = 1, amount = 3.0)
 
-        `when`(bolusDao.findById(1)).thenReturn(existing)
+        whenever(bolusDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateBolusTransaction(bolus)
         transaction.database = database
@@ -66,7 +66,7 @@ class InsertOrUpdateBolusTransactionTest {
     fun `inserts SMB bolus`() {
         val bolus = createBolus(id = 1, amount = 0.5, type = Bolus.Type.SMB)
 
-        `when`(bolusDao.findById(1)).thenReturn(null)
+        whenever(bolusDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateBolusTransaction(bolus)
         transaction.database = database
@@ -81,7 +81,7 @@ class InsertOrUpdateBolusTransactionTest {
         val existing = createBolus(id = 1, amount = 3.0)
         val updated = createBolus(id = 1, amount = 7.5)
 
-        `when`(bolusDao.findById(1)).thenReturn(existing)
+        whenever(bolusDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateBolusTransaction(updated)
         transaction.database = database
@@ -95,7 +95,7 @@ class InsertOrUpdateBolusTransactionTest {
     fun `inserts invalid bolus`() {
         val bolus = createBolus(id = 1, amount = 5.0, isValid = false)
 
-        `when`(bolusDao.findById(1)).thenReturn(null)
+        whenever(bolusDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateBolusTransaction(bolus)
         transaction.database = database

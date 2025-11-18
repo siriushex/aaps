@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateTemporaryTargetTransactionTest {
 
@@ -22,14 +22,14 @@ class InvalidateTemporaryTargetTransactionTest {
     fun setup() {
         temporaryTargetDao = mock()
         database = mock()
-        `when`(database.temporaryTargetDao).thenReturn(temporaryTargetDao)
+        whenever(database.temporaryTargetDao).thenReturn(temporaryTargetDao)
     }
 
     @Test
     fun `invalidates valid temporary target`() {
         val target = createTemporaryTarget(id = 1, isValid = true)
 
-        `when`(temporaryTargetDao.findById(1)).thenReturn(target)
+        whenever(temporaryTargetDao.findById(1)).thenReturn(target)
 
         val transaction = InvalidateTemporaryTargetTransaction(id = 1)
         transaction.database = database
@@ -46,7 +46,7 @@ class InvalidateTemporaryTargetTransactionTest {
     fun `does not update already invalid temporary target`() {
         val target = createTemporaryTarget(id = 1, isValid = false)
 
-        `when`(temporaryTargetDao.findById(1)).thenReturn(target)
+        whenever(temporaryTargetDao.findById(1)).thenReturn(target)
 
         val transaction = InvalidateTemporaryTargetTransaction(id = 1)
         transaction.database = database
@@ -60,7 +60,7 @@ class InvalidateTemporaryTargetTransactionTest {
 
     @Test
     fun `throws exception when temporary target not found`() {
-        `when`(temporaryTargetDao.findById(999)).thenReturn(null)
+        whenever(temporaryTargetDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateTemporaryTargetTransaction(id = 999)
         transaction.database = database
@@ -79,7 +79,7 @@ class InvalidateTemporaryTargetTransactionTest {
         val highTarget = 120.0
         val target = createTemporaryTarget(id = 1, isValid = true, lowTarget = lowTarget, highTarget = highTarget)
 
-        `when`(temporaryTargetDao.findById(1)).thenReturn(target)
+        whenever(temporaryTargetDao.findById(1)).thenReturn(target)
 
         val transaction = InvalidateTemporaryTargetTransaction(id = 1)
         transaction.database = database
