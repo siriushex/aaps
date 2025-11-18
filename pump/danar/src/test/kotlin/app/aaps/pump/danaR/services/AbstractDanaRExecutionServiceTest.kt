@@ -225,20 +225,22 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         val extendedBolus = mock(PumpSync.PumpState.ExtendedBolus::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
+        // Set dateUtil.now() FIRST to ensure it's available for all property getters
+        `when`(dateUtil.now()).thenReturn(1500000L) // Within the extended bolus range
+
         `when`(extendedBolus.rate).thenReturn(1.5)
-        `when`(extendedBolus.timestamp).thenReturn(1000000L)
+        `when`(extendedBolus.timestamp).thenReturn(500000L) // Make timestamp different enough
 
         // Create real PumpState for proper destructuring
         val pumpState = PumpSync.PumpState(null, extendedBolus, null, null, "TEST123")
         `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
 
         // Set underlying properties to make isExtendedInProgress true
-        danaPump.extendedBolusAbsoluteRate = 2.0
         danaPump.extendedBolusStart = 1000000L
         danaPump.extendedBolusAmount = 3.0
         danaPump.extendedBolusDuration = 7200000L // 120 minutes in milliseconds
-        // Don't set tempBasalStart - leave it at 0 to ensure no temp basal is active
-        `when`(dateUtil.now()).thenReturn(2000000L) // Within the extended bolus range
+        danaPump.extendedBolusAbsoluteRate = 2.0 // Different rate to trigger mismatch
+
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
