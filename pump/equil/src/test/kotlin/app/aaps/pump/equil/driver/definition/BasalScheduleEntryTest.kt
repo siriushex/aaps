@@ -1,11 +1,12 @@
 package app.aaps.pump.equil.driver.definition
 
+import app.aaps.shared.tests.TestBase
 import org.joda.time.Duration
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 
-class BasalScheduleEntryTest {
+class BasalScheduleEntryTest : TestBase() {
 
     @Test
     fun `constructor should set rate and startTime`() {

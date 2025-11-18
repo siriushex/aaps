@@ -1,11 +1,12 @@
 package app.aaps.pump.equil.manager
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 
-class CrcTest {
+class CrcTest : TestBase() {
 
     @Test
     fun `crc8Maxim should calculate correct CRC for simple data`() {

@@ -1,5 +1,6 @@
 package app.aaps.pump.equil.manager
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -8,7 +9,7 @@ import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-class UtilsTest {
+class UtilsTest : TestBase() {
 
     @Test
     fun `generateRandomPassword should create password of correct length`() {

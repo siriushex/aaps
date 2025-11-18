@@ -1,12 +1,13 @@
 package app.aaps.pump.equil.data
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class BolusProfileTest {
+class BolusProfileTest : TestBase() {
 
     private lateinit var bolusProfile: BolusProfile
 

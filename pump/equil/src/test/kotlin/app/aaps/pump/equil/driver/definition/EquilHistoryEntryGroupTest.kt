@@ -1,24 +1,13 @@
 package app.aaps.pump.equil.driver.definition
 
-import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.pump.equil.R
+import app.aaps.shared.tests.TestBaseWithProfile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
-class EquilHistoryEntryGroupTest {
-
-    @Mock
-    private lateinit var rh: ResourceHelper
-
-    @BeforeEach
-    fun setUp() {
-        MockitoAnnotations.openMocks(this)
-    }
+class EquilHistoryEntryGroupTest : TestBaseWithProfile() {
 
     @Test
     fun `all enum values should be accessible`() {

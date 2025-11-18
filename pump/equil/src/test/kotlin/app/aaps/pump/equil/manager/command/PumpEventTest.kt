@@ -1,23 +1,17 @@
 package app.aaps.pump.equil.manager.command
 
-import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.pump.equil.R
+import app.aaps.shared.tests.TestBaseWithProfile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
-class PumpEventTest {
-
-    @Mock
-    private lateinit var rh: ResourceHelper
+class PumpEventTest : TestBaseWithProfile() {
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.openMocks(this)
 
         // Mock all resource strings
         `when`(rh.gs(R.string.equil_history_item1)).thenReturn("Item 1")
