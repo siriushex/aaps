@@ -58,7 +58,7 @@ class EquilHistoryEntryGroupTest : TestBaseWithProfile() {
 
     @Test
     fun `toString should return translated string`() {
-        whenever(rh.gs(R.string.equil_history_group_all)).thenReturn("All History")
+        whenever(rh.gs(R.string.equil_history_group_all)).thenReturn("All")
         whenever(rh.gs(R.string.equil_history_group_pair)).thenReturn("Pairing")
         whenever(rh.gs(R.string.equil_history_group_bolus)).thenReturn("Boluses")
         whenever(rh.gs(R.string.equil_history_group_basal)).thenReturn("Basal Rates")
@@ -66,7 +66,7 @@ class EquilHistoryEntryGroupTest : TestBaseWithProfile() {
 
         EquilHistoryEntryGroup.getTranslatedList(rh)
 
-        assertEquals("All History", EquilHistoryEntryGroup.All.toString())
+        assertEquals("All", EquilHistoryEntryGroup.All.toString())
         assertEquals("Pairing", EquilHistoryEntryGroup.Pair.toString())
         assertEquals("Boluses", EquilHistoryEntryGroup.Bolus.toString())
         assertEquals("Basal Rates", EquilHistoryEntryGroup.Basal.toString())
