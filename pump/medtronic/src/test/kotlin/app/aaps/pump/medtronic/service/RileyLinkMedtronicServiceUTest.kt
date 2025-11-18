@@ -1,18 +1,8 @@
 package app.aaps.pump.medtronic.service
 
-import android.content.Context
 import app.aaps.core.data.pump.defs.PumpType
-import app.aaps.core.interfaces.configuration.Config
-import app.aaps.core.interfaces.logging.UserEntryLogger
-import app.aaps.core.interfaces.profile.ProfileFunction
-import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.sharedPreferences.SP
-import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.common.hw.rileylink.RileyLinkUtil
 import app.aaps.pump.common.hw.rileylink.ble.RFSpy
-import app.aaps.pump.common.hw.rileylink.ble.defs.RileyLinkEncodingType
 import app.aaps.pump.common.hw.rileylink.ble.defs.RileyLinkTargetFrequency
 import app.aaps.pump.common.hw.rileylink.keys.RileyLinkStringKey
 import app.aaps.pump.common.hw.rileylink.keys.RileyLinkStringPreferenceKey
@@ -42,19 +32,12 @@ import org.mockito.kotlin.whenever
  */
 class RileyLinkMedtronicServiceUTest : TestBaseWithProfile() {
 
-    @Mock lateinit var context: Context
-    @Mock lateinit var rxBus: RxBus
     @Mock lateinit var rileyLinkUtil: RileyLinkUtil
     @Mock lateinit var medtronicPumpPlugin: MedtronicPumpPlugin
     @Mock lateinit var medtronicUtil: MedtronicUtil
     @Mock lateinit var medtronicCommunicationManager: MedtronicCommunicationManager
     @Mock lateinit var medtronicUIComm: MedtronicUIComm
     @Mock lateinit var rfSpy: RFSpy
-    @Mock lateinit var preferences: Preferences
-    @Mock lateinit var uiInteraction: UiInteraction
-    @Mock lateinit var config: Config
-    @Mock lateinit var sp: SP
-    @Mock lateinit var uel: UserEntryLogger
 
     lateinit var service: RileyLinkMedtronicService
     lateinit var medtronicPumpStatus: MedtronicPumpStatus
@@ -64,39 +47,27 @@ class RileyLinkMedtronicServiceUTest : TestBaseWithProfile() {
     fun setup() {
         // Create real instances for objects we need to inspect
         medtronicPumpStatus = MedtronicPumpStatus(preferences, rxBus, rileyLinkUtil)
-        rileyLinkServiceData = RileyLinkServiceData(rxBus)
+        rileyLinkServiceData = RileyLinkServiceData(aapsLogger, rileyLinkUtil, rxBus)
 
         // Create service instance
-        service = RileyLinkMedtronicService()
+        service = RileyLinkMedtronicService().also {
 
         // Inject dependencies via reflection since it's a service with @Inject fields
-        setPrivateField(service, "medtronicPumpPlugin", medtronicPumpPlugin)
-        setPrivateField(service, "medtronicUtil", medtronicUtil)
-        setPrivateField(service, "medtronicPumpStatus", medtronicPumpStatus)
-        setPrivateField(service, "medtronicCommunicationManager", medtronicCommunicationManager)
-        setPrivateField(service, "medtronicUIComm", medtronicUIComm)
-        setPrivateField(service, "aapsLogger", aapsLogger)
-        setPrivateField(service, "preferences", preferences)
-        setPrivateField(service, "rh", rh)
-        setPrivateField(service, "rileyLinkServiceData", rileyLinkServiceData)
-        setPrivateField(service, "rileyLinkUtil", rileyLinkUtil)
-        setPrivateField(service, "rfSpy", rfSpy)
-        setPrivateField(service, "context", context)
-        setPrivateField(service, "uiInteraction", uiInteraction)
-        setPrivateField(service, "config", config)
-        setPrivateField(service, "sp", sp)
-        setPrivateField(service, "uel", uel)
-
+            it.medtronicPumpPlugin = medtronicPumpPlugin
+            it.medtronicUtil = medtronicUtil
+            it.medtronicPumpStatus = medtronicPumpStatus
+            it.medtronicCommunicationManager = medtronicCommunicationManager
+            it.medtronicUIComm = medtronicUIComm
+            it.aapsLogger = aapsLogger
+            it.preferences = preferences
+            it.rh = rh
+            it.rileyLinkServiceData = rileyLinkServiceData
+            it.rileyLinkUtil = rileyLinkUtil
+            it.rfSpy = rfSpy
+        }
         // Setup common mock behaviors
         doReturn("").whenever(rh).gs(any<Int>())
         doReturn("").whenever(rh).gs(any<Int>(), any())
-    }
-
-    private fun setPrivateField(target: Any, fieldName: String, value: Any?) {
-        val field = target.javaClass.superclass?.getDeclaredField(fieldName)
-            ?: target.javaClass.getDeclaredField(fieldName)
-        field.isAccessible = true
-        field.set(target, value)
     }
 
     private fun setupValidConfiguration() {
@@ -126,7 +97,7 @@ class RileyLinkMedtronicServiceUTest : TestBaseWithProfile() {
         assertThat(medtronicPumpStatus.maxBolus).isEqualTo(10.0)
         assertThat(medtronicPumpStatus.maxBasal).isEqualTo(5.0)
         assertThat(medtronicPumpStatus.batteryType).isEqualTo(BatteryType.Alkaline)
-        assertThat(rileyLinkServiceData.rileyLinkTargetFrequency).isEqualTo(RileyLinkTargetFrequency.Medtronic_US)
+        assertThat(rileyLinkServiceData.rileyLinkTargetFrequency).isEqualTo(RileyLinkTargetFrequency.MedtronicUS)
     }
 
     @Test
@@ -340,12 +311,12 @@ class RileyLinkMedtronicServiceUTest : TestBaseWithProfile() {
         // Test US frequency
         whenever(preferences.get(MedtronicStringPreferenceKey.PumpFrequency)).thenReturn("US & Canada (916 MHz)")
         service.verifyConfiguration(forceRileyLinkAddressRenewal = false)
-        assertThat(rileyLinkServiceData.rileyLinkTargetFrequency).isEqualTo(RileyLinkTargetFrequency.Medtronic_US)
+        assertThat(rileyLinkServiceData.rileyLinkTargetFrequency).isEqualTo(RileyLinkTargetFrequency.MedtronicUS)
 
         // Test Worldwide frequency
         whenever(preferences.get(MedtronicStringPreferenceKey.PumpFrequency)).thenReturn("Worldwide (868 Mhz)")
         service.verifyConfiguration(forceRileyLinkAddressRenewal = false)
-        assertThat(rileyLinkServiceData.rileyLinkTargetFrequency).isEqualTo(RileyLinkTargetFrequency.Medtronic_WorldWide)
+        assertThat(rileyLinkServiceData.rileyLinkTargetFrequency).isEqualTo(RileyLinkTargetFrequency.MedtronicWorldWide)
     }
 
     @Test
