@@ -41,10 +41,10 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         whenever(bleConnectionState.isConnecting).thenReturn(false)
 
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
         val bolusCurrent = app.aaps.pump.eopatch.vo.BolusCurrent()
-        whenever<app.aaps.pump.eopatch.vo.BolusCurrent>(preferenceManager.bolusCurrent).thenReturn(bolusCurrent)
+        whenever<app.aaps.pump.eopatch.vo.BolusCurrent>(eopatchPreferenceManager.bolusCurrent).thenReturn(bolusCurrent)
 
         // Set patch as activated
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
@@ -63,7 +63,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
             patchManager,
             patchManagerExecutor,
             alarmManager,
-            preferenceManager,
+            eopatchPreferenceManager,
             uiInteraction,
             pumpEnactResultProvider,
             patchConfig,
@@ -118,7 +118,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
         // isNormalBasalAct will be false
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
         val result = plugin.setTempBasalAbsolute(1.5, 60, profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
@@ -130,7 +130,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     fun `setTempBasalPercent should fail when normal basal not active`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
         val result = plugin.setTempBasalPercent(150, 60, profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
@@ -144,7 +144,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         val bytes = ByteArray(20)
         bytes[4] = 0x14.toByte() // isNormalBasalAct = true
         patchState.update(bytes, System.currentTimeMillis())
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
         val result = plugin.setTempBasalPercent(0, 60, profile, false, PumpSync.TemporaryBasalType.NORMAL)
 
@@ -168,7 +168,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     fun `cancelExtendedBolus should return success when not active`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
         whenever(pumpSync.expectedPumpState()).thenReturn(
             PumpSync.PumpState(null, null, null, profile, "")
         )

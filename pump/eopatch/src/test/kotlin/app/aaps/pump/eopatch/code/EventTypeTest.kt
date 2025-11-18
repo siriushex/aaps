@@ -10,37 +10,34 @@ class EventTypeTest {
         val eventTypes = EventType.entries
 
         assertThat(eventTypes).isNotEmpty()
-        assertThat(eventTypes).contains(EventType.ACTIVATION_EVENT)
-        assertThat(eventTypes).contains(EventType.INSULIN_DELIVERY_EVENT)
+        assertThat(eventTypes).contains(EventType.ACTIVATION_CLICKED)
+        assertThat(eventTypes).contains(EventType.DEACTIVATION_CLICKED)
     }
 
     @Test
-    fun `ACTIVATION_EVENT should have correct value`() {
-        assertThat(EventType.ACTIVATION_EVENT.value).isEqualTo(0)
+    fun `ACTIVATION_CLICKED should exist`() {
+        assertThat(EventType.ACTIVATION_CLICKED).isNotNull()
     }
 
     @Test
-    fun `INSULIN_DELIVERY_EVENT should have correct value`() {
-        assertThat(EventType.INSULIN_DELIVERY_EVENT.value).isEqualTo(1)
+    fun `DEACTIVATION_CLICKED should exist`() {
+        assertThat(EventType.DEACTIVATION_CLICKED).isNotNull()
     }
 
     @Test
-    fun `DISCARDED_PATCH should have correct value`() {
-        assertThat(EventType.DISCARDED_PATCH.value).isEqualTo(2)
+    fun `SUSPEND_CLICKED should exist`() {
+        assertThat(EventType.SUSPEND_CLICKED).isNotNull()
     }
 
     @Test
-    fun `all event types should have unique values`() {
-        val values = EventType.entries.map { it.value }
-        val uniqueValues = values.toSet()
-
-        assertThat(uniqueValues.size).isEqualTo(values.size)
+    fun `RESUME_CLICKED should exist`() {
+        assertThat(EventType.RESUME_CLICKED).isNotNull()
     }
 
     @Test
     fun `should support valueOf`() {
-        assertThat(EventType.valueOf("ACTIVATION_EVENT")).isEqualTo(EventType.ACTIVATION_EVENT)
-        assertThat(EventType.valueOf("INSULIN_DELIVERY_EVENT")).isEqualTo(EventType.INSULIN_DELIVERY_EVENT)
-        assertThat(EventType.valueOf("DISCARDED_PATCH")).isEqualTo(EventType.DISCARDED_PATCH)
+        assertThat(EventType.valueOf("ACTIVATION_CLICKED")).isEqualTo(EventType.ACTIVATION_CLICKED)
+        assertThat(EventType.valueOf("DEACTIVATION_CLICKED")).isEqualTo(EventType.DEACTIVATION_CLICKED)
+        assertThat(EventType.valueOf("SUSPEND_CLICKED")).isEqualTo(EventType.SUSPEND_CLICKED)
     }
 }

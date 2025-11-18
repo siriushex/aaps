@@ -35,7 +35,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         whenever(patchManagerExecutor.patchConnectionState).thenReturn(bleConnectionState)
         whenever(bleConnectionState.isConnected).thenReturn(false)
         whenever(bleConnectionState.isConnecting).thenReturn(false)
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(
             app.aaps.pump.eopatch.vo.PatchState()
         )
 
@@ -52,7 +52,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
             patchManager,
             patchManagerExecutor,
             alarmManager,
-            preferenceManager,
+            eopatchPreferenceManager,
             uiInteraction,
             pumpEnactResultProvider,
             patchConfig,
@@ -106,7 +106,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         val bytes = ByteArray(20)
         bytes[4] = 0x01.toByte() // isNormalBasalPaused = true
         patchState.update(bytes, System.currentTimeMillis())
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
         assertThat(plugin.isSuspended()).isTrue()
     }
@@ -115,7 +115,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
     fun `isSuspended should return false when basal is not paused`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
         assertThat(plugin.isSuspended()).isFalse()
     }
@@ -176,7 +176,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         val bytes = ByteArray(20)
         bytes[4] = 0x01.toByte() // isNormalBasalPaused = true
         patchState.update(bytes, System.currentTimeMillis())
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
         assertThat(plugin.baseBasalRate).isWithin(0.001).of(0.0)
     }
@@ -195,7 +195,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         // Create bytes with remainedInsulin = 50.0f
         val bytes = ByteArray(20)
         patchState.update(bytes, System.currentTimeMillis())
-        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
         // Just verify it returns a value (actual implementation uses patch state)
         assertThat(plugin.reservoirLevel).isAtLeast(0.0)

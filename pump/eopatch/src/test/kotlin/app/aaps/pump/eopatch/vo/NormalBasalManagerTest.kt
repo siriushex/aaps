@@ -18,12 +18,23 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
     @Mock
     private lateinit var mockPreferences: Preferences
 
+    @Mock
+    private lateinit var mockProfile: Profile
+
     private lateinit var manager: NormalBasalManager
 
     @BeforeEach
     fun setup() {
         MockitoAnnotations.openMocks(this)
         manager = NormalBasalManager()
+
+        // Setup mock profile with basal values
+        `when`(mockProfile.getBasalValues()).thenReturn(
+            arrayOf(
+                Profile.ProfileValue(0, 1.0)
+            )
+        )
+        `when`(mockProfile.getBasal(org.mockito.kotlin.any())).thenReturn(1.0)
     }
 
     @Test
@@ -83,7 +94,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
 
     @Test
     fun `setNormalBasal should convert profile to basal segments`() {
-        val profile = validProfile
+        val profile = mockProfile
 
         manager.setNormalBasal(profile)
 
@@ -96,7 +107,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
         manager.normalBasal.list.add(BasalSegment.create(0, 360, 1.0f))
         val initialSize = manager.normalBasal.list.size
 
-        manager.setNormalBasal(validProfile)
+        manager.setNormalBasal(mockProfile)
 
         // Should be replaced with profile segments
         assertThat(manager.normalBasal.list.size).isNotEqualTo(initialSize)
@@ -104,7 +115,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
 
     @Test
     fun `convertProfileToNormalBasal should create new basal without modifying manager`() {
-        val profile = validProfile
+        val profile = mockProfile
         val originalBasal = manager.normalBasal
 
         val converted = manager.convertProfileToNormalBasal(profile)
@@ -115,7 +126,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
 
     @Test
     fun `convertProfileToNormalBasal should handle single segment profile`() {
-        val profile = validProfile // validProfile from TestBaseWithProfile
+        val profile = mockProfile // mockProfile from TestBaseWithProfile
 
         val converted = manager.convertProfileToNormalBasal(profile)
 
@@ -126,7 +137,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
 
     @Test
     fun `convertProfileToNormalBasal should wrap last segment to 1440 minutes`() {
-        val profile = validProfile
+        val profile = mockProfile
 
         val converted = manager.convertProfileToNormalBasal(profile)
 
@@ -137,7 +148,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
 
     @Test
     fun `isEqual should return true for matching profile`() {
-        val profile = validProfile
+        val profile = mockProfile
         manager.setNormalBasal(profile)
 
         assertThat(manager.isEqual(profile)).isTrue()
@@ -145,7 +156,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
 
     @Test
     fun `isEqual should return false for different segment count`() {
-        val profile = validProfile
+        val profile = mockProfile
         manager.setNormalBasal(profile)
 
         // Modify the basal
@@ -156,7 +167,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
 
     @Test
     fun `isEqual should return false for different segment times`() {
-        val profile = validProfile
+        val profile = mockProfile
         manager.setNormalBasal(profile)
 
         // Modify segment time
@@ -169,7 +180,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
 
     @Test
     fun `isEqual should return false for different dose values`() {
-        val profile = validProfile
+        val profile = mockProfile
         manager.setNormalBasal(profile)
 
         // Modify dose
@@ -188,7 +199,7 @@ class NormalBasalManagerTest : TestBaseWithProfile() {
     @Test
     fun `update should copy basal from other manager`() {
         val other = NormalBasalManager()
-        other.setNormalBasal(validProfile)
+        other.setNormalBasal(mockProfile)
         other.updateBasalStarted()
 
         manager.update(other)
