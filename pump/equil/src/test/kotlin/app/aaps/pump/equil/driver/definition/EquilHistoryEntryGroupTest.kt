@@ -41,10 +41,10 @@ class EquilHistoryEntryGroupTest : TestBaseWithProfile() {
     fun `getTranslatedList should return all groups`() {
         // Mock resource helper to return translated strings
         whenever(rh.gs(R.string.equil_history_group_all)).thenReturn("All")
-        whenever(rh.gs(R.string.equil_history_group_pair)).thenReturn("Pair")
-        whenever(rh.gs(R.string.equil_history_group_bolus)).thenReturn("Bolus")
-        whenever(rh.gs(R.string.equil_history_group_basal)).thenReturn("Basal")
-        whenever(rh.gs(R.string.equil_history_group_configuration)).thenReturn("Configuration")
+        whenever(rh.gs(R.string.equil_history_group_pair)).thenReturn("Pairing")
+        whenever(rh.gs(R.string.equil_history_group_bolus)).thenReturn("Boluses")
+        whenever(rh.gs(R.string.equil_history_group_basal)).thenReturn("Basal Rates")
+        whenever(rh.gs(R.string.equil_history_group_configuration)).thenReturn("Config")
 
         val translatedList = EquilHistoryEntryGroup.getTranslatedList(rh)
 
