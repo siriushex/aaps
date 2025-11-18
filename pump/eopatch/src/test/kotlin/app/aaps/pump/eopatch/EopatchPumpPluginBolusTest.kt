@@ -40,10 +40,10 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         whenever(bleConnectionState.isConnecting).thenReturn(false)
 
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
-        whenever(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
 
         val bolusCurrent = app.aaps.pump.eopatch.vo.BolusCurrent()
-        whenever(preferenceManager.bolusCurrent).thenReturn(bolusCurrent)
+        whenever<app.aaps.pump.eopatch.vo.BolusCurrent>(preferenceManager.bolusCurrent).thenReturn(bolusCurrent)
 
         // Set patch as activated
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
@@ -117,9 +117,9 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
         // isNormalBasalAct will be false
-        whenever(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalAbsolute(1.5, 60, validProfile as Profile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalAbsolute(1.5, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -129,9 +129,9 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     fun `setTempBasalPercent should fail when normal basal not active`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
-        whenever(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalPercent(150, 60, validProfile as Profile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalPercent(150, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -143,9 +143,9 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         val bytes = ByteArray(20)
         bytes[4] = 0x14.toByte() // isNormalBasalAct = true
         patchState.update(bytes, System.currentTimeMillis())
-        whenever(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
 
-        val result = plugin.setTempBasalPercent(0, 60, validProfile as Profile, false, PumpSync.TemporaryBasalType.NORMAL)
+        val result = plugin.setTempBasalPercent(0, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
 
         assertThat(result.success).isFalse()
         assertThat(result.enacted).isFalse()
@@ -154,7 +154,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     @Test
     fun `cancelTempBasal should return success when TBR already false`() {
         whenever(pumpSync.expectedPumpState()).thenReturn(
-            PumpSync.PumpState(null, null, null, validProfile as Profile, "")
+            PumpSync.PumpState(null, null, null, validProfile, "")
         )
 
         val result = plugin.cancelTempBasal(false)
@@ -167,9 +167,9 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     fun `cancelExtendedBolus should return success when not active`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
-        whenever(preferenceManager.patchState).thenReturn(patchState)
+        whenever<app.aaps.pump.eopatch.vo.PatchState>(preferenceManager.patchState).thenReturn(patchState)
         whenever(pumpSync.expectedPumpState()).thenReturn(
-            PumpSync.PumpState(null, null, null, validProfile as Profile, "")
+            PumpSync.PumpState(null, null, null, validProfile, "")
         )
 
         val result = plugin.cancelExtendedBolus()
