@@ -25,6 +25,7 @@ dependencies {
     implementation(project(":core:validators"))
 
     testImplementation(project(":shared:tests"))
+    testImplementation(project(":core:objects"))
 
     api(libs.com.google.guava)
 

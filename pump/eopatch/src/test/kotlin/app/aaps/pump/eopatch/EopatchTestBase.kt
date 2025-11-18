@@ -14,7 +14,6 @@ open class EopatchTestBase : TestBaseWithProfile() {
     @Mock lateinit var patchManager: IPatchManager
     @Mock lateinit var patchManagerExecutor: PatchManagerExecutor
     @Mock lateinit var alarmManager: IAlarmManager
-    @Mock lateinit var preferenceManager: PreferenceManager
 
     lateinit var patchConfig: PatchConfig
     lateinit var normalBasalManager: NormalBasalManager
