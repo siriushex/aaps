@@ -8,6 +8,7 @@ import app.aaps.pump.medtronic.defs.MedtronicDeviceType
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.whenever
 
 /**
  * Created by andy on 1/30/19.
@@ -104,7 +105,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeRemainingInsulin with 10 stroke pump`() {
-        medtronicUtil.medtronicPumpModel = MedtronicDeviceType.Medtronic_522_722
+        whenever(medtronicUtil.medtronicPumpModel).thenReturn(MedtronicDeviceType.Medtronic_522_722)
         val data = ByteUtil.createByteArrayFromString("32 00") // 0x32 = 50
 
         val remaining = converter.decodeRemainingInsulin(data)
@@ -114,7 +115,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeRemainingInsulin with 40 stroke pump`() {
-        medtronicUtil.medtronicPumpModel = MedtronicDeviceType.Medtronic_554_Veo
+        whenever(medtronicUtil.medtronicPumpModel).thenReturn(MedtronicDeviceType.Medtronic_554_Veo)
         val data = ByteUtil.createByteArrayFromString("00 00 C8 00") // Skip 2 bytes, 0x00C8 = 200
 
         val remaining = converter.decodeRemainingInsulin(data)
@@ -159,7 +160,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeSettings with 522 pump configuration`() {
-        medtronicUtil.medtronicPumpModel = MedtronicDeviceType.Medtronic_522_722
+        whenever(medtronicUtil.medtronicPumpModel).thenReturn(MedtronicDeviceType.Medtronic_522_722)
 
         // Sample settings data for Medtronic 522/722
         val data = ByteUtil.createByteArrayFromString(
@@ -204,7 +205,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeSettings with percent temp basal type`() {
-        medtronicUtil.medtronicPumpModel = MedtronicDeviceType.Medtronic_522_722
+        whenever(medtronicUtil.medtronicPumpModel).thenReturn(MedtronicDeviceType.Medtronic_522_722)
 
         val data = ByteUtil.createByteArrayFromString(
             "08 02 01 0A 01 32 00 28 01 00 01 00 01 00 " +
@@ -221,7 +222,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeSettings with alarm mode silent`() {
-        medtronicUtil.medtronicPumpModel = MedtronicDeviceType.Medtronic_522_722
+        whenever(medtronicUtil.medtronicPumpModel).thenReturn(MedtronicDeviceType.Medtronic_522_722)
 
         val data = ByteUtil.createByteArrayFromString(
             "08 " +      // [0] Auto-off timeout
@@ -268,7 +269,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
     @Test
     fun `test decodeSettingsLoop for simple configuration`() {
-        medtronicUtil.medtronicPumpModel = MedtronicDeviceType.Medtronic_522_722
+        whenever(medtronicUtil.medtronicPumpModel).thenReturn(MedtronicDeviceType.Medtronic_522_722)
 
         val data = ByteUtil.createByteArrayFromString(
             "08 02 01 0A 01 32 00 28 01 00 " +
