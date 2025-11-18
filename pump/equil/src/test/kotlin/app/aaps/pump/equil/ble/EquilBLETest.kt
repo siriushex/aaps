@@ -1,7 +1,6 @@
 package app.aaps.pump.equil.ble
 
 import android.content.Context
-import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -11,11 +10,7 @@ import org.mockito.Mock
 
 class EquilBLETest : TestBase() {
 
-    @Mock
-    private lateinit var context: Context
-
-    @Mock
-    private lateinit var rxBus: RxBus
+    @Mock private lateinit var context: Context
 
     @Test
     fun `isConnected should be false initially`() {
