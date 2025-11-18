@@ -83,8 +83,8 @@ object CommonUtils {
         val diff = abs(a - b)
         return if (a == b) {
             true
-        } else if (a == 0f || b == 0f || absA + absB < java.lang.Float.MIN_NORMAL) {
-            // For values at or near zero, use absolute difference
+        } else if (a == 0f || b == 0f || absA + absB < java.lang.Float.MIN_NORMAL || absA + absB < 1.0f) {
+            // For values at or near zero, or small values (sum < 1.0), use absolute difference
             diff < epsilon
         } else {
             // For other values, use relative difference

@@ -19,6 +19,7 @@ class SegmentsEntityTest {
     @Test
     fun `hasSegments should return true when segments exist`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 60, 1.0f))
 
         assertThat(normalBasal.hasSegments()).isTrue()
@@ -41,6 +42,7 @@ class SegmentsEntityTest {
     @Test
     fun `copiedSegmentList should return copy of list`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         val segment = BasalSegment.create(0, 60, 1.0f)
         normalBasal.list.add(segment)
 
@@ -54,6 +56,7 @@ class SegmentsEntityTest {
     @Test
     fun `deepCopiedSegmentList should return deep copy`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         val segment = BasalSegment.create(0, 60, 1.0f)
         normalBasal.list.add(segment)
 
@@ -84,6 +87,7 @@ class SegmentsEntityTest {
     @Test
     fun `isValid should return false when list contains empty segment`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 60, 1.0f))
         normalBasal.list.add(BasalSegment.create(60, 120, 0f)) // Empty segment
 
@@ -93,6 +97,7 @@ class SegmentsEntityTest {
     @Test
     fun `isValid should return true when all segments are non-empty`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 60, 1.0f))
         normalBasal.list.add(BasalSegment.create(60, 120, 1.5f))
 
@@ -102,6 +107,7 @@ class SegmentsEntityTest {
     @Test
     fun `isFullSegment should return true for complete 24 hour coverage`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 720, 1.0f))
         normalBasal.list.add(BasalSegment.create(720, 1440, 1.5f))
 
@@ -111,6 +117,7 @@ class SegmentsEntityTest {
     @Test
     fun `isFullSegment should return false for incomplete coverage`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 720, 1.0f))
         normalBasal.list.add(BasalSegment.create(720, 1200, 1.5f)) // Ends at 1200, not 1440
 
@@ -120,6 +127,7 @@ class SegmentsEntityTest {
     @Test
     fun `isFullSegment should return false for gaps in coverage`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 600, 1.0f))
         normalBasal.list.add(BasalSegment.create(720, 1440, 1.5f)) // Gap from 600-720
 
@@ -148,6 +156,7 @@ class SegmentsEntityTest {
     @Test
     fun `getEmptySegment should return gap at start if first segment doesn't start at 0`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(60, 1440, 1.0f)) // Starts at 60 instead of 0
 
         val empty = normalBasal.getEmptySegment()
@@ -159,6 +168,7 @@ class SegmentsEntityTest {
     @Test
     fun `getEmptySegment should return gap at end if only one segment`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 720, 1.0f))
 
         val empty = normalBasal.getEmptySegment()
@@ -170,6 +180,7 @@ class SegmentsEntityTest {
     @Test
     fun `getEmptySegment should return gap between segments`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 300, 1.0f))
         normalBasal.list.add(BasalSegment.create(600, 1440, 1.5f)) // Gap from 300-600
 
@@ -182,6 +193,7 @@ class SegmentsEntityTest {
     @Test
     fun `getEmptySegment should return last gap when full coverage`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 1440, 1.0f))
 
         val empty = normalBasal.getEmptySegment()
@@ -193,6 +205,7 @@ class SegmentsEntityTest {
     @Test
     fun `eachSegmentItem should iterate over all segment items`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 60, 1.0f)) // 2 items (30min each)
         normalBasal.list.add(BasalSegment.create(60, 120, 1.5f)) // 2 items
 
@@ -208,6 +221,7 @@ class SegmentsEntityTest {
     @Test
     fun `eachSegmentItem should stop when function returns false`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 120, 1.0f)) // 4 items
 
         val indices = mutableListOf<Int>()
@@ -222,6 +236,7 @@ class SegmentsEntityTest {
     @Test
     fun `eachSegmentItem should provide correct segment for each index`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         val segment1 = BasalSegment.create(0, 60, 1.0f)
         val segment2 = BasalSegment.create(60, 120, 2.0f)
         normalBasal.list.add(segment1)
@@ -242,6 +257,7 @@ class SegmentsEntityTest {
     @Test
     fun `multiple segments should form continuous day coverage`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
         normalBasal.list.add(BasalSegment.create(0, 360, 1.0f))
         normalBasal.list.add(BasalSegment.create(360, 720, 1.5f))
         normalBasal.list.add(BasalSegment.create(720, 1080, 2.0f))
