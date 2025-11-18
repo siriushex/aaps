@@ -2,7 +2,6 @@ package app.aaps.pump.danaR.services
 
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
-import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.ui.UiInteraction
@@ -17,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 
@@ -28,7 +26,6 @@ class DanaRExecutionServiceTest : TestBaseWithProfile() {
     @Mock lateinit var commandQueue: CommandQueue
     @Mock lateinit var messageHashTableR: MessageHashTableR
     @Mock lateinit var profile: Profile
-    @Mock lateinit var pumpEnactResult: PumpEnactResult
     @Mock lateinit var danaPump: DanaPump
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var uiInteraction: UiInteraction
@@ -57,10 +54,6 @@ class DanaRExecutionServiceTest : TestBaseWithProfile() {
         danaRExecutionService.messageHashTableR = messageHashTableR
         danaRExecutionService.profileFunction = profileFunction
 
-        `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.success(any())).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.comment(anyInt())).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.comment(anyString())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test")
         `when`(rh.gs(anyInt(), any())).thenReturn("test")
         `when`(danaRPlugin.pumpDescription).thenReturn(mockPumpDescription())

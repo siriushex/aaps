@@ -11,11 +11,9 @@ import app.aaps.pump.dana.comm.RecordTypes
 import app.aaps.pump.danars.DanaRSPlugin
 import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
-import io.reactivex.rxjava3.schedulers.Schedulers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
@@ -56,10 +54,6 @@ class DanaRSServiceTest : TestBaseWithProfile() {
         danaRSService.dateUtil = dateUtil
         danaRSService.pumpEnactResultProvider = pumpEnactResultProvider
 
-        `when`(aapsSchedulers.io).thenReturn(Schedulers.trampoline())
-        `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.success(anyBoolean())).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.comment(anyString())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test string")
         `when`(rh.gs(anyInt(), any())).thenReturn("test string")
         `when`(activePlugin.activePump).thenReturn(danaRSPlugin)

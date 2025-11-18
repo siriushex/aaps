@@ -3,31 +3,23 @@ package app.aaps.pump.danaR.services
 import android.bluetooth.BluetoothManager
 import android.content.Context
 import app.aaps.core.data.pump.defs.PumpType
-import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
-import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.ui.UiInteraction
-import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
-import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.dana.comm.RecordTypes
 import app.aaps.pump.dana.keys.DanaStringKey
 import app.aaps.pump.danar.comm.MessageHashTableBase
 import app.aaps.pump.danar.services.AbstractDanaRExecutionService
-import app.aaps.shared.tests.TestBase
+import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import dagger.android.AndroidInjector
-import dagger.android.HasAndroidInjector
-import io.reactivex.rxjava3.schedulers.Schedulers
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mock
@@ -35,21 +27,12 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
-import javax.inject.Provider
 
-class AbstractDanaRExecutionServiceTest : TestBase() {
+class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
 
-    @Mock lateinit var injector: HasAndroidInjector
-    @Mock lateinit var preferences: Preferences
-    @Mock lateinit var context: Context
-    @Mock lateinit var rh: ResourceHelper
     @Mock lateinit var danaPump: DanaPump
-    @Mock lateinit var fabricPrivacy: FabricPrivacy
-    @Mock lateinit var dateUtil: DateUtil
     @Mock lateinit var pumpSync: PumpSync
-    @Mock lateinit var activePlugin: ActivePlugin
     @Mock lateinit var uiInteraction: UiInteraction
-    @Mock lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
     @Mock lateinit var messageHashTable: MessageHashTableBase
     @Mock lateinit var bluetoothManager: BluetoothManager
     @Mock lateinit var pumpEnactResult: PumpEnactResult
@@ -73,10 +56,6 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
 
     @BeforeEach
     fun setup() {
-        `when`(aapsSchedulers.io).thenReturn(Schedulers.trampoline())
-        `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.success(anyBoolean())).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.comment(anyString())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test string")
         `when`(rh.gs(anyInt(), any())).thenReturn("test string")
 
