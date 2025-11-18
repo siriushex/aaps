@@ -11,6 +11,7 @@ import app.aaps.pump.medtronic.defs.MedtronicCommandType
 import app.aaps.pump.medtronic.defs.MedtronicDeviceType
 import app.aaps.pump.medtronic.defs.MedtronicNotificationType
 import app.aaps.pump.medtronic.driver.MedtronicPumpStatus
+import app.aaps.shared.tests.TestBaseWithProfile
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,13 +26,12 @@ import org.mockito.kotlin.whenever
 /**
  * Tests for MedtronicUtil instance methods
  */
-class MedtronicUtilInstanceUTest : MedtronicTestBase() {
+class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
 
-    @Mock lateinit var rxBus: RxBus
-    @Mock lateinit var rileyLinkUtil: RileyLinkUtil
     @Mock lateinit var medtronicPumpStatus: MedtronicPumpStatus
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var rileyLinkServiceData: RileyLinkServiceData
+    @Mock lateinit var rileyLinkUtil: RileyLinkUtil
 
     @Captor lateinit var eventCaptor: ArgumentCaptor<EventDismissNotification>
 
@@ -39,7 +39,6 @@ class MedtronicUtilInstanceUTest : MedtronicTestBase() {
 
     @BeforeEach
     fun setup() {
-        super.initializeCommonMocks()
         medtronicUtil = MedtronicUtil(aapsLogger, rxBus, rileyLinkUtil, medtronicPumpStatus, uiInteraction)
     }
 
@@ -111,7 +110,7 @@ class MedtronicUtilInstanceUTest : MedtronicTestBase() {
 
         val result = medtronicUtil.buildCommandPayload(
             rileyLinkServiceData,
-            MedtronicCommandType.GetPumpModel,
+            MedtronicCommandType.PumpModel,
             null
         )
 
@@ -121,7 +120,7 @@ class MedtronicUtilInstanceUTest : MedtronicTestBase() {
         assertThat(result[1]).isEqualTo(0x12.toByte())
         assertThat(result[2]).isEqualTo(0x34.toByte())
         assertThat(result[3]).isEqualTo(0x56.toByte())
-        assertThat(result[4]).isEqualTo(MedtronicCommandType.GetPumpModel.commandCode)
+        assertThat(result[4]).isEqualTo(MedtronicCommandType.PumpModel.commandCode)
         assertThat(result[5]).isEqualTo(0x00.toByte()) // No parameters
     }
 
@@ -129,7 +128,7 @@ class MedtronicUtilInstanceUTest : MedtronicTestBase() {
     fun `test buildCommandPayload with single parameter`() {
         whenever(rileyLinkServiceData.pumpIDBytes).thenReturn(byteArrayOf(0x12, 0x34, 0x56))
 
-        val parameters = byteArrayOf(0xAB)
+        val parameters = byteArrayOf(0xAB.toByte())
         val result = medtronicUtil.buildCommandPayload(
             rileyLinkServiceData,
             MedtronicCommandType.SetBasalProfileSTD,
@@ -149,12 +148,12 @@ class MedtronicUtilInstanceUTest : MedtronicTestBase() {
 
     @Test
     fun `test buildCommandPayload with multiple parameters`() {
-        whenever(rileyLinkServiceData.pumpIDBytes).thenReturn(byteArrayOf(0xAA, 0xBB, 0xCC))
+        whenever(rileyLinkServiceData.pumpIDBytes).thenReturn(byteArrayOf(0xAA.toByte(), 0xBB.toByte(), 0xCC.toByte()))
 
         val parameters = byteArrayOf(0x01, 0x02, 0x03, 0x04)
         val result = medtronicUtil.buildCommandPayload(
             rileyLinkServiceData,
-            MedtronicCommandType.SetTempBasal,
+            MedtronicCommandType.SetTemporaryBasal,
             parameters
         )
 
@@ -163,7 +162,7 @@ class MedtronicUtilInstanceUTest : MedtronicTestBase() {
         assertThat(result[1]).isEqualTo(0xAA.toByte())
         assertThat(result[2]).isEqualTo(0xBB.toByte())
         assertThat(result[3]).isEqualTo(0xCC.toByte())
-        assertThat(result[4]).isEqualTo(MedtronicCommandType.SetTempBasal.commandCode)
+        assertThat(result[4]).isEqualTo(MedtronicCommandType.SetTemporaryBasal.commandCode)
         assertThat(result[5]).isEqualTo(0x04.toByte()) // 4 parameters
         assertThat(result[6]).isEqualTo(0x01.toByte())
         assertThat(result[7]).isEqualTo(0x02.toByte())
@@ -240,14 +239,14 @@ class MedtronicUtilInstanceUTest : MedtronicTestBase() {
 
     @Test
     fun `test setCurrentCommand stores command`() {
-        medtronicUtil.setCurrentCommand(MedtronicCommandType.GetPumpModel)
+        medtronicUtil.setCurrentCommand(MedtronicCommandType.PumpModel)
 
-        assertThat(medtronicUtil.getCurrentCommand()).isEqualTo(MedtronicCommandType.GetPumpModel)
+        assertThat(medtronicUtil.getCurrentCommand()).isEqualTo(MedtronicCommandType.PumpModel)
     }
 
     @Test
     fun `test setCurrentCommand can be set to null`() {
-        medtronicUtil.setCurrentCommand(MedtronicCommandType.GetPumpModel)
+        medtronicUtil.setCurrentCommand(MedtronicCommandType.PumpModel)
         medtronicUtil.setCurrentCommand(null)
 
         assertThat(medtronicUtil.getCurrentCommand()).isNull()
@@ -273,10 +272,10 @@ class MedtronicUtilInstanceUTest : MedtronicTestBase() {
 
     @Test
     fun `test setCurrentCommand does not change if same command`() {
-        medtronicUtil.setCurrentCommand(MedtronicCommandType.GetPumpModel)
+        medtronicUtil.setCurrentCommand(MedtronicCommandType.PumpModel)
         val firstCommand = medtronicUtil.getCurrentCommand()
 
-        medtronicUtil.setCurrentCommand(MedtronicCommandType.GetPumpModel, 1, 2)
+        medtronicUtil.setCurrentCommand(MedtronicCommandType.PumpModel, 1, 2)
 
         assertThat(medtronicUtil.getCurrentCommand()).isSameInstanceAs(firstCommand)
     }
