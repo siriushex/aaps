@@ -9,9 +9,9 @@ import android.content.pm.PackageManager
 import android.os.Build
 import app.aaps.core.data.pump.defs.PumpType
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.core.interfaces.objects.Instantiator
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
+import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.pump.TemporaryBasal
@@ -24,12 +24,14 @@ import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
-import app.aaps.core.keys.Preferences
+import app.aaps.core.keys.interfaces.Preferences
+import javax.inject.Provider
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.dana.comm.RecordTypes
 import app.aaps.pump.dana.keys.DanaStringKey
 import app.aaps.pump.danar.SerialIOThread
 import app.aaps.pump.danar.comm.MessageBase
+import app.aaps.pump.danar.comm.MessageHashTableBase
 import app.aaps.pump.danar.comm.MsgHistoryBolus
 import app.aaps.pump.danar.services.AbstractDanaRExecutionService
 import app.aaps.shared.tests.TestBase
@@ -69,7 +71,8 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var activePlugin: ActivePlugin
     @Mock lateinit var uiInteraction: UiInteraction
-    @Mock lateinit var instantiator: Instantiator
+    @Mock lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
+    @Mock lateinit var messageHashTable: MessageHashTableBase
     @Mock lateinit var bluetoothManager: BluetoothManager
     @Mock lateinit var bluetoothAdapter: BluetoothAdapter
     @Mock lateinit var bluetoothDevice: BluetoothDevice
@@ -80,11 +83,11 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
     private lateinit var testService: TestDanaRExecutionService
 
     inner class TestDanaRExecutionService : AbstractDanaRExecutionService() {
+        override fun messageHashTable(): MessageHashTableBase = messageHashTable
         override fun updateBasalsInPump(profile: Profile): Boolean = true
-        override fun connect() {}
         override fun getPumpStatus() {}
         override fun loadEvents(): PumpEnactResult? = pumpEnactResult
-        override fun bolus(amount: Double, carbs: Int, carbTimeStamp: Long, t: EventOverviewBolusProgress.Treatment): Boolean = true
+        override fun bolus(detailedBolusInfo: DetailedBolusInfo): Boolean = true
         override fun highTempBasal(percent: Int, durationInMinutes: Int): Boolean = false
         override fun tempBasalShortDuration(percent: Int, durationInMinutes: Int): Boolean = false
         override fun tempBasal(percent: Int, durationInHours: Int): Boolean = true
@@ -97,7 +100,7 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
     @BeforeEach
     fun setup() {
         `when`(aapsSchedulers.io).thenReturn(Schedulers.trampoline())
-        `when`(instantiator.providePumpEnactResult()).thenReturn(pumpEnactResult)
+        `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
         `when`(pumpEnactResult.success(anyBoolean())).thenReturn(pumpEnactResult)
         `when`(pumpEnactResult.comment(anyString())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test string")
@@ -116,7 +119,7 @@ class AbstractDanaRExecutionServiceTest : TestBase() {
         testService.pumpSync = pumpSync
         testService.activePlugin = activePlugin
         testService.uiInteraction = uiInteraction
-        testService.instantiator = instantiator
+        testService.pumpEnactResultProvider = pumpEnactResultProvider
         testService.injector = injector
 
         `when`(injector.androidInjector()).thenReturn(AndroidInjector { })

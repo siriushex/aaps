@@ -4,11 +4,10 @@ import android.bluetooth.BluetoothSocket
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
+import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.queue.Command
 import app.aaps.core.interfaces.queue.CommandQueue
-import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
-import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.pump.danar.DanaRPlugin
 import app.aaps.pump.danar.SerialIOThread
 import app.aaps.pump.danarkorean.DanaRKoreanPlugin
@@ -21,18 +20,20 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
+import javax.inject.Provider
 
 class DanaRKoreanExecutionServiceTest : TestBaseWithProfile() {
 
     @Mock lateinit var constraintChecker: ConstraintsChecker
     @Mock lateinit var danaRPlugin: DanaRPlugin
-    @Mock lateinit var danaRKoreanPlugin: DanaRKoreanPlugin
+    @Mock latinit var danaRKoreanPlugin: DanaRKoreanPlugin
     @Mock lateinit var commandQueue: CommandQueue
     @Mock lateinit var messageHashTableRKorean: MessageHashTableRKorean
     @Mock lateinit var profileFunction: ProfileFunction
     @Mock lateinit var serialIOThread: SerialIOThread
     @Mock lateinit var rfcommSocket: BluetoothSocket
     @Mock lateinit var profile: Profile
+    @Mock lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
 
     private lateinit var danaRKoreanExecutionService: DanaRKoreanExecutionService
 
@@ -51,7 +52,7 @@ class DanaRKoreanExecutionServiceTest : TestBaseWithProfile() {
         danaRKoreanExecutionService.pumpSync = pumpSync
         danaRKoreanExecutionService.activePlugin = activePlugin
         danaRKoreanExecutionService.uiInteraction = uiInteraction
-        danaRKoreanExecutionService.instantiator = instantiator
+        danaRKoreanExecutionService.pumpEnactResultProvider = pumpEnactResultProvider
         danaRKoreanExecutionService.constraintChecker = constraintChecker
         danaRKoreanExecutionService.danaRPlugin = danaRPlugin
         danaRKoreanExecutionService.danaRKoreanPlugin = danaRKoreanPlugin
@@ -108,8 +109,9 @@ class DanaRKoreanExecutionServiceTest : TestBaseWithProfile() {
 
     @Test
     fun testBolus_notConnected() {
-        val treatment = EventOverviewBolusProgress.Treatment(0.0, 0, false, 0)
-        val result = danaRKoreanExecutionService.bolus(5.0, 0, 0L, treatment)
+        val detailedBolusInfo = DetailedBolusInfo()
+        detailedBolusInfo.insulin = 5.0
+        val result = danaRKoreanExecutionService.bolus(detailedBolusInfo)
 
         assertThat(result).isFalse()
     }
@@ -136,16 +138,6 @@ class DanaRKoreanExecutionServiceTest : TestBaseWithProfile() {
         val result = danaRKoreanExecutionService.updateBasalsInPump(profile)
 
         assertThat(result).isFalse()
-    }
-
-    @Test
-    fun testConnect_alreadyConnecting() {
-        danaRKoreanExecutionService.isConnecting = true
-
-        danaRKoreanExecutionService.connect()
-
-        // Should return early without doing anything
-        assertThat(danaRKoreanExecutionService.isConnecting).isTrue()
     }
 
     private fun mockPumpDescription(): app.aaps.core.data.pump.defs.PumpDescription {

@@ -3,11 +3,10 @@ package app.aaps.pump.danarv2.services
 import android.bluetooth.BluetoothSocket
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
+import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.queue.Command
 import app.aaps.core.interfaces.queue.CommandQueue
-import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
-import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.pump.danar.SerialIOThread
 import app.aaps.pump.danarkorean.DanaRKoreanPlugin
 import app.aaps.pump.danarv2.DanaRv2Plugin
@@ -20,6 +19,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
+import javax.inject.Provider
 
 class DanaRv2ExecutionServiceTest : TestBaseWithProfile() {
 
@@ -32,6 +32,7 @@ class DanaRv2ExecutionServiceTest : TestBaseWithProfile() {
     @Mock lateinit var rfcommSocket: BluetoothSocket
     @Mock lateinit var profile: Profile
     @Mock lateinit var pumpEnactResult: PumpEnactResult
+    @Mock lateinit var pumpEnactResultProvider: Provider<PumpEnactResult>
 
     private lateinit var danaRv2ExecutionService: DanaRv2ExecutionService
 
@@ -50,14 +51,14 @@ class DanaRv2ExecutionServiceTest : TestBaseWithProfile() {
         danaRv2ExecutionService.pumpSync = pumpSync
         danaRv2ExecutionService.activePlugin = activePlugin
         danaRv2ExecutionService.uiInteraction = uiInteraction
-        danaRv2ExecutionService.instantiator = instantiator
+        danaRv2ExecutionService.pumpEnactResultProvider = pumpEnactResultProvider
         danaRv2ExecutionService.danaRKoreanPlugin = danaRKoreanPlugin
         danaRv2ExecutionService.danaRv2Plugin = danaRv2Plugin
         danaRv2ExecutionService.commandQueue = commandQueue
         danaRv2ExecutionService.messageHashTableRv2 = messageHashTableRv2
         danaRv2ExecutionService.profileFunction = profileFunction
 
-        `when`(instantiator.providePumpEnactResult()).thenReturn(pumpEnactResult)
+        `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
         `when`(pumpEnactResult.success(any())).thenReturn(pumpEnactResult)
         `when`(pumpEnactResult.comment(any())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test")
@@ -138,8 +139,9 @@ class DanaRv2ExecutionServiceTest : TestBaseWithProfile() {
 
     @Test
     fun testBolus_notConnected() {
-        val treatment = EventOverviewBolusProgress.Treatment(0.0, 0, false, 0)
-        val result = danaRv2ExecutionService.bolus(5.0, 0, 0L, treatment)
+        val detailedBolusInfo = DetailedBolusInfo()
+        detailedBolusInfo.insulin = 5.0
+        val result = danaRv2ExecutionService.bolus(detailedBolusInfo)
 
         assertThat(result).isFalse()
     }
@@ -160,16 +162,6 @@ class DanaRv2ExecutionServiceTest : TestBaseWithProfile() {
 
         assertThat(result).isNotNull()
         assertThat(result.success).isFalse()
-    }
-
-    @Test
-    fun testConnect_alreadyConnecting() {
-        danaRv2ExecutionService.isConnecting = true
-
-        danaRv2ExecutionService.connect()
-
-        // Should return early without doing anything
-        assertThat(danaRv2ExecutionService.isConnecting).isTrue()
     }
 
     private fun mockPumpDescription(): app.aaps.core.data.pump.defs.PumpDescription {

@@ -2,21 +2,20 @@ package app.aaps.pump.danars.services
 
 import android.content.Context
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
-import app.aaps.core.interfaces.objects.Instantiator
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.profile.ProfileFunction
+import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.rx.events.EventOverviewBolusProgress
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
-import app.aaps.core.keys.Preferences
+import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.dana.comm.RecordTypes
 import app.aaps.pump.danars.DanaRSPlugin
@@ -50,9 +49,9 @@ class DanaRSServiceTest : TestBase() {
     @Mock lateinit var fabricPrivacy: FabricPrivacy
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var dateUtil: DateUtil
-    @Mock lateinit var instantiator: Instantiator
+    @Mock lateinit var pumpEnactResultProvider: javax.inject.Provider<PumpEnactResult>
     @Mock lateinit var aapsSchedulers: AapsSchedulers
-    @Mock lateinit var profile: Profile
+    @Mock latinit var profile: Profile
     @Mock lateinit var pumpEnactResult: PumpEnactResult
 
     private lateinit var danaRSService: DanaRSService
@@ -78,10 +77,10 @@ class DanaRSServiceTest : TestBase() {
         danaRSService.fabricPrivacy = fabricPrivacy
         danaRSService.pumpSync = pumpSync
         danaRSService.dateUtil = dateUtil
-        danaRSService.instantiator = instantiator
+        danaRSService.pumpEnactResultProvider = pumpEnactResultProvider
 
         `when`(aapsSchedulers.io).thenReturn(Schedulers.trampoline())
-        `when`(instantiator.providePumpEnactResult()).thenReturn(pumpEnactResult)
+        `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
         `when`(pumpEnactResult.success(anyBoolean())).thenReturn(pumpEnactResult)
         `when`(pumpEnactResult.comment(anyString())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test string")
@@ -149,9 +148,10 @@ class DanaRSServiceTest : TestBase() {
     @Test
     fun testBolus_notConnected() {
         `when`(bleComm.isConnected).thenReturn(false)
-        val treatment = EventOverviewBolusProgress.Treatment(0.0, 0, false, 0)
+        val detailedBolusInfo = DetailedBolusInfo()
+        detailedBolusInfo.insulin = 5.0
 
-        val result = danaRSService.bolus(5.0, 0, 0L, treatment)
+        val result = danaRSService.bolus(detailedBolusInfo)
 
         assertThat(result).isFalse()
     }
@@ -159,7 +159,6 @@ class DanaRSServiceTest : TestBase() {
     @Test
     fun testBolusStop() {
         `when`(bleComm.isConnected).thenReturn(false)
-        `when`(danaPump.bolusingTreatment).thenReturn(null)
 
         danaRSService.bolusStop()
 
