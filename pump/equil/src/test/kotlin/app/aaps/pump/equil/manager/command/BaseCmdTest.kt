@@ -150,8 +150,9 @@ class BaseCmdTest : TestBaseWithProfile() {
     @Test
     fun `up1 should handle zero and negative values`() {
         assertEquals(0, testCmd.up1(0.0))
-        assertEquals(0, testCmd.up1(-0.5))
-        assertEquals(-1, testCmd.up1(-1.5))
+        // RoundingMode.UP rounds away from zero, so negative values round down
+        assertEquals(-1, testCmd.up1(-0.5))
+        assertEquals(-2, testCmd.up1(-1.5))
     }
 
     @Test
