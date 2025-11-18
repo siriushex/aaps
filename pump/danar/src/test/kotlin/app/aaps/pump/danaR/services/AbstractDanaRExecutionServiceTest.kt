@@ -7,7 +7,6 @@ import app.aaps.core.interfaces.profile.Profile
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpEnactResult
 import app.aaps.core.interfaces.pump.PumpSync
-import app.aaps.core.interfaces.rx.events.EventPumpStatusChanged
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.pump.dana.DanaPump
 import app.aaps.pump.dana.comm.RecordTypes
@@ -35,7 +34,6 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     @Mock lateinit var messageHashTable: MessageHashTableBase
     @Mock lateinit var bluetoothManager: BluetoothManager
     @Mock lateinit var pumpEnactResult: PumpEnactResult
-    @Mock lateinit var injector: HasAndroidInjector
 
     lateinit var danaPump: DanaPump
 
@@ -68,7 +66,6 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     fun setup() {
         `when`(rh.gs(anyInt())).thenReturn("test string")
         `when`(rh.gs(anyInt(), any())).thenReturn("test string")
-        `when`(injector.androidInjector()).thenReturn(AndroidInjector { })
 
         danaPump = DanaPump(aapsLogger, preferences, dateUtil, decimalFormatter, profileStoreProvider)
         testService = TestDanaRExecutionService()
@@ -114,8 +111,8 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     fun testBolusStop_notConnected() {
         testService.bolusStop()
 
-        verify(danaPump).bolusStopForced = true
-        verify(danaPump).bolusStopped = true
+        assertThat(danaPump.bolusStopForced).isTrue()
+        assertThat(danaPump.bolusStopped).isTrue()
     }
 
     @Test
@@ -157,10 +154,10 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(pumpState.extendedBolus).thenReturn(null)
         `when`(temporaryBasal.rate).thenReturn(150.0)
         `when`(temporaryBasal.timestamp).thenReturn(1000000L)
-        `when`(danaPump.isTempBasalInProgress).thenReturn(true)
-        `when`(danaPump.tempBasalPercent).thenReturn(100)
-        `when`(danaPump.tempBasalStart).thenReturn(1000000L)
-        `when`(danaPump.tempBasalDuration).thenReturn(30)
+        danaPump.isTempBasalInProgress = true
+        danaPump.tempBasalPercent = 100
+        danaPump.tempBasalStart = 1000000L
+        danaPump.tempBasalDuration = 30
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
@@ -180,10 +177,10 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
         `when`(pumpState.temporaryBasal).thenReturn(null)
         `when`(pumpState.extendedBolus).thenReturn(null)
-        `when`(danaPump.isTempBasalInProgress).thenReturn(true)
-        `when`(danaPump.tempBasalPercent).thenReturn(120)
-        `when`(danaPump.tempBasalStart).thenReturn(1000000L)
-        `when`(danaPump.tempBasalDuration).thenReturn(30)
+        danaPump.isTempBasalInProgress = true
+        danaPump.tempBasalPercent = 120
+        danaPump.tempBasalStart = 1000000L
+        danaPump.tempBasalDuration = 30
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
@@ -252,8 +249,8 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
         `when`(pumpState.temporaryBasal).thenReturn(null)
         `when`(pumpState.extendedBolus).thenReturn(null)
-        `when`(danaPump.isTempBasalInProgress).thenReturn(false)
-        `when`(danaPump.isExtendedInProgress).thenReturn(false)
+        danaPump.isTempBasalInProgress = false
+        danaPump.isExtendedInProgress = false
 
         testService.doSanityCheck()
 
