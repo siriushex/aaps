@@ -32,6 +32,7 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var rileyLinkServiceData: RileyLinkServiceData
     @Mock lateinit var rileyLinkUtil: RileyLinkUtil
+    @Mock lateinit var rxBusMock: RxBus
 
     @Captor lateinit var eventCaptor: ArgumentCaptor<EventDismissNotification>
 
@@ -39,7 +40,7 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
 
     @BeforeEach
     fun setup() {
-        medtronicUtil = MedtronicUtil(aapsLogger, rxBus, rileyLinkUtil, medtronicPumpStatus, uiInteraction)
+        medtronicUtil = MedtronicUtil(aapsLogger, rxBusMock, rileyLinkUtil, medtronicPumpStatus, uiInteraction)
     }
 
     // getBolusStrokes tests
@@ -48,10 +49,12 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
         whenever(medtronicPumpStatus.medtronicDeviceType).thenReturn(MedtronicDeviceType.Medtronic_522_722)
 
         // 1.0 U * 10 strokes/U = 10 strokes = 0x0A
+        // Format: [length, data] = [0x01, 0x0A]
         val result = medtronicUtil.getBolusStrokes(1.0)
 
-        assertThat(result).hasLength(1)
-        assertThat(result[0]).isEqualTo(0x0A.toByte())
+        assertThat(result).hasLength(2)
+        assertThat(result[0]).isEqualTo(0x01.toByte()) // length = 1
+        assertThat(result[1]).isEqualTo(0x0A.toByte()) // strokes = 10
     }
 
     @Test
@@ -59,10 +62,12 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
         whenever(medtronicPumpStatus.medtronicDeviceType).thenReturn(MedtronicDeviceType.Medtronic_522_722)
 
         // 5.5 U * 10 strokes/U = 55 strokes = 0x37
+        // Format: [length, data] = [0x01, 0x37]
         val result = medtronicUtil.getBolusStrokes(5.5)
 
-        assertThat(result).hasLength(1)
-        assertThat(result[0]).isEqualTo(0x37.toByte())
+        assertThat(result).hasLength(2)
+        assertThat(result[0]).isEqualTo(0x01.toByte()) // length = 1
+        assertThat(result[1]).isEqualTo(0x37.toByte()) // strokes = 55
     }
 
     @Test
@@ -173,25 +178,27 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
     // getBasalProfileFrames tests
     @Test
     fun `test getBasalProfileFrames with small data fits in one frame`() {
-        val data = ByteArray(30) { it.toByte() }
+        val data = ByteArray(30) { (it + 1).toByte() }
 
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
         assertThat(frames).hasSize(1)
         assertThat(frames[0]).hasSize(65) // BIG_FRAME_LENGTH
         assertThat(frames[0][0]).isEqualTo(0x81.toByte()) // Frame 1 with done bit (0x01 | 0x80)
+        // Check that data is present
+        assertThat(frames[0][1]).isEqualTo(0x01.toByte())
     }
 
     @Test
     fun `test getBasalProfileFrames with data requiring two frames`() {
+        // 128 bytes = 2 full frames (64 bytes each)
         val data = ByteArray(128) { it.toByte() }
 
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
-        assertThat(frames).hasSize(3) // 2 data frames + 1 terminator frame
+        assertThat(frames).hasSize(2) // 2 data frames, last one has done bit
         assertThat(frames[0][0]).isEqualTo(0x01.toByte()) // Frame 1
-        assertThat(frames[1][0]).isEqualTo(0x02.toByte()) // Frame 2
-        assertThat(frames[2][0].toInt() and 0x80).isEqualTo(0x80) // Frame 3 with done bit
+        assertThat(frames[1][0].toInt() and 0x80).isEqualTo(0x80) // Frame 2 with done bit
     }
 
     @Test
@@ -207,13 +214,13 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
 
     @Test
     fun `test getBasalProfileFrames pads last frame to 65 bytes`() {
-        val data = ByteArray(10) { it.toByte() }
+        val data = ByteArray(10) { (it + 1).toByte() }
 
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
         assertThat(frames).hasSize(1)
         assertThat(frames[0]).hasSize(65)
-        // Check padding zeros
+        // Check padding zeros (frame number + 10 data bytes + padding)
         for (i in 11 until 65) {
             assertThat(frames[0][i]).isEqualTo(0x00.toByte())
         }
@@ -221,14 +228,14 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
 
     @Test
     fun `test getBasalProfileFrames with exactly 64 bytes per frame`() {
-        // 64 bytes data + 1 byte frame number = 65 bytes total per frame
+        // 64 bytes data fits exactly in one frame (64 data + 1 frame number = 65)
         val data = ByteArray(64) { it.toByte() }
 
         val frames = medtronicUtil.getBasalProfileFrames(data)
 
         assertThat(frames).hasSize(1)
         assertThat(frames[0]).hasSize(65)
-        assertThat(frames[0][0]).isEqualTo(0x81.toByte()) // Frame 1 with done bit
+        assertThat(frames[0][0].toInt() and 0x80).isEqualTo(0x80) // Frame 1 with done bit
     }
 
     // Command tracking tests
@@ -308,7 +315,7 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
     @Test
     fun `test sendNotification calls uiInteraction`() {
         val notificationType = MedtronicNotificationType.PumpUnreachable
-        whenever(rh.gs(any<Int>(), any())).thenReturn("Test notification")
+        whenever(rh.gs(eq(notificationType.resourceId), eq("param1"), eq("param2"))).thenReturn("Test notification")
 
         medtronicUtil.sendNotification(notificationType, rh, "param1", "param2")
 
@@ -322,7 +329,7 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
     @Test
     fun `test sendNotification with no parameters`() {
         val notificationType = MedtronicNotificationType.PumpUnreachable
-        whenever(rh.gs(any<Int>())).thenReturn("Simple notification")
+        whenever(rh.gs(eq(notificationType.resourceId))).thenReturn("Simple notification")
 
         medtronicUtil.sendNotification(notificationType, rh)
 
@@ -337,9 +344,9 @@ class MedtronicUtilInstanceUTest : TestBaseWithProfile() {
     fun `test dismissNotification sends event`() {
         val notificationType = MedtronicNotificationType.PumpUnreachable
 
-        medtronicUtil.dismissNotification(notificationType, rxBus)
+        medtronicUtil.dismissNotification(notificationType, rxBusMock)
 
-        verify(rxBus).send(eventCaptor.capture())
+        verify(rxBusMock).send(eventCaptor.capture())
         assertThat(eventCaptor.value.id).isEqualTo(notificationType.notificationType)
     }
 
