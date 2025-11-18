@@ -146,14 +146,15 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     @Test
     fun testDoSanityCheck_temporaryBasalMismatch() {
         val temporaryBasal = mock(PumpSync.PumpState.TemporaryBasal::class.java)
-        val pumpState = mock(PumpSync.PumpState::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
-        `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
-        `when`(pumpState.temporaryBasal).thenReturn(temporaryBasal)
-        `when`(pumpState.extendedBolus).thenReturn(null)
         `when`(temporaryBasal.rate).thenReturn(150.0)
         `when`(temporaryBasal.timestamp).thenReturn(1000000L)
+
+        // Create real PumpState for proper destructuring
+        val pumpState = PumpSync.PumpState(temporaryBasal, null, null, null, "TEST123")
+        `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
+
         // Set underlying properties to make isTempBasalInProgress true
         danaPump.tempBasalPercent = 100
         danaPump.tempBasalStart = 1000000L
@@ -171,12 +172,12 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
 
     @Test
     fun testDoSanityCheck_noTemporaryBasalInAAPSButInPump() {
-        val pumpState = mock(PumpSync.PumpState::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
+        // Create real PumpState for proper destructuring
+        val pumpState = PumpSync.PumpState(null, null, null, null, "TEST123")
         `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
-        `when`(pumpState.temporaryBasal).thenReturn(null)
-        `when`(pumpState.extendedBolus).thenReturn(null)
+
         // Set underlying properties to make isTempBasalInProgress true
         danaPump.tempBasalPercent = 120
         danaPump.tempBasalStart = 1000000L
@@ -195,17 +196,18 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     @Test
     fun testDoSanityCheck_temporaryBasalInAAPSButNotInPump() {
         val temporaryBasal = mock(PumpSync.PumpState.TemporaryBasal::class.java)
-        val pumpState = mock(PumpSync.PumpState::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
         // Set dateUtil.now() first, before checking isTempBasalInProgress
         `when`(dateUtil.now()).thenReturn(2000000L)
 
-        `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
-        `when`(pumpState.temporaryBasal).thenReturn(temporaryBasal)
-        `when`(pumpState.extendedBolus).thenReturn(null)
         `when`(temporaryBasal.rate).thenReturn(150.0)
         `when`(temporaryBasal.timestamp).thenReturn(1000000L)
+
+        // Create real PumpState for proper destructuring
+        val pumpState = PumpSync.PumpState(temporaryBasal, null, null, null, "TEST123")
+        `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
+
         // Ensure pump shows no temp basal (tempBasalStart = 0 by default)
         danaPump.isTempBasalInProgress = false
         `when`(activePlugin.activePump).thenReturn(activePump)
@@ -221,14 +223,15 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
     @Test
     fun testDoSanityCheck_extendedBolusMismatch() {
         val extendedBolus = mock(PumpSync.PumpState.ExtendedBolus::class.java)
-        val pumpState = mock(PumpSync.PumpState::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
-        `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
-        `when`(pumpState.temporaryBasal).thenReturn(null)
-        `when`(pumpState.extendedBolus).thenReturn(extendedBolus)
         `when`(extendedBolus.rate).thenReturn(1.5)
         `when`(extendedBolus.timestamp).thenReturn(1000000L)
+
+        // Create real PumpState for proper destructuring
+        val pumpState = PumpSync.PumpState(null, extendedBolus, null, null, "TEST123")
+        `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
+
         // Set underlying properties to make isExtendedInProgress true
         danaPump.extendedBolusAbsoluteRate = 2.0
         danaPump.extendedBolusStart = 1000000L
@@ -249,13 +252,13 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
 
     @Test
     fun testDoSanityCheck_allMatch() {
-        val pumpState = mock(PumpSync.PumpState::class.java)
-
+        // Create real PumpState for proper destructuring
+        val pumpState = PumpSync.PumpState(null, null, null, null, "TEST123")
         `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
-        `when`(pumpState.temporaryBasal).thenReturn(null)
-        `when`(pumpState.extendedBolus).thenReturn(null)
+
         danaPump.isTempBasalInProgress = false
         danaPump.isExtendedInProgress = false
+        `when`(dateUtil.now()).thenReturn(2000000L)
 
         testService.doSanityCheck()
 
