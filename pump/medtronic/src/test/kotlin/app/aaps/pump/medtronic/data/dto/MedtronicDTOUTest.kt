@@ -1,6 +1,5 @@
 package app.aaps.pump.medtronic.data.dto
 
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.utils.pump.ByteUtil
 import app.aaps.pump.medtronic.MedtronicTestBase
 import app.aaps.pump.medtronic.defs.BatteryType
@@ -8,15 +7,12 @@ import app.aaps.pump.medtronic.defs.PumpBolusType
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mock
 
 /**
  * Tests for Medtronic DTO classes
  */
 class MedtronicDTOUTest : MedtronicTestBase() {
 
-    @Mock
-    lateinit var aapsLogger: AAPSLogger
 
     @BeforeEach
     fun setup() {

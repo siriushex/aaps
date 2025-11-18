@@ -17,10 +17,9 @@ open class MedtronicTestBase : TestBaseWithProfile() {
 
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var pumpSyncStorage: PumpSyncStorage
-    @Mock(answer = Answers.RETURNS_DEEP_STUBS) override lateinit var activePlugin: ActivePlugin
 
-    lateinit var medtronicUtil: MedtronicUtil
-    lateinit var decoder: MedtronicPumpHistoryDecoder
+    @Mock lateinit var medtronicUtil: MedtronicUtil
+    @Mock lateinit var decoder: MedtronicPumpHistoryDecoder
     lateinit var rileyLinkUtil: RileyLinkUtil
 
     @BeforeEach

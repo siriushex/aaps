@@ -1,17 +1,13 @@
 package app.aaps.pump.medtronic.comm
 
 import app.aaps.core.data.pump.defs.PumpType
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.utils.pump.ByteUtil
 import app.aaps.pump.medtronic.MedtronicTestBase
 import app.aaps.pump.medtronic.data.dto.BatteryStatusDTO
 import app.aaps.pump.medtronic.defs.MedtronicDeviceType
-import app.aaps.pump.medtronic.util.MedtronicUtil
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
 
 /**
  * Created by andy on 1/30/19.
@@ -19,8 +15,6 @@ import org.mockito.Mockito.`when`
  */
 class MedtronicConverterUTest : MedtronicTestBase() {
 
-    @Mock
-    lateinit var aapsLogger: AAPSLogger
 
     lateinit var converter: MedtronicConverter
 
@@ -45,7 +39,7 @@ class MedtronicConverterUTest : MedtronicTestBase() {
 
         val model = converter.decodeModel(data)
 
-        assertThat(model).isEqualTo(MedtronicDeviceType.Medtronic_722_Paradigm)
+        assertThat(model).isEqualTo(MedtronicDeviceType.Medtronic_722)
     }
 
     @Test
