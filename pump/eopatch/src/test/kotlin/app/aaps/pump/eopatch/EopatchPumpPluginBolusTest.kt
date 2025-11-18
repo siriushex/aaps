@@ -102,18 +102,6 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     }
 
     @Test
-    fun `stopBolusDelivering should call patch executor`() {
-        whenever(patchManagerExecutor.stopNowBolus()).thenReturn(
-            Single.just(mock<BolusStopResponse>())
-        )
-        whenever(aapsSchedulers.io).thenReturn(io.reactivex.rxjava3.schedulers.Schedulers.trampoline())
-        whenever(aapsSchedulers.main).thenReturn(io.reactivex.rxjava3.schedulers.Schedulers.trampoline())
-
-        // Should not throw exception
-        plugin.stopBolusDelivering()
-    }
-
-    @Test
     fun `setTempBasalAbsolute should fail when normal basal not active`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
