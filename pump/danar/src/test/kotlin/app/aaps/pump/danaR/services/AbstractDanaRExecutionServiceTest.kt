@@ -237,7 +237,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         danaPump.extendedBolusStart = 1000000L
         danaPump.extendedBolusAmount = 3.0
         danaPump.extendedBolusDuration = 7200000L // 120 minutes in milliseconds
-        danaPump.tempBasalStart = 1000000L
+        // Don't set tempBasalStart - leave it at 0 to ensure no temp basal is active
         `when`(dateUtil.now()).thenReturn(2000000L) // Within the extended bolus range
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
