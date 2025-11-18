@@ -62,7 +62,8 @@ class UtilsTest : TestBase() {
     @Test
     fun `internalDecodeSpeedToUH2 should return BigDecimal correctly`() {
         val result = Utils.internalDecodeSpeedToUH2(100)
-        assertEquals(BigDecimal("0.625"), result)
+        // Use compareTo for BigDecimal comparison (ignores scale differences)
+        assertEquals(0, BigDecimal("0.625").compareTo(result))
     }
 
     @Test
