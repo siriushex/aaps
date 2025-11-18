@@ -10,18 +10,18 @@ import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
-import app.aaps.pump.eopatch.ble.PatchConnectionState
 import app.aaps.pump.eopatch.code.PatchLifecycle
+import app.aaps.pump.eopatch.core.scan.BleConnectionState
 import app.aaps.pump.eopatch.vo.PatchLifecycleEvent
 import com.google.common.truth.Truth.assertThat
 import io.reactivex.rxjava3.core.Single
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.whenever
 
 class EopatchPumpPluginBolusTest : EopatchTestBase() {
 
@@ -32,7 +32,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var profileFunction: ProfileFunction
-    @Mock lateinit var patchConnectionState: PatchConnectionState
+    @Mock lateinit var bleConnectionState: BleConnectionState
 
     private lateinit var plugin: EopatchPumpPlugin
 
@@ -41,17 +41,17 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         MockitoAnnotations.openMocks(this)
         prepareMocks()
 
-        `when`(rh.gs(any<Int>())).thenReturn("MockedString")
-        `when`(rh.gs(any<Int>(), any())).thenReturn("Mocked %s")
-        `when`(patchManagerExecutor.patchConnectionState).thenReturn(patchConnectionState)
-        `when`(patchConnectionState.isConnected).thenReturn(true)
-        `when`(patchConnectionState.isConnecting).thenReturn(false)
+        whenever(rh.gs(any<Int>())).thenReturn("MockedString")
+        whenever(rh.gs(any<Int>(), any())).thenReturn("Mocked %s")
+        whenever(patchManagerExecutor.patchConnectionState).thenReturn(bleConnectionState)
+        whenever(bleConnectionState.isConnected).thenReturn(true)
+        whenever(bleConnectionState.isConnecting).thenReturn(false)
 
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
-        `when`(preferenceManager.patchState).thenReturn(patchState)
+        whenever(preferenceManager.patchState).thenReturn(patchState)
 
         val bolusCurrent = app.aaps.pump.eopatch.vo.BolusCurrent()
-        `when`(preferenceManager.bolusCurrent).thenReturn(bolusCurrent)
+        whenever(preferenceManager.bolusCurrent).thenReturn(bolusCurrent)
 
         // Set patch as activated
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
@@ -110,11 +110,11 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
 
     @Test
     fun `stopBolusDelivering should call patch executor`() {
-        `when`(patchManagerExecutor.stopNowBolus()).thenReturn(
+        whenever(patchManagerExecutor.stopNowBolus()).thenReturn(
             Single.just(app.aaps.pump.eopatch.core.response.BaseResponse(0))
         )
-        `when`(aapsSchedulers.io).thenReturn(io.reactivex.rxjava3.schedulers.Schedulers.trampoline())
-        `when`(aapsSchedulers.main).thenReturn(io.reactivex.rxjava3.schedulers.Schedulers.trampoline())
+        whenever(aapsSchedulers.io).thenReturn(io.reactivex.rxjava3.schedulers.Schedulers.trampoline())
+        whenever(aapsSchedulers.main).thenReturn(io.reactivex.rxjava3.schedulers.Schedulers.trampoline())
 
         // Should not throw exception
         plugin.stopBolusDelivering()
@@ -125,7 +125,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
         // isNormalBasalAct will be false
-        `when`(preferenceManager.patchState).thenReturn(patchState)
+        whenever(preferenceManager.patchState).thenReturn(patchState)
 
         val result = plugin.setTempBasalAbsolute(1.5, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
 
@@ -137,7 +137,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     fun `setTempBasalPercent should fail when normal basal not active`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
-        `when`(preferenceManager.patchState).thenReturn(patchState)
+        whenever(preferenceManager.patchState).thenReturn(patchState)
 
         val result = plugin.setTempBasalPercent(150, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
 
@@ -151,7 +151,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
         val bytes = ByteArray(20)
         bytes[4] = 0x14.toByte() // isNormalBasalAct = true
         patchState.update(bytes, System.currentTimeMillis())
-        `when`(preferenceManager.patchState).thenReturn(patchState)
+        whenever(preferenceManager.patchState).thenReturn(patchState)
 
         val result = plugin.setTempBasalPercent(0, 60, validProfile, false, PumpSync.TemporaryBasalType.NORMAL)
 
@@ -161,7 +161,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
 
     @Test
     fun `cancelTempBasal should return success when TBR already false`() {
-        `when`(pumpSync.expectedPumpState()).thenReturn(
+        whenever(pumpSync.expectedPumpState()).thenReturn(
             PumpSync.PumpState(null, null, null, validProfile)
         )
 
@@ -175,8 +175,8 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
     fun `cancelExtendedBolus should return success when not active`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.update(ByteArray(20), System.currentTimeMillis())
-        `when`(preferenceManager.patchState).thenReturn(patchState)
-        `when`(pumpSync.expectedPumpState()).thenReturn(
+        whenever(preferenceManager.patchState).thenReturn(patchState)
+        whenever(pumpSync.expectedPumpState()).thenReturn(
             PumpSync.PumpState(null, null, null, validProfile)
         )
 
@@ -226,7 +226,7 @@ class EopatchPumpPluginBolusTest : EopatchTestBase() {
 
     @Test
     fun `getPumpStatus should update last data time when activated`() {
-        `when`(patchManagerExecutor.updateConnection()).thenReturn(Single.just(true))
+        whenever(patchManagerExecutor.updateConnection()).thenReturn(Single.just(true))
 
         val beforeTime = System.currentTimeMillis()
         plugin.getPumpStatus("test")

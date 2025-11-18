@@ -12,8 +12,8 @@ import app.aaps.core.interfaces.rx.AapsSchedulers
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
-import app.aaps.pump.eopatch.ble.PatchConnectionState
 import app.aaps.pump.eopatch.code.PatchLifecycle
+import app.aaps.pump.eopatch.core.scan.BleConnectionState
 import app.aaps.pump.eopatch.vo.PatchLifecycleEvent
 import com.google.common.truth.Truth.assertThat
 import io.reactivex.rxjava3.core.Single
@@ -21,8 +21,8 @@ import org.json.JSONObject
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.whenever
 
 class EopatchPumpPluginTest : EopatchTestBase() {
 
@@ -33,7 +33,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
     @Mock lateinit var pumpSync: PumpSync
     @Mock lateinit var uiInteraction: UiInteraction
     @Mock lateinit var profileFunction: ProfileFunction
-    @Mock lateinit var patchConnectionState: PatchConnectionState
+    @Mock lateinit var bleConnectionState: BleConnectionState
 
     private lateinit var plugin: EopatchPumpPlugin
 
@@ -42,11 +42,11 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         MockitoAnnotations.openMocks(this)
         prepareMocks()
 
-        `when`(rh.gs(org.mockito.kotlin.any<Int>())).thenReturn("MockedString")
-        `when`(patchManagerExecutor.patchConnectionState).thenReturn(patchConnectionState)
-        `when`(patchConnectionState.isConnected).thenReturn(false)
-        `when`(patchConnectionState.isConnecting).thenReturn(false)
-        `when`(preferenceManager.patchState).thenReturn(
+        whenever(rh.gs(org.mockito.kotlin.any<Int>())).thenReturn("MockedString")
+        whenever(patchManagerExecutor.bleConnectionState).thenReturn(bleConnectionState)
+        whenever(bleConnectionState.isConnected).thenReturn(false)
+        whenever(bleConnectionState.isConnecting).thenReturn(false)
+        whenever(preferenceManager.patchState).thenReturn(
             app.aaps.pump.eopatch.vo.PatchState()
         )
 
@@ -90,14 +90,14 @@ class EopatchPumpPluginTest : EopatchTestBase() {
 
     @Test
     fun `isInitialized should return false when not connected`() {
-        `when`(patchConnectionState.isConnected).thenReturn(false)
+        whenever(bleConnectionState.isConnected).thenReturn(false)
 
         assertThat(plugin.isInitialized()).isFalse()
     }
 
     @Test
     fun `isInitialized should return false when not activated`() {
-        `when`(patchConnectionState.isConnected).thenReturn(true)
+        whenever(bleConnectionState.isConnected).thenReturn(true)
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createShutdown()
 
         assertThat(plugin.isInitialized()).isFalse()
@@ -105,7 +105,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
 
     @Test
     fun `isInitialized should return true when connected and activated`() {
-        `when`(patchConnectionState.isConnected).thenReturn(true)
+        whenever(bleConnectionState.isConnected).thenReturn(true)
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
 
         assertThat(plugin.isInitialized()).isTrue()
@@ -115,7 +115,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
     fun `isSuspended should return true when basal is paused`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.isNormalBasalPaused = true
-        `when`(preferenceManager.patchState).thenReturn(patchState)
+        whenever(preferenceManager.patchState).thenReturn(patchState)
 
         assertThat(plugin.isSuspended()).isTrue()
     }
@@ -124,7 +124,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
     fun `isSuspended should return false when basal is not paused`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.isNormalBasalPaused = false
-        `when`(preferenceManager.patchState).thenReturn(patchState)
+        whenever(preferenceManager.patchState).thenReturn(patchState)
 
         assertThat(plugin.isSuspended()).isFalse()
     }
@@ -145,14 +145,14 @@ class EopatchPumpPluginTest : EopatchTestBase() {
     fun `isConnected should return connection state when activated`() {
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
         patchConfig.macAddress = "00:11:22:33:44:55"
-        `when`(patchConnectionState.isConnected).thenReturn(true)
+        whenever(bleConnectionState.isConnected).thenReturn(true)
 
         assertThat(plugin.isConnected()).isTrue()
     }
 
     @Test
     fun `isConnecting should return connection state`() {
-        `when`(patchConnectionState.isConnecting).thenReturn(true)
+        whenever(bleConnectionState.isConnecting).thenReturn(true)
 
         assertThat(plugin.isConnecting()).isTrue()
     }
@@ -183,7 +183,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.isNormalBasalPaused = true
-        `when`(preferenceManager.patchState).thenReturn(patchState)
+        whenever(preferenceManager.patchState).thenReturn(patchState)
 
         assertThat(plugin.baseBasalRate).isWithin(0.001).of(0.0)
     }
@@ -200,7 +200,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.remainedInsulin = 50.0f
-        `when`(preferenceManager.patchState).thenReturn(patchState)
+        whenever(preferenceManager.patchState).thenReturn(patchState)
 
         assertThat(plugin.reservoirLevel).isWithin(0.001).of(50.0)
     }
@@ -233,11 +233,11 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.remainedInsulin = 50.0f
         patchState.isNormalBasalPaused = false
-        `when`(preferenceManager.patchState).thenReturn(patchState)
-        `when`(pumpSync.expectedPumpState()).thenReturn(
+        whenever(preferenceManager.patchState).thenReturn(patchState)
+        whenever(pumpSync.expectedPumpState()).thenReturn(
             PumpSync.PumpState(null, null, null, validProfile)
         )
-        `when`(profileFunction.getProfileName()).thenReturn("TestProfile")
+        whenever(profileFunction.getProfileName()).thenReturn("TestProfile")
 
         val json = plugin.getJSONStatus(validProfile, "TestProfile", "1.0.0")
 
@@ -270,8 +270,8 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         patchState.remainedInsulin = 50.0f
-        `when`(preferenceManager.patchState).thenReturn(patchState)
-        `when`(pumpSync.expectedPumpState()).thenReturn(
+        whenever(preferenceManager.patchState).thenReturn(patchState)
+        whenever(pumpSync.expectedPumpState()).thenReturn(
             PumpSync.PumpState(null, null, null, validProfile)
         )
 
