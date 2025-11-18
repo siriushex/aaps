@@ -201,7 +201,7 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(pumpState.extendedBolus).thenReturn(null)
         `when`(temporaryBasal.rate).thenReturn(150.0)
         `when`(temporaryBasal.timestamp).thenReturn(1000000L)
-        `when`(danaPump.isTempBasalInProgress).thenReturn(false)
+        danaPump.isTempBasalInProgress = false
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
@@ -224,12 +224,12 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(pumpState.extendedBolus).thenReturn(extendedBolus)
         `when`(extendedBolus.rate).thenReturn(1.5)
         `when`(extendedBolus.timestamp).thenReturn(1000000L)
-        `when`(danaPump.isExtendedInProgress).thenReturn(true)
-        `when`(danaPump.extendedBolusAbsoluteRate).thenReturn(2.0)
-        `when`(danaPump.extendedBolusStart).thenReturn(1000000L)
-        `when`(danaPump.extendedBolusAmount).thenReturn(3.0)
-        `when`(danaPump.extendedBolusDuration).thenReturn(120)
-        `when`(danaPump.tempBasalStart).thenReturn(1000000L)
+        danaPump.isExtendedInProgress = true
+        danaPump.extendedBolusAbsoluteRate = 2.0
+        danaPump.extendedBolusStart = 1000000L
+        danaPump.extendedBolusAmount = 3.0
+        danaPump.extendedBolusDuration = 120
+        danaPump.tempBasalStart = 1000000L
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
