@@ -11,6 +11,7 @@ class SegmentsEntityTest {
     @Test
     fun `hasSegments should return false when empty`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
 
         assertThat(normalBasal.hasSegments()).isFalse()
     }
@@ -26,6 +27,7 @@ class SegmentsEntityTest {
     @Test
     fun `segmentCount should return correct count`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
 
         assertThat(normalBasal.segmentCount).isEqualTo(0)
 
@@ -66,6 +68,7 @@ class SegmentsEntityTest {
     @Test
     fun `isValid should return false for empty list when allowEmpty is false`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
 
         assertThat(normalBasal.isValid(false)).isFalse()
     }
@@ -73,6 +76,7 @@ class SegmentsEntityTest {
     @Test
     fun `isValid should return true for empty list when allowEmpty is true`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
 
         assertThat(normalBasal.isValid(true)).isTrue()
     }
@@ -125,6 +129,7 @@ class SegmentsEntityTest {
     @Test
     fun `isFullSegment should return false for empty list`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
 
         assertThat(normalBasal.isFullSegment()).isFalse()
     }
@@ -132,6 +137,7 @@ class SegmentsEntityTest {
     @Test
     fun `getEmptySegment should return full day for empty list`() {
         val normalBasal = NormalBasal()
+        normalBasal.list.clear() // Clear default initialization
 
         val empty = normalBasal.getEmptySegment()
 

@@ -192,6 +192,10 @@ class PatchConfigTest {
     @Test
     fun `updateLifecycle SHUTDOWN should deactivate patch`() {
         val config = PatchConfig()
+        // First set to ACTIVATED state so the transition to SHUTDOWN is meaningful
+        config.lifecycleEvent = PatchLifecycleEvent().apply {
+            lifeCycle = PatchLifecycle.ACTIVATED
+        }
         config.macAddress = "00:11:22:33:44:55"
         config.patchSerialNumber = "ABC123"
 

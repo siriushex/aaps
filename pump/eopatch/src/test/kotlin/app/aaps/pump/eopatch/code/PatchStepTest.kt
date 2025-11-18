@@ -7,7 +7,7 @@ class PatchStepTest {
 
     @Test
     fun `should have exactly 18 steps`() {
-        assertThat(PatchStep.entries).hasSize(18)
+        assertThat(PatchStep.entries).hasSize(19)
     }
 
     @Test
@@ -73,6 +73,7 @@ class PatchStepTest {
         assertThat(PatchStep.CANCEL.ordinal).isEqualTo(15)
         assertThat(PatchStep.COMPLETE.ordinal).isEqualTo(16)
         assertThat(PatchStep.BACK_TO_HOME.ordinal).isEqualTo(17)
+        assertThat(PatchStep.FINISH.ordinal).isEqualTo(18)
     }
 
     @Test

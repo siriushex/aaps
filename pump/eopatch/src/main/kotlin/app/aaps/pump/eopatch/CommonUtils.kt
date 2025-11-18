@@ -84,8 +84,10 @@ object CommonUtils {
         return if (a == b) {
             true
         } else if (a == 0f || b == 0f || absA + absB < java.lang.Float.MIN_NORMAL) {
-            diff < epsilon * java.lang.Float.MIN_NORMAL
+            // For values at or near zero, use absolute difference
+            diff < epsilon
         } else {
+            // For other values, use relative difference
             diff / min(absA + absB, Float.MAX_VALUE) < epsilon
         }
     }

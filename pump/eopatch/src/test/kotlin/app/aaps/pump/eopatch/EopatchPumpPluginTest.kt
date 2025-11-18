@@ -39,6 +39,12 @@ class EopatchPumpPluginTest : EopatchTestBase() {
             app.aaps.pump.eopatch.vo.PatchState()
         )
 
+        // Setup profile mock to return valid basal values
+        whenever(profile.getBasalValues()).thenReturn(
+            arrayOf(Profile.ProfileValue(0, 1.0))
+        )
+        whenever(profile.getBasal(org.mockito.kotlin.any())).thenReturn(1.0)
+
         plugin = EopatchPumpPlugin(
             aapsLogger,
             rh,
@@ -104,7 +110,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
     fun `isSuspended should return true when basal is paused`() {
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         val bytes = ByteArray(20)
-        bytes[4] = 0x01.toByte() // isNormalBasalPaused = true
+        bytes[4] = 0x04.toByte() // isNormalBasalReg=true (bit 2), isNormalBasalAct=false (bit 4) -> paused
         patchState.update(bytes, System.currentTimeMillis())
         whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
@@ -174,7 +180,7 @@ class EopatchPumpPluginTest : EopatchTestBase() {
         patchConfig.lifecycleEvent = PatchLifecycleEvent.createActivated()
         val patchState = app.aaps.pump.eopatch.vo.PatchState()
         val bytes = ByteArray(20)
-        bytes[4] = 0x01.toByte() // isNormalBasalPaused = true
+        bytes[4] = 0x04.toByte() // isNormalBasalReg=true (bit 2), isNormalBasalAct=false (bit 4) -> paused
         patchState.update(bytes, System.currentTimeMillis())
         whenever<app.aaps.pump.eopatch.vo.PatchState>(eopatchPreferenceManager.patchState).thenReturn(patchState)
 
