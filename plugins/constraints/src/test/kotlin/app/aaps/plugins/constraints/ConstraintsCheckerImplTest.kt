@@ -211,7 +211,7 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
     // Safety & Objectives
     @Test
     fun isAutosensModeEnabledTest() {
-        openAPSSMBPlugin.setPluginEnabled(PluginType.APS, true)
+        openAPSSMBPlugin.setPluginEnabledBlocking(PluginType.APS, true)
         objectivesPlugin.objectives[Objectives.AUTOSENS_OBJECTIVE].startedOn = 0
         whenever(preferences.get(BooleanKey.ApsUseAutosens)).thenReturn(false)
         val c = constraintChecker.isAutosensModeEnabled()
@@ -233,7 +233,7 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
     // SMB should limit
     @Test
     fun isSuperBolusEnabledTest() {
-        openAPSSMBPlugin.setPluginEnabled(PluginType.APS, true)
+        openAPSSMBPlugin.setPluginEnabledBlocking(PluginType.APS, true)
         val c = constraintChecker.isSuperBolusEnabled()
         assertThat(c.value()).isFalse() // SMB should limit
     }
@@ -241,7 +241,7 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
     // Safety & Objectives
     @Test
     fun isSMBModeEnabledTest() {
-        openAPSSMBPlugin.setPluginEnabled(PluginType.APS, true)
+        openAPSSMBPlugin.setPluginEnabledBlocking(PluginType.APS, true)
         objectivesPlugin.objectives[Objectives.SMB_OBJECTIVE].startedOn = 0
         whenever(preferences.get(BooleanKey.ApsUseSmb)).thenReturn(false)
         whenever(loop.runningMode).thenReturn(RM.Mode.OPEN_LOOP)
@@ -257,12 +257,12 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
     fun basalRateShouldBeLimited() {
         whenever(activePlugin.activePump).thenReturn(danaRPlugin)
         // DanaR, RS
-        danaRPlugin.setPluginEnabled(PluginType.PUMP, true)
-        danaRSPlugin.setPluginEnabled(PluginType.PUMP, true)
+        danaRPlugin.setPluginEnabledBlocking(PluginType.PUMP, true)
+        danaRSPlugin.setPluginEnabledBlocking(PluginType.PUMP, true)
         danaPump.maxBasal = 0.8
 
         // Insight
-//        insightPlugin.setPluginEnabled(PluginType.PUMP, true);
+//        insightPlugin.setPluginEnabledBlocking(PluginType.PUMP, true);
 //        StatusTaskRunner.Result result = new StatusTaskRunner.Result();
 //        result.maximumBasalAmount = 1.1d;
 //        insightPlugin.setStatusResult(result);
@@ -284,12 +284,12 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
     fun percentBasalRateShouldBeLimited() {
         whenever(activePlugin.activePump).thenReturn(danaRPlugin)
         // DanaR, RS
-        danaRPlugin.setPluginEnabled(PluginType.PUMP, true)
-        danaRSPlugin.setPluginEnabled(PluginType.PUMP, true)
+        danaRPlugin.setPluginEnabledBlocking(PluginType.PUMP, true)
+        danaRSPlugin.setPluginEnabledBlocking(PluginType.PUMP, true)
         danaPump.maxBasal = 0.8
 
         // Insight
-//        insightPlugin.setPluginEnabled(PluginType.PUMP, true);
+//        insightPlugin.setPluginEnabledBlocking(PluginType.PUMP, true);
 //        StatusTaskRunner.Result result = new StatusTaskRunner.Result();
 //        result.maximumBasalAmount = 1.1d;
 //        insightPlugin.setStatusResult(result);
@@ -313,12 +313,12 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
         whenever(activePlugin.activePump).thenReturn(virtualPumpPlugin)
         whenever(virtualPumpPlugin.pumpDescription).thenReturn(PumpDescription())
         // DanaR, RS
-        danaRPlugin.setPluginEnabled(PluginType.PUMP, true)
-        danaRSPlugin.setPluginEnabled(PluginType.PUMP, true)
+        danaRPlugin.setPluginEnabledBlocking(PluginType.PUMP, true)
+        danaRSPlugin.setPluginEnabledBlocking(PluginType.PUMP, true)
         danaPump.maxBolus = 6.0
 
         // Insight
-//        insightPlugin.setPluginEnabled(PluginType.PUMP, true);
+//        insightPlugin.setPluginEnabledBlocking(PluginType.PUMP, true);
 //        StatusTaskRunner.Result result = new StatusTaskRunner.Result();
 //        result.maximumBolusAmount = 7d;
 //        insightPlugin.setStatusResult(result);
@@ -354,8 +354,8 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
         whenever(loop.runningMode).thenReturn(RM.Mode.CLOSED_LOOP)
         whenever(preferences.get(DoubleKey.ApsAmaMaxIob)).thenReturn(1.5)
         whenever(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
-        openAPSAMAPlugin.setPluginEnabled(PluginType.APS, true)
-        openAPSSMBPlugin.setPluginEnabled(PluginType.APS, false)
+        openAPSAMAPlugin.setPluginEnabledBlocking(PluginType.APS, true)
+        openAPSSMBPlugin.setPluginEnabledBlocking(PluginType.APS, false)
 
         // Apply all limits
         val d = constraintChecker.getMaxIOBAllowed()
@@ -370,8 +370,8 @@ class ConstraintsCheckerImplTest : TestBaseWithProfile() {
         whenever(loop.runningMode).thenReturn(RM.Mode.CLOSED_LOOP)
         whenever(preferences.get(DoubleKey.ApsSmbMaxIob)).thenReturn(3.0)
         whenever(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
-        openAPSSMBPlugin.setPluginEnabled(PluginType.APS, true)
-        openAPSAMAPlugin.setPluginEnabled(PluginType.APS, false)
+        openAPSSMBPlugin.setPluginEnabledBlocking(PluginType.APS, true)
+        openAPSAMAPlugin.setPluginEnabledBlocking(PluginType.APS, false)
 
         // Apply all limits
         val d = constraintChecker.getMaxIOBAllowed()
