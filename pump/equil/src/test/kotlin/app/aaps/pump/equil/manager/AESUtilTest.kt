@@ -1,5 +1,6 @@
 package app.aaps.pump.equil.manager
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -7,7 +8,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-class AESUtilTest {
+class AESUtilTest : TestBase() {
 
     @Test
     fun `getEquilPassWord should return 32 byte key`() {

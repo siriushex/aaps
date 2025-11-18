@@ -1,5 +1,6 @@
 package app.aaps.pump.equil.manager
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -8,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
 
-class EquilResponseTest {
+class EquilResponseTest : TestBase() {
 
     private lateinit var equilResponse: EquilResponse
     private val createTime = System.currentTimeMillis()

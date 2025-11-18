@@ -1,10 +1,11 @@
 package app.aaps.pump.equil.events
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 
-class EventEquilAlarmTest {
+class EventEquilAlarmTest : TestBase() {
 
     @Test
     fun `constructor should set tips`() {

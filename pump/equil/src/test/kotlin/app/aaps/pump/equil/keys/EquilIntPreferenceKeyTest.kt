@@ -1,12 +1,13 @@
 package app.aaps.pump.equil.keys
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class EquilIntPreferenceKeyTest {
+class EquilIntPreferenceKeyTest : TestBase() {
 
     @Test
     fun `all enum values should be accessible`() {

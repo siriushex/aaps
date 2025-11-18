@@ -1,13 +1,11 @@
 package app.aaps.pump.equil.manager.command
 
-import app.aaps.core.interfaces.logging.AAPSLogger
-import app.aaps.core.keys.interfaces.Preferences
-import app.aaps.core.keys.interfaces.StringPreferenceKey
 import app.aaps.pump.equil.database.EquilHistoryRecord
 import app.aaps.pump.equil.manager.AESUtil
 import app.aaps.pump.equil.manager.EquilManager
 import app.aaps.pump.equil.manager.EquilResponse
 import app.aaps.pump.equil.manager.Utils
+import app.aaps.shared.tests.TestBaseWithProfile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -17,15 +15,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
-class BaseSettingTest {
-
-    @Mock
-    private lateinit var aapsLogger: AAPSLogger
-
-    @Mock
-    private lateinit var preferences: Preferences
+class BaseSettingTest : TestBaseWithProfile() {
 
     @Mock
     private lateinit var equilManager: EquilManager
@@ -61,11 +52,14 @@ class BaseSettingTest {
 
     @BeforeEach
     fun setUp() {
+<<<<<<< HEAD
         MockitoAnnotations.openMocks(this)
 
         // Mock preferences to return test values
         `when`(preferences.get(any<StringPreferenceKey>())).thenReturn("")
 
+=======
+>>>>>>> a801cb123 (Refactor all Equil unit tests to extend TestBase/TestBaseWithProfile)
         testSetting = TestBaseSetting()
     }
 

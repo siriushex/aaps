@@ -1,9 +1,10 @@
 package app.aaps.pump.equil.data
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class RunModeTest {
+class RunModeTest : TestBase() {
 
     @Test
     fun `all modes should have correct command values`() {

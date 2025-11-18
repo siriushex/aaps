@@ -1,36 +1,19 @@
 package app.aaps.pump.equil.manager
 
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.pump.PumpSync
-import app.aaps.core.interfaces.resources.ResourceHelper
-import app.aaps.core.interfaces.rx.bus.RxBus
-import app.aaps.core.interfaces.utils.DateUtil
-import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.equil.R
 import app.aaps.pump.equil.ble.EquilBLE
 import app.aaps.pump.equil.database.EquilHistoryPumpDao
 import app.aaps.pump.equil.database.EquilHistoryRecordDao
 import app.aaps.pump.equil.manager.command.PumpEvent
+import app.aaps.shared.tests.TestBaseWithProfile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
-class EquilManagerTest {
-
-    @Mock
-    private lateinit var aapsLogger: AAPSLogger
-
-    @Mock
-    private lateinit var rxBus: RxBus
-
-    @Mock
-    private lateinit var preferences: Preferences
-
-    @Mock
-    private lateinit var rh: ResourceHelper
+class EquilManagerTest : TestBaseWithProfile() {
 
     @Mock
     private lateinit var pumpSync: PumpSync
@@ -44,17 +27,10 @@ class EquilManagerTest {
     @Mock
     private lateinit var equilHistoryPumpDao: EquilHistoryPumpDao
 
-    @Mock
-    private lateinit var pumpEnactResultProvider: javax.inject.Provider<app.aaps.core.interfaces.pump.PumpEnactResult>
-
-    @Mock
-    private lateinit var dateUtil: DateUtil
-
     private lateinit var equilManager: EquilManager
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.openMocks(this)
 
         // Mock resource strings
         `when`(rh.gs(R.string.equil_history_item3)).thenReturn("Error 1")

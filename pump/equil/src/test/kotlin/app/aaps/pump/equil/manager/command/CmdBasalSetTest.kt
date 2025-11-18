@@ -1,13 +1,12 @@
 package app.aaps.pump.equil.manager.command
 
-import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.profile.Profile
-import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.equil.database.EquilHistoryRecord
 import app.aaps.pump.equil.driver.definition.BasalSchedule
 import app.aaps.pump.equil.driver.definition.BasalScheduleEntry
 import app.aaps.pump.equil.keys.EquilBooleanKey
 import app.aaps.pump.equil.manager.EquilManager
+import app.aaps.shared.tests.TestBaseWithProfile
 import org.joda.time.Duration
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -16,16 +15,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
-class CmdBasalSetTest {
-
-    @Mock
-    private lateinit var aapsLogger: AAPSLogger
-
-    @Mock
-    private lateinit var preferences: Preferences
+class CmdBasalSetTest : TestBaseWithProfile() {
 
     @Mock
     private lateinit var equilManager: EquilManager
@@ -38,7 +29,6 @@ class CmdBasalSetTest {
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.openMocks(this)
 
         // Create a simple basal schedule
         val entries = listOf(

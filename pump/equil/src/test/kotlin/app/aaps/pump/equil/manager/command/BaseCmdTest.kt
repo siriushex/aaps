@@ -1,22 +1,20 @@
 package app.aaps.pump.equil.manager.command
 
-import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.pump.equil.database.EquilHistoryRecord
 import app.aaps.pump.equil.manager.EquilManager
 import app.aaps.pump.equil.manager.EquilResponse
-import app.aaps.shared.tests.TestBase
+import app.aaps.shared.tests.TestBaseWithProfile
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.MockitoAnnotations
 
-class BaseCmdTest : TestBase() {
+class BaseCmdTest : TestBaseWithProfile() {
 
-    @Mock private lateinit var preferences: Preferences
-    @Mock private lateinit var equilManager: EquilManager
+    @Mock
+    private lateinit var equilManager: EquilManager
 
     private lateinit var testCmd: TestCmd
 
@@ -34,7 +32,6 @@ class BaseCmdTest : TestBase() {
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.openMocks(this)
         testCmd = TestCmd()
     }
 

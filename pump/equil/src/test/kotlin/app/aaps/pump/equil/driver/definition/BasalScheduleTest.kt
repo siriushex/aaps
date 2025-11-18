@@ -1,6 +1,7 @@
 package app.aaps.pump.equil.driver.definition
 
 import app.aaps.core.interfaces.profile.Profile
+import app.aaps.shared.tests.TestBase
 import org.joda.time.Duration
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -9,7 +10,7 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 
-class BasalScheduleTest {
+class BasalScheduleTest : TestBase() {
 
     @Test
     fun `constructor should require non-empty entries`() {

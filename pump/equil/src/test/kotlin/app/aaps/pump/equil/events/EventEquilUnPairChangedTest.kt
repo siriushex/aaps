@@ -1,8 +1,9 @@
 package app.aaps.pump.equil.events
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Test
 
-class EventEquilUnPairChangedTest {
+class EventEquilUnPairChangedTest : TestBase() {
 
     @Test
     fun `event should be instantiable`() {

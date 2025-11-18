@@ -1,12 +1,13 @@
 package app.aaps.pump.equil.manager
 
+import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class EquilCmdModelTest {
+class EquilCmdModelTest : TestBase() {
 
     private lateinit var model: EquilCmdModel
 
