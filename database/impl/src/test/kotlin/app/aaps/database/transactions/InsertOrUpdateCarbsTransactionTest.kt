@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateCarbsTransactionTest {
 
@@ -22,14 +22,14 @@ class InsertOrUpdateCarbsTransactionTest {
     fun setup() {
         carbsDao = mock()
         database = mock()
-        `when`(database.carbsDao).thenReturn(carbsDao)
+        whenever(database.carbsDao).thenReturn(carbsDao)
     }
 
     @Test
     fun `inserts new carbs when id not found`() {
         val carbs = createCarbs(id = 1, amount = 50.0)
 
-        `when`(carbsDao.findById(1)).thenReturn(null)
+        whenever(carbsDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateCarbsTransaction(carbs)
         transaction.database = database
@@ -48,7 +48,7 @@ class InsertOrUpdateCarbsTransactionTest {
         val carbs = createCarbs(id = 1, amount = 50.0)
         val existing = createCarbs(id = 1, amount = 30.0)
 
-        `when`(carbsDao.findById(1)).thenReturn(existing)
+        whenever(carbsDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCarbsTransaction(carbs)
         transaction.database = database
@@ -66,7 +66,7 @@ class InsertOrUpdateCarbsTransactionTest {
     fun `handles carbs with zero amount`() {
         val carbs = createCarbs(id = 1, amount = 0.0)
 
-        `when`(carbsDao.findById(1)).thenReturn(null)
+        whenever(carbsDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateCarbsTransaction(carbs)
         transaction.database = database
@@ -80,7 +80,7 @@ class InsertOrUpdateCarbsTransactionTest {
     fun `handles carbs with extended duration`() {
         val carbs = createCarbs(id = 1, amount = 50.0, duration = 120_000L)
 
-        `when`(carbsDao.findById(1)).thenReturn(null)
+        whenever(carbsDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateCarbsTransaction(carbs)
         transaction.database = database
@@ -94,7 +94,7 @@ class InsertOrUpdateCarbsTransactionTest {
     fun `handles carbs without duration`() {
         val carbs = createCarbs(id = 1, amount = 50.0, duration = 0L)
 
-        `when`(carbsDao.findById(1)).thenReturn(null)
+        whenever(carbsDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateCarbsTransaction(carbs)
         transaction.database = database
@@ -109,7 +109,7 @@ class InsertOrUpdateCarbsTransactionTest {
         val carbs = createCarbs(id = 1, amount = 50.0, isValid = false)
         val existing = createCarbs(id = 1, amount = 30.0, isValid = true)
 
-        `when`(carbsDao.findById(1)).thenReturn(existing)
+        whenever(carbsDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCarbsTransaction(carbs)
         transaction.database = database
@@ -135,7 +135,7 @@ class InsertOrUpdateCarbsTransactionTest {
         val carbs = createCarbs(id = 1, amount = 50.0, timestamp = timestamp)
         val existing = createCarbs(id = 1, amount = 30.0, timestamp = timestamp)
 
-        `when`(carbsDao.findById(1)).thenReturn(existing)
+        whenever(carbsDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCarbsTransaction(carbs)
         transaction.database = database
@@ -148,7 +148,7 @@ class InsertOrUpdateCarbsTransactionTest {
     fun `inserts carbs with notes`() {
         val carbs = createCarbs(id = 1, amount = 50.0, notes = "Test meal")
 
-        `when`(carbsDao.findById(1)).thenReturn(null)
+        whenever(carbsDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateCarbsTransaction(carbs)
         transaction.database = database
@@ -163,7 +163,7 @@ class InsertOrUpdateCarbsTransactionTest {
         val existing = createCarbs(id = 1, amount = 30.0)
         val updated = createCarbs(id = 1, amount = 75.0)
 
-        `when`(carbsDao.findById(1)).thenReturn(existing)
+        whenever(carbsDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateCarbsTransaction(updated)
         transaction.database = database

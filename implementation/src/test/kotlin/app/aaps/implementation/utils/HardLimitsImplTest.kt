@@ -14,9 +14,9 @@ import io.reactivex.rxjava3.core.Single
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 
 class HardLimitsImplTest : TestBase() {
 
@@ -32,135 +32,135 @@ class HardLimitsImplTest : TestBase() {
     @BeforeEach
     fun setup() {
         hardLimits = HardLimitsImpl(aapsLogger, uiInteraction, preferences, rh, context, persistenceLayer, dateUtil)
-        `when`(dateUtil.now()).thenReturn(1000L)
-        `when`(persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(any(), any(), any(), any(), any(), any())).thenReturn(Single.just(PersistenceLayer.TransactionResult()))
-        `when`(rh.gs(any())).thenReturn("")
-        `when`(rh.gs(any(), any())).thenReturn("")
+        whenever(dateUtil.now()).thenReturn(1000L)
+        whenever(persistenceLayer.insertPumpTherapyEventIfNewByTimestamp(any(), any(), any(), any(), any(), any())).thenReturn(Single.just(PersistenceLayer.TransactionResult()))
+        whenever(rh.gs(any())).thenReturn("")
+        whenever(rh.gs(any(), any())).thenReturn("")
     }
 
     @Test
     fun `maxBolus returns correct value for child`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("child")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.maxBolus()).isEqualTo(5.0)
     }
 
     @Test
     fun `maxBolus returns correct value for teenage`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
         assertThat(hardLimits.maxBolus()).isEqualTo(10.0)
     }
 
     @Test
     fun `maxBolus returns correct value for adult`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
         assertThat(hardLimits.maxBolus()).isEqualTo(17.0)
     }
 
     @Test
     fun `maxBolus returns correct value for resistant adult`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("resistantadult")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("resistantadult")
         assertThat(hardLimits.maxBolus()).isEqualTo(25.0)
     }
 
     @Test
     fun `maxBolus returns correct value for pregnant`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
         assertThat(hardLimits.maxBolus()).isEqualTo(60.0)
     }
 
     @Test
     fun `maxBolus defaults to adult for unknown age`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("unknown")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("unknown")
         assertThat(hardLimits.maxBolus()).isEqualTo(17.0)
     }
 
     @Test
     fun `maxIobAMA returns correct values for all ages`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("child")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.maxIobAMA()).isEqualTo(3.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
         assertThat(hardLimits.maxIobAMA()).isEqualTo(5.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
         assertThat(hardLimits.maxIobAMA()).isEqualTo(7.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("resistantadult")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("resistantadult")
         assertThat(hardLimits.maxIobAMA()).isEqualTo(12.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
         assertThat(hardLimits.maxIobAMA()).isEqualTo(25.0)
     }
 
     @Test
     fun `maxIobSMB returns correct values for all ages`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("child")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.maxIobSMB()).isEqualTo(7.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
         assertThat(hardLimits.maxIobSMB()).isEqualTo(13.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
         assertThat(hardLimits.maxIobSMB()).isEqualTo(22.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("resistantadult")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("resistantadult")
         assertThat(hardLimits.maxIobSMB()).isEqualTo(30.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
         assertThat(hardLimits.maxIobSMB()).isEqualTo(70.0)
     }
 
     @Test
     fun `maxBasal returns correct values for all ages`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("child")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.maxBasal()).isEqualTo(2.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("teenage")
         assertThat(hardLimits.maxBasal()).isEqualTo(5.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("adult")
         assertThat(hardLimits.maxBasal()).isEqualTo(10.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("resistantadult")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("resistantadult")
         assertThat(hardLimits.maxBasal()).isEqualTo(12.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
         assertThat(hardLimits.maxBasal()).isEqualTo(25.0)
     }
 
     @Test
     fun `minDia returns correct values for all ages`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("child")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.minDia()).isEqualTo(5.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
         assertThat(hardLimits.minDia()).isEqualTo(5.0)
     }
 
     @Test
     fun `maxDia returns correct values for all ages`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("child")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.maxDia()).isEqualTo(9.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
         assertThat(hardLimits.maxDia()).isEqualTo(10.0)
     }
 
     @Test
     fun `minIC returns correct values for all ages`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("child")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.minIC()).isEqualTo(2.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
         assertThat(hardLimits.minIC()).isEqualTo(0.3)
     }
 
     @Test
     fun `maxIC returns correct values for all ages`() {
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("child")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("child")
         assertThat(hardLimits.maxIC()).isEqualTo(100.0)
 
-        `when`(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
+        whenever(preferences.get(StringKey.SafetyAge)).thenReturn("pregnant")
         assertThat(hardLimits.maxIC()).isEqualTo(100.0)
     }
 
@@ -220,11 +220,11 @@ class HardLimitsImplTest : TestBase() {
 
     @Test
     fun `ageEntries returns correct number of entries`() {
-        `when`(rh.gs(app.aaps.core.ui.R.string.child)).thenReturn("Child")
-        `when`(rh.gs(app.aaps.core.ui.R.string.teenage)).thenReturn("Teenage")
-        `when`(rh.gs(app.aaps.core.ui.R.string.adult)).thenReturn("Adult")
-        `when`(rh.gs(app.aaps.core.ui.R.string.resistant_adult)).thenReturn("Resistant adult")
-        `when`(rh.gs(app.aaps.core.ui.R.string.pregnant)).thenReturn("Pregnant")
+        whenever(rh.gs(app.aaps.core.ui.R.string.child)).thenReturn("Child")
+        whenever(rh.gs(app.aaps.core.ui.R.string.teenage)).thenReturn("Teenage")
+        whenever(rh.gs(app.aaps.core.ui.R.string.adult)).thenReturn("Adult")
+        whenever(rh.gs(app.aaps.core.ui.R.string.resistant_adult)).thenReturn("Resistant adult")
+        whenever(rh.gs(app.aaps.core.ui.R.string.pregnant)).thenReturn("Pregnant")
 
         val entries = hardLimits.ageEntries()
         assertThat(entries).hasLength(5)

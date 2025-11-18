@@ -9,8 +9,8 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class CutCarbsTransactionTest {
 
@@ -21,7 +21,7 @@ class CutCarbsTransactionTest {
     fun setup() {
         carbsDao = mock()
         database = mock()
-        `when`(database.carbsDao).thenReturn(carbsDao)
+        whenever(database.carbsDao).thenReturn(carbsDao)
     }
 
     @Test
@@ -34,7 +34,7 @@ class CutCarbsTransactionTest {
             amount = 50.0
         )
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val transaction = CutCarbsTransaction(id = 1, end = timestamp)
         transaction.database = database
@@ -60,7 +60,7 @@ class CutCarbsTransactionTest {
             amount = amount
         )
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val halfwayPoint = timestamp + (duration / 2)
         val transaction = CutCarbsTransaction(id = 1, end = halfwayPoint)
@@ -89,7 +89,7 @@ class CutCarbsTransactionTest {
             amount = amount
         )
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val quarterPoint = timestamp + (duration / 4)
         val transaction = CutCarbsTransaction(id = 1, end = quarterPoint)
@@ -114,7 +114,7 @@ class CutCarbsTransactionTest {
             amount = amount
         )
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val threeQuarterPoint = timestamp + (duration * 3 / 4)
         val transaction = CutCarbsTransaction(id = 1, end = threeQuarterPoint)
@@ -139,13 +139,13 @@ class CutCarbsTransactionTest {
             amount = amount
         )
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         // 33.33% should round to 33
         val oneThirdPoint = timestamp + (duration / 3)
         val transaction = CutCarbsTransaction(id = 1, end = oneThirdPoint)
         transaction.database = database
-        val result = transaction.run()
+        transaction.run()
 
         assertThat(carbs.amount).isEqualTo(33.0)
     }
@@ -162,7 +162,7 @@ class CutCarbsTransactionTest {
         val originalAmount = carbs.amount
         val originalEnd = carbs.end
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val beforeStart = timestamp - 1000L
         val transaction = CutCarbsTransaction(id = 1, end = beforeStart)
@@ -190,7 +190,7 @@ class CutCarbsTransactionTest {
         val originalAmount = carbs.amount
         val originalEnd = carbs.end
 
-        `when`(carbsDao.findById(1)).thenReturn(carbs)
+        whenever(carbsDao.findById(1)).thenReturn(carbs)
 
         val afterEnd = timestamp + duration + 1000L
         val transaction = CutCarbsTransaction(id = 1, end = afterEnd)
@@ -207,7 +207,7 @@ class CutCarbsTransactionTest {
 
     @Test
     fun `throws exception when carbs not found`() {
-        `when`(carbsDao.findById(999)).thenReturn(null)
+        whenever(carbsDao.findById(999)).thenReturn(null)
 
         val transaction = CutCarbsTransaction(id = 999, end = 2000L)
         transaction.database = database

@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateTemporaryBasalWithTempIdTransactionTest {
 
@@ -22,7 +22,7 @@ class InvalidateTemporaryBasalWithTempIdTransactionTest {
     fun setup() {
         temporaryBasalDao = mock()
         database = mock()
-        `when`(database.temporaryBasalDao).thenReturn(temporaryBasalDao)
+        whenever(database.temporaryBasalDao).thenReturn(temporaryBasalDao)
     }
 
     @Test
@@ -30,7 +30,7 @@ class InvalidateTemporaryBasalWithTempIdTransactionTest {
         val tempId = 54321L
         val tb = createTemporaryBasal(id = 1, isValid = true)
 
-        `when`(temporaryBasalDao.findByTempId(tempId)).thenReturn(tb)
+        whenever(temporaryBasalDao.findByTempId(tempId)).thenReturn(tb)
 
         val transaction = InvalidateTemporaryBasalWithTempIdTransaction(tempId)
         transaction.database = database
@@ -47,7 +47,7 @@ class InvalidateTemporaryBasalWithTempIdTransactionTest {
         val tempId = 54321L
         val tb = createTemporaryBasal(id = 1, isValid = false)
 
-        `when`(temporaryBasalDao.findByTempId(tempId)).thenReturn(tb)
+        whenever(temporaryBasalDao.findByTempId(tempId)).thenReturn(tb)
 
         val transaction = InvalidateTemporaryBasalWithTempIdTransaction(tempId)
         transaction.database = database
@@ -62,7 +62,7 @@ class InvalidateTemporaryBasalWithTempIdTransactionTest {
     fun `throws exception when temporary basal not found`() {
         val tempId = 999L
 
-        `when`(temporaryBasalDao.findByTempId(tempId)).thenReturn(null)
+        whenever(temporaryBasalDao.findByTempId(tempId)).thenReturn(null)
 
         val transaction = InvalidateTemporaryBasalWithTempIdTransaction(tempId)
         transaction.database = database

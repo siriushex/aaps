@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 
 class BasalScheduleTest : TestBase() {
 
@@ -192,7 +192,7 @@ class BasalScheduleTest : TestBase() {
 
         // Mock profile to return different basal rates for each hour
         for (i in 0..23) {
-            `when`(profile.getBasalTimeFromMidnight(i * 60 * 60)).thenReturn(1.0 + i * 0.1)
+            whenever(profile.getBasalTimeFromMidnight(i * 60 * 60)).thenReturn(1.0 + i * 0.1)
         }
 
         val schedule = BasalSchedule.mapProfileToBasalSchedule(profile)
@@ -204,15 +204,15 @@ class BasalScheduleTest : TestBase() {
         val profile = mock(Profile::class.java)
 
         // Set up specific basal rates
-        `when`(profile.getBasalTimeFromMidnight(0)).thenReturn(0.8)
-        `when`(profile.getBasalTimeFromMidnight(6 * 60 * 60)).thenReturn(1.2)
-        `when`(profile.getBasalTimeFromMidnight(12 * 60 * 60)).thenReturn(1.5)
-        `when`(profile.getBasalTimeFromMidnight(18 * 60 * 60)).thenReturn(0.9)
+        whenever(profile.getBasalTimeFromMidnight(0)).thenReturn(0.8)
+        whenever(profile.getBasalTimeFromMidnight(6 * 60 * 60)).thenReturn(1.2)
+        whenever(profile.getBasalTimeFromMidnight(12 * 60 * 60)).thenReturn(1.5)
+        whenever(profile.getBasalTimeFromMidnight(18 * 60 * 60)).thenReturn(0.9)
 
         // Fill in the rest
         for (i in 0..23) {
             if (i != 0 && i != 6 && i != 12 && i != 18) {
-                `when`(profile.getBasalTimeFromMidnight(i * 60 * 60)).thenReturn(1.0)
+                whenever(profile.getBasalTimeFromMidnight(i * 60 * 60)).thenReturn(1.0)
             }
         }
 
@@ -229,7 +229,7 @@ class BasalScheduleTest : TestBase() {
         val profile = mock(Profile::class.java)
 
         for (i in 0..23) {
-            `when`(profile.getBasalTimeFromMidnight(i * 60 * 60)).thenReturn(1.0)
+            whenever(profile.getBasalTimeFromMidnight(i * 60 * 60)).thenReturn(1.0)
         }
 
         val schedule = BasalSchedule.mapProfileToBasalSchedule(profile)
@@ -243,7 +243,7 @@ class BasalScheduleTest : TestBase() {
         val profile = mock(Profile::class.java)
 
         for (i in 0..23) {
-            `when`(profile.getBasalTimeFromMidnight(i * 60 * 60)).thenReturn(1.0)
+            whenever(profile.getBasalTimeFromMidnight(i * 60 * 60)).thenReturn(1.0)
         }
 
         val schedule = BasalSchedule.mapProfileToBasalSchedule(profile)

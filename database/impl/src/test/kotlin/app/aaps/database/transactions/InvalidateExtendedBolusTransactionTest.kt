@@ -9,9 +9,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateExtendedBolusTransactionTest {
 
@@ -22,14 +22,14 @@ class InvalidateExtendedBolusTransactionTest {
     fun setup() {
         extendedBolusDao = mock()
         database = mock()
-        `when`(database.extendedBolusDao).thenReturn(extendedBolusDao)
+        whenever(database.extendedBolusDao).thenReturn(extendedBolusDao)
     }
 
     @Test
     fun `invalidates valid extended bolus`() {
         val eb = createExtendedBolus(id = 1, isValid = true)
 
-        `when`(extendedBolusDao.findById(1)).thenReturn(eb)
+        whenever(extendedBolusDao.findById(1)).thenReturn(eb)
 
         val transaction = InvalidateExtendedBolusTransaction(id = 1)
         transaction.database = database
@@ -45,7 +45,7 @@ class InvalidateExtendedBolusTransactionTest {
     fun `does not update already invalid extended bolus`() {
         val eb = createExtendedBolus(id = 1, isValid = false)
 
-        `when`(extendedBolusDao.findById(1)).thenReturn(eb)
+        whenever(extendedBolusDao.findById(1)).thenReturn(eb)
 
         val transaction = InvalidateExtendedBolusTransaction(id = 1)
         transaction.database = database
@@ -58,7 +58,7 @@ class InvalidateExtendedBolusTransactionTest {
 
     @Test
     fun `throws exception when extended bolus not found`() {
-        `when`(extendedBolusDao.findById(999)).thenReturn(null)
+        whenever(extendedBolusDao.findById(999)).thenReturn(null)
 
         val transaction = InvalidateExtendedBolusTransaction(id = 999)
         transaction.database = database

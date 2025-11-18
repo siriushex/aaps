@@ -10,9 +10,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InvalidateTherapyEventsWithNoteTransactionTest {
 
@@ -23,7 +23,7 @@ class InvalidateTherapyEventsWithNoteTransactionTest {
     fun setup() {
         therapyEventDao = mock()
         database = mock()
-        `when`(database.therapyEventDao).thenReturn(therapyEventDao)
+        whenever(database.therapyEventDao).thenReturn(therapyEventDao)
     }
 
     @Test
@@ -33,7 +33,7 @@ class InvalidateTherapyEventsWithNoteTransactionTest {
         val event2 = createTherapyEvent(id = 2, note = "Another test note here", isValid = true)
         val event3 = createTherapyEvent(id = 3, note = "Different text", isValid = true)
 
-        `when`(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(listOf(event1, event2, event3))
+        whenever(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(listOf(event1, event2, event3))
 
         val transaction = InvalidateTherapyEventsWithNoteTransaction(searchNote)
         transaction.database = database
@@ -54,7 +54,7 @@ class InvalidateTherapyEventsWithNoteTransactionTest {
         val event1 = createTherapyEvent(id = 1, note = "This is a test", isValid = true)
         val event2 = createTherapyEvent(id = 2, note = "Another note", isValid = true)
 
-        `when`(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(listOf(event1, event2))
+        whenever(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(listOf(event1, event2))
 
         val transaction = InvalidateTherapyEventsWithNoteTransaction(searchNote)
         transaction.database = database
@@ -72,7 +72,7 @@ class InvalidateTherapyEventsWithNoteTransactionTest {
         val searchNote = "test"
         val event1 = createTherapyEvent(id = 1, note = "test note", isValid = false)
 
-        `when`(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(listOf(event1))
+        whenever(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(listOf(event1))
 
         val transaction = InvalidateTherapyEventsWithNoteTransaction(searchNote)
         transaction.database = database
@@ -87,7 +87,7 @@ class InvalidateTherapyEventsWithNoteTransactionTest {
     fun `handles empty event list`() {
         val searchNote = "test"
 
-        `when`(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(emptyList())
+        whenever(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(emptyList())
 
         val transaction = InvalidateTherapyEventsWithNoteTransaction(searchNote)
         transaction.database = database
@@ -104,7 +104,7 @@ class InvalidateTherapyEventsWithNoteTransactionTest {
         val event1 = createTherapyEvent(id = 1, note = null, isValid = true)
         val event2 = createTherapyEvent(id = 2, note = "test note", isValid = true)
 
-        `when`(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(listOf(event1, event2))
+        whenever(therapyEventDao.getValidByType(TherapyEvent.Type.NOTE)).thenReturn(listOf(event1, event2))
 
         val transaction = InvalidateTherapyEventsWithNoteTransaction(searchNote)
         transaction.database = database

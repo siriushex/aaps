@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class SyncNsBolusTransactionTest {
 
@@ -23,15 +23,15 @@ class SyncNsBolusTransactionTest {
     fun setup() {
         bolusDao = mock()
         database = mock()
-        `when`(database.bolusDao).thenReturn(bolusDao)
+        whenever(database.bolusDao).thenReturn(bolusDao)
     }
 
     @Test
     fun `inserts new bolus when nsId not found and no timestamp match`() {
         val bolus = createBolus(id = 0, nsId = "ns-123", amount = 5.0, timestamp = 1000L)
 
-        `when`(bolusDao.getByNSId("ns-123")).thenReturn(null)
-        `when`(bolusDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(bolusDao.getByNSId("ns-123")).thenReturn(null)
+        whenever(bolusDao.findByTimestamp(1000L)).thenReturn(null)
 
         val transaction = SyncNsBolusTransaction(listOf(bolus))
         transaction.database = database
@@ -53,8 +53,8 @@ class SyncNsBolusTransactionTest {
         val existing = createBolus(id = 1, nsId = null, amount = 5.0, timestamp = timestamp)
         val incoming = createBolus(id = 0, nsId = nsId, amount = 5.0, timestamp = timestamp)
 
-        `when`(bolusDao.getByNSId(nsId)).thenReturn(null)
-        `when`(bolusDao.findByTimestamp(timestamp)).thenReturn(existing)
+        whenever(bolusDao.getByNSId(nsId)).thenReturn(null)
+        whenever(bolusDao.findByTimestamp(timestamp)).thenReturn(existing)
 
         val transaction = SyncNsBolusTransaction(listOf(incoming))
         transaction.database = database
@@ -75,7 +75,7 @@ class SyncNsBolusTransactionTest {
         val existing = createBolus(id = 1, nsId = nsId, amount = 5.0, isValid = true)
         val incoming = createBolus(id = 0, nsId = nsId, amount = 5.0, isValid = false)
 
-        `when`(bolusDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(bolusDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsBolusTransaction(listOf(incoming))
         transaction.database = database
@@ -94,7 +94,7 @@ class SyncNsBolusTransactionTest {
         val existing = createBolus(id = 1, nsId = nsId, amount = 5.0, isValid = false)
         val incoming = createBolus(id = 0, nsId = nsId, amount = 5.0, isValid = false)
 
-        `when`(bolusDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(bolusDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsBolusTransaction(listOf(incoming))
         transaction.database = database
@@ -110,7 +110,7 @@ class SyncNsBolusTransactionTest {
         val existing = createBolus(id = 1, nsId = nsId, amount = 5.0)
         val incoming = createBolus(id = 0, nsId = nsId, amount = 7.5)
 
-        `when`(bolusDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(bolusDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsBolusTransaction(listOf(incoming))
         transaction.database = database
@@ -129,7 +129,7 @@ class SyncNsBolusTransactionTest {
         val existing = createBolus(id = 1, nsId = nsId, amount = 5.0)
         val incoming = createBolus(id = 0, nsId = nsId, amount = 5.0)
 
-        `when`(bolusDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(bolusDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsBolusTransaction(listOf(incoming))
         transaction.database = database
@@ -145,7 +145,7 @@ class SyncNsBolusTransactionTest {
         val existing = createBolus(id = 1, nsId = nsId, amount = 5.0, isValid = true)
         val incoming = createBolus(id = 0, nsId = nsId, amount = 7.5, isValid = false)
 
-        `when`(bolusDao.getByNSId(nsId)).thenReturn(existing)
+        whenever(bolusDao.getByNSId(nsId)).thenReturn(existing)
 
         val transaction = SyncNsBolusTransaction(listOf(incoming))
         transaction.database = database
@@ -164,10 +164,10 @@ class SyncNsBolusTransactionTest {
         val bolus1 = createBolus(id = 0, nsId = "ns-1", amount = 5.0, timestamp = 1000L)
         val bolus2 = createBolus(id = 0, nsId = "ns-2", amount = 3.0, timestamp = 2000L)
 
-        `when`(bolusDao.getByNSId("ns-1")).thenReturn(null)
-        `when`(bolusDao.getByNSId("ns-2")).thenReturn(null)
-        `when`(bolusDao.findByTimestamp(1000L)).thenReturn(null)
-        `when`(bolusDao.findByTimestamp(2000L)).thenReturn(null)
+        whenever(bolusDao.getByNSId("ns-1")).thenReturn(null)
+        whenever(bolusDao.getByNSId("ns-2")).thenReturn(null)
+        whenever(bolusDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(bolusDao.findByTimestamp(2000L)).thenReturn(null)
 
         val transaction = SyncNsBolusTransaction(listOf(bolus1, bolus2))
         transaction.database = database
@@ -201,8 +201,8 @@ class SyncNsBolusTransactionTest {
         val existing = createBolus(id = 1, nsId = null, amount = 5.0, timestamp = timestamp, isValid = true)
         val incoming = createBolus(id = 0, nsId = nsId, amount = 7.5, timestamp = timestamp, isValid = false)
 
-        `when`(bolusDao.getByNSId(nsId)).thenReturn(null)
-        `when`(bolusDao.findByTimestamp(timestamp)).thenReturn(existing)
+        whenever(bolusDao.getByNSId(nsId)).thenReturn(null)
+        whenever(bolusDao.findByTimestamp(timestamp)).thenReturn(existing)
 
         val transaction = SyncNsBolusTransaction(listOf(incoming))
         transaction.database = database
@@ -220,7 +220,7 @@ class SyncNsBolusTransactionTest {
     fun `skips bolus with null nsId when no timestamp match`() {
         val bolus = createBolus(id = 0, nsId = null, amount = 5.0, timestamp = 1000L)
 
-        `when`(bolusDao.findByTimestamp(1000L)).thenReturn(null)
+        whenever(bolusDao.findByTimestamp(1000L)).thenReturn(null)
 
         val transaction = SyncNsBolusTransaction(listOf(bolus))
         transaction.database = database

@@ -3,9 +3,8 @@ package app.aaps.pump.equil.driver.definition
 import app.aaps.pump.equil.R
 import app.aaps.shared.tests.TestBaseWithProfile
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.whenever
 
 class EquilHistoryEntryGroupTest : TestBaseWithProfile() {
 
@@ -41,11 +40,11 @@ class EquilHistoryEntryGroupTest : TestBaseWithProfile() {
     @Test
     fun `getTranslatedList should return all groups`() {
         // Mock resource helper to return translated strings
-        `when`(rh.gs(R.string.equil_history_group_all)).thenReturn("All")
-        `when`(rh.gs(R.string.equil_history_group_pair)).thenReturn("Pair")
-        `when`(rh.gs(R.string.equil_history_group_bolus)).thenReturn("Bolus")
-        `when`(rh.gs(R.string.equil_history_group_basal)).thenReturn("Basal")
-        `when`(rh.gs(R.string.equil_history_group_configuration)).thenReturn("Configuration")
+        whenever(rh.gs(R.string.equil_history_group_all)).thenReturn("All")
+        whenever(rh.gs(R.string.equil_history_group_pair)).thenReturn("Pair")
+        whenever(rh.gs(R.string.equil_history_group_bolus)).thenReturn("Bolus")
+        whenever(rh.gs(R.string.equil_history_group_basal)).thenReturn("Basal")
+        whenever(rh.gs(R.string.equil_history_group_configuration)).thenReturn("Configuration")
 
         val translatedList = EquilHistoryEntryGroup.getTranslatedList(rh)
 
@@ -59,11 +58,11 @@ class EquilHistoryEntryGroupTest : TestBaseWithProfile() {
 
     @Test
     fun `toString should return translated string`() {
-        `when`(rh.gs(R.string.equil_history_group_all)).thenReturn("All History")
-        `when`(rh.gs(R.string.equil_history_group_pair)).thenReturn("Pairing")
-        `when`(rh.gs(R.string.equil_history_group_bolus)).thenReturn("Boluses")
-        `when`(rh.gs(R.string.equil_history_group_basal)).thenReturn("Basal Rates")
-        `when`(rh.gs(R.string.equil_history_group_configuration)).thenReturn("Config")
+        whenever(rh.gs(R.string.equil_history_group_all)).thenReturn("All History")
+        whenever(rh.gs(R.string.equil_history_group_pair)).thenReturn("Pairing")
+        whenever(rh.gs(R.string.equil_history_group_bolus)).thenReturn("Boluses")
+        whenever(rh.gs(R.string.equil_history_group_basal)).thenReturn("Basal Rates")
+        whenever(rh.gs(R.string.equil_history_group_configuration)).thenReturn("Config")
 
         EquilHistoryEntryGroup.getTranslatedList(rh)
 

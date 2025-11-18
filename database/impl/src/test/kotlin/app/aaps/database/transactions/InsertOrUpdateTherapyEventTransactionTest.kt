@@ -10,9 +10,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class InsertOrUpdateTherapyEventTransactionTest {
 
@@ -23,14 +23,14 @@ class InsertOrUpdateTherapyEventTransactionTest {
     fun setup() {
         therapyEventDao = mock()
         database = mock()
-        `when`(database.therapyEventDao).thenReturn(therapyEventDao)
+        whenever(database.therapyEventDao).thenReturn(therapyEventDao)
     }
 
     @Test
     fun `inserts new therapy event when id not found`() {
         val event = createTherapyEvent(id = 1)
 
-        `when`(therapyEventDao.findById(1)).thenReturn(null)
+        whenever(therapyEventDao.findById(1)).thenReturn(null)
 
         val transaction = InsertOrUpdateTherapyEventTransaction(event)
         transaction.database = database
@@ -49,7 +49,7 @@ class InsertOrUpdateTherapyEventTransactionTest {
         val event = createTherapyEvent(id = 1)
         val existing = createTherapyEvent(id = 1)
 
-        `when`(therapyEventDao.findById(1)).thenReturn(existing)
+        whenever(therapyEventDao.findById(1)).thenReturn(existing)
 
         val transaction = InsertOrUpdateTherapyEventTransaction(event)
         transaction.database = database
@@ -73,7 +73,7 @@ class InsertOrUpdateTherapyEventTransactionTest {
 
         types.forEach { type ->
             val event = createTherapyEvent(id = 1, type = type)
-            `when`(therapyEventDao.findById(1)).thenReturn(null)
+            whenever(therapyEventDao.findById(1)).thenReturn(null)
 
             val transaction = InsertOrUpdateTherapyEventTransaction(event)
             transaction.database = database
