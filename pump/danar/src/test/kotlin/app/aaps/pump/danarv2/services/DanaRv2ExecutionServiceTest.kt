@@ -61,10 +61,6 @@ class DanaRv2ExecutionServiceTest : TestBaseWithProfile() {
         danaRv2ExecutionService.messageHashTableRv2 = messageHashTableRv2
         danaRv2ExecutionService.profileFunction = profileFunction
 
-        `when`(pumpEnactResultProvider.get()).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.success(any())).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.comment(anyInt())).thenReturn(pumpEnactResult)
-        `when`(pumpEnactResult.comment(anyString())).thenReturn(pumpEnactResult)
         `when`(rh.gs(anyInt())).thenReturn("test")
         `when`(rh.gs(anyInt(), any())).thenReturn("test")
         `when`(activePlugin.activePump).thenReturn(danaRv2Plugin)
