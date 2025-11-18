@@ -13,7 +13,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
-class InsertOrUpdateRunningModeTest {
+class InsertOrUpdateRunningModeTransactionTest {
 
     private lateinit var database: DelegatedAppDatabase
     private lateinit var runningModeDao: RunningModeDao
@@ -27,11 +27,11 @@ class InsertOrUpdateRunningModeTest {
 
     @Test
     fun `inserts new running mode when id not found`() {
-        val runningMode = createRunningMode(id = 1, mode = RunningMode.Mode.OPEN)
+        val runningMode = createRunningMode(id = 1, mode = RunningMode.Mode.OPEN_LOOP)
 
         whenever(runningModeDao.findById(1)).thenReturn(null)
 
-        val transaction = InsertOrUpdateRunningMode(runningMode)
+        val transaction = InsertOrUpdateRunningModeTransaction(runningMode)
         transaction.database = database
         val result = transaction.run()
 
@@ -45,12 +45,12 @@ class InsertOrUpdateRunningModeTest {
 
     @Test
     fun `updates existing running mode when id found`() {
-        val runningMode = createRunningMode(id = 1, mode = RunningMode.Mode.CLOSED)
-        val existing = createRunningMode(id = 1, mode = RunningMode.Mode.OPEN)
+        val runningMode = createRunningMode(id = 1, mode = RunningMode.Mode.CLOSED_LOOP)
+        val existing = createRunningMode(id = 1, mode = RunningMode.Mode.OPEN_LOOP)
 
         whenever(runningModeDao.findById(1)).thenReturn(existing)
 
-        val transaction = InsertOrUpdateRunningMode(runningMode)
+        val transaction = InsertOrUpdateRunningModeTransaction(runningMode)
         transaction.database = database
         val result = transaction.run()
 
@@ -64,26 +64,26 @@ class InsertOrUpdateRunningModeTest {
 
     @Test
     fun `updates running mode type`() {
-        val existing = createRunningMode(id = 1, mode = RunningMode.Mode.OPEN)
-        val updated = createRunningMode(id = 1, mode = RunningMode.Mode.CLOSED)
+        val existing = createRunningMode(id = 1, mode = RunningMode.Mode.OPEN_LOOP)
+        val updated = createRunningMode(id = 1, mode = RunningMode.Mode.CLOSED_LOOP)
 
         whenever(runningModeDao.findById(1)).thenReturn(existing)
 
-        val transaction = InsertOrUpdateRunningMode(updated)
+        val transaction = InsertOrUpdateRunningModeTransaction(updated)
         transaction.database = database
         val result = transaction.run()
 
         assertThat(result.updated).hasSize(1)
-        assertThat(result.updated[0].mode).isEqualTo(RunningMode.Mode.CLOSED)
+        assertThat(result.updated[0].mode).isEqualTo(RunningMode.Mode.CLOSED_LOOP)
     }
 
     @Test
     fun `inserts running mode with duration`() {
-        val runningMode = createRunningMode(id = 1, mode = RunningMode.Mode.OPEN, duration = 60_000L)
+        val runningMode = createRunningMode(id = 1, mode = RunningMode.Mode.OPEN_LOOP, duration = 60_000L)
 
         whenever(runningModeDao.findById(1)).thenReturn(null)
 
-        val transaction = InsertOrUpdateRunningMode(runningMode)
+        val transaction = InsertOrUpdateRunningModeTransaction(runningMode)
         transaction.database = database
         val result = transaction.run()
 

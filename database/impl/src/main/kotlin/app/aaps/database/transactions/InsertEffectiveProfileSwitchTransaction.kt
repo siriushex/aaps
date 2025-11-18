@@ -2,7 +2,7 @@ package app.aaps.database.transactions
 
 import app.aaps.database.entities.EffectiveProfileSwitch
 
-class InsertEffectiveProfileSwitch(private val effectiveProfileSwitch: EffectiveProfileSwitch) : Transaction<InsertEffectiveProfileSwitch.TransactionResult>() {
+class InsertEffectiveProfileSwitchTransaction(private val effectiveProfileSwitch: EffectiveProfileSwitch) : Transaction<InsertEffectiveProfileSwitchTransaction.TransactionResult>() {
 
     override fun run(): TransactionResult {
         val result = TransactionResult()

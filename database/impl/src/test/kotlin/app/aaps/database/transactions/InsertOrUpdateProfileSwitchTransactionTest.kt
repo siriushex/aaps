@@ -3,6 +3,8 @@ package app.aaps.database.transactions
 import app.aaps.database.DelegatedAppDatabase
 import app.aaps.database.daos.ProfileSwitchDao
 import app.aaps.database.entities.ProfileSwitch
+import app.aaps.database.entities.data.GlucoseUnit
+import app.aaps.database.entities.embedments.InsulinConfiguration
 import app.aaps.database.entities.embedments.InterfaceIDs
 import com.google.common.truth.Truth.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -13,7 +15,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
-class InsertOrUpdateProfileSwitchTest {
+class InsertOrUpdateProfileSwitchTransactionTest {
 
     private lateinit var database: DelegatedAppDatabase
     private lateinit var profileSwitchDao: ProfileSwitchDao
@@ -31,7 +33,7 @@ class InsertOrUpdateProfileSwitchTest {
 
         whenever(profileSwitchDao.findById(1)).thenReturn(null)
 
-        val transaction = InsertOrUpdateProfileSwitch(profileSwitch)
+        val transaction = InsertOrUpdateProfileSwitchTransaction(profileSwitch)
         transaction.database = database
         val result = transaction.run()
 
@@ -50,7 +52,7 @@ class InsertOrUpdateProfileSwitchTest {
 
         whenever(profileSwitchDao.findById(1)).thenReturn(existing)
 
-        val transaction = InsertOrUpdateProfileSwitch(profileSwitch)
+        val transaction = InsertOrUpdateProfileSwitchTransaction(profileSwitch)
         transaction.database = database
         val result = transaction.run()
 
@@ -69,7 +71,7 @@ class InsertOrUpdateProfileSwitchTest {
 
         whenever(profileSwitchDao.findById(1)).thenReturn(existing)
 
-        val transaction = InsertOrUpdateProfileSwitch(updated)
+        val transaction = InsertOrUpdateProfileSwitchTransaction(updated)
         transaction.database = database
         val result = transaction.run()
 
@@ -83,7 +85,7 @@ class InsertOrUpdateProfileSwitchTest {
 
         whenever(profileSwitchDao.findById(1)).thenReturn(null)
 
-        val transaction = InsertOrUpdateProfileSwitch(profileSwitch)
+        val transaction = InsertOrUpdateProfileSwitchTransaction(profileSwitch)
         transaction.database = database
         val result = transaction.run()
 
@@ -94,18 +96,19 @@ class InsertOrUpdateProfileSwitchTest {
     private fun createProfileSwitch(
         id: Long,
         percentage: Int,
-        timeshift: Int = 0
+        timeshift: Long = 0
     ): ProfileSwitch = ProfileSwitch(
         timestamp = System.currentTimeMillis(),
         basalBlocks = emptyList(),
         isfBlocks = emptyList(),
         icBlocks = emptyList(),
         targetBlocks = emptyList(),
-        glucoseUnit = ProfileSwitch.GlucoseUnit.MGDL,
+        glucoseUnit = GlucoseUnit.MGDL,
         profileName = "Test",
         timeshift = timeshift,
         percentage = percentage,
         duration = 0,
-        interfaceIDs_backing = InterfaceIDs()
+        interfaceIDs_backing = InterfaceIDs(),
+        insulinConfiguration = InsulinConfiguration("some", 600000L, 60000L)
     ).also { it.id = id }
 }

@@ -2,7 +2,7 @@ package app.aaps.database.transactions
 
 import app.aaps.database.entities.ProfileSwitch
 
-class InsertOrUpdateProfileSwitch(val profileSwitch: ProfileSwitch) : Transaction<InsertOrUpdateProfileSwitch.TransactionResult>() {
+class InsertOrUpdateProfileSwitchTransaction(val profileSwitch: ProfileSwitch) : Transaction<InsertOrUpdateProfileSwitchTransaction.TransactionResult>() {
 
     override fun run(): TransactionResult {
         val result = TransactionResult()
