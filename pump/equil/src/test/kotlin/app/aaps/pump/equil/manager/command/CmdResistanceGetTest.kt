@@ -70,8 +70,8 @@ class CmdResistanceGetTest : TestBaseWithProfile() {
         val data = cmd.getNextData()
 
         assertNotNull(data)
-        // Should contain index (4) + command (3) + value (4) = 11 bytes
-        assertEquals(11, data.size)
+        // Should contain index (4) + command (3) = 7 bytes
+        assertEquals(7, data.size)
     }
 
     @Test
@@ -98,8 +98,9 @@ class CmdResistanceGetTest : TestBaseWithProfile() {
         val cmd = CmdResistanceGet(aapsLogger, preferences, equilManager)
         val testData = ByteArray(10)
         // Set bytes 6 and 7 to represent value >= 500
-        testData[6] = 0x01
-        testData[7] = 0xF4.toByte() // 500 in little endian
+        // Utils.bytesToInt(data[7], data[6]) treats data[7] as high byte
+        testData[6] = 0xF4.toByte() // Low byte = 244
+        testData[7] = 0x01 // High byte = 1, result = 500
 
         val thread = Thread {
             cmd.decodeConfirmData(testData)
@@ -116,8 +117,9 @@ class CmdResistanceGetTest : TestBaseWithProfile() {
         val cmd = CmdResistanceGet(aapsLogger, preferences, equilManager)
         val testData = ByteArray(10)
         // Set bytes 6 and 7 to represent value < 500
-        testData[6] = 0x00
-        testData[7] = 0x64 // 100
+        // Utils.bytesToInt(data[7], data[6]) treats data[7] as high byte
+        testData[6] = 0x64 // Low byte = 100
+        testData[7] = 0x00 // High byte = 0, result = 100
 
         val thread = Thread {
             cmd.decodeConfirmData(testData)
@@ -148,8 +150,9 @@ class CmdResistanceGetTest : TestBaseWithProfile() {
         val cmd = CmdResistanceGet(aapsLogger, preferences, equilManager)
         val testData = ByteArray(10)
         // Set bytes 6 and 7 to exactly 500
-        testData[6] = 0x01
-        testData[7] = 0xF4.toByte()
+        // Utils.bytesToInt(data[7], data[6]) treats data[7] as high byte
+        testData[6] = 0xF4.toByte() // Low byte = 244
+        testData[7] = 0x01 // High byte = 1, result = 500
 
         val thread = Thread {
             cmd.decodeConfirmData(testData)
