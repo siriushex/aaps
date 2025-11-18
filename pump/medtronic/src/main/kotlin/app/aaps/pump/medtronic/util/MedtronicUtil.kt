@@ -260,7 +260,7 @@ class MedtronicUtil @Inject constructor(
         }
 
         fun makeUnsignedShort(b2: Int, b1: Int): Int {
-            return b2 and 0xff shl 8 or b1 and 0xff
+            return ((b2 and 0xff) shl 8) or (b1 and 0xff)
         }
 
         fun getByteArrayFromUnsignedShort(shortValue: Int, returnFixedSize: Boolean): ByteArray {
