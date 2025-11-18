@@ -154,14 +154,14 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(pumpState.extendedBolus).thenReturn(null)
         `when`(temporaryBasal.rate).thenReturn(150.0)
         `when`(temporaryBasal.timestamp).thenReturn(1000000L)
-        danaPump.isTempBasalInProgress = true
+        // Set underlying properties to make isTempBasalInProgress true
         danaPump.tempBasalPercent = 100
         danaPump.tempBasalStart = 1000000L
-        danaPump.tempBasalDuration = 30
+        danaPump.tempBasalDuration = 1800000L // 30 minutes in milliseconds
+        `when`(dateUtil.now()).thenReturn(1500000L) // Within the temp basal range
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
-        `when`(dateUtil.now()).thenReturn(2000000L)
 
         testService.doSanityCheck()
 
@@ -177,10 +177,11 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
         `when`(pumpState.temporaryBasal).thenReturn(null)
         `when`(pumpState.extendedBolus).thenReturn(null)
-        danaPump.isTempBasalInProgress = true
+        // Set underlying properties to make isTempBasalInProgress true
         danaPump.tempBasalPercent = 120
         danaPump.tempBasalStart = 1000000L
-        danaPump.tempBasalDuration = 30
+        danaPump.tempBasalDuration = 1800000L // 30 minutes in milliseconds
+        `when`(dateUtil.now()).thenReturn(1500000L) // Within the temp basal range
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
@@ -197,16 +198,19 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         val pumpState = mock(PumpSync.PumpState::class.java)
         val activePump = mock(app.aaps.core.interfaces.pump.Pump::class.java)
 
+        // Set dateUtil.now() first, before checking isTempBasalInProgress
+        `when`(dateUtil.now()).thenReturn(2000000L)
+
         `when`(pumpSync.expectedPumpState()).thenReturn(pumpState)
         `when`(pumpState.temporaryBasal).thenReturn(temporaryBasal)
         `when`(pumpState.extendedBolus).thenReturn(null)
         `when`(temporaryBasal.rate).thenReturn(150.0)
         `when`(temporaryBasal.timestamp).thenReturn(1000000L)
+        // Ensure pump shows no temp basal (tempBasalStart = 0 by default)
         danaPump.isTempBasalInProgress = false
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
-        `when`(dateUtil.now()).thenReturn(2000000L)
 
         testService.doSanityCheck()
 
@@ -225,12 +229,13 @@ class AbstractDanaRExecutionServiceTest : TestBaseWithProfile() {
         `when`(pumpState.extendedBolus).thenReturn(extendedBolus)
         `when`(extendedBolus.rate).thenReturn(1.5)
         `when`(extendedBolus.timestamp).thenReturn(1000000L)
-        danaPump.isExtendedInProgress = true
+        // Set underlying properties to make isExtendedInProgress true
         danaPump.extendedBolusAbsoluteRate = 2.0
         danaPump.extendedBolusStart = 1000000L
         danaPump.extendedBolusAmount = 3.0
-        danaPump.extendedBolusDuration = 120
+        danaPump.extendedBolusDuration = 7200000L // 120 minutes in milliseconds
         danaPump.tempBasalStart = 1000000L
+        `when`(dateUtil.now()).thenReturn(2000000L) // Within the extended bolus range
         `when`(activePlugin.activePump).thenReturn(activePump)
         `when`(activePump.model()).thenReturn(PumpType.DANA_R)
         `when`(activePump.serialNumber()).thenReturn("TEST123")
