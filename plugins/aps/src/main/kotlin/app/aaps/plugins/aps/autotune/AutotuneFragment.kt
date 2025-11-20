@@ -324,6 +324,11 @@ class AutotuneFragment : DaggerFragment() {
         handler.removeCallbacksAndMessages(null)
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     @Synchronized
     private fun updateGui() {
         _binding ?: return
