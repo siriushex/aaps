@@ -66,7 +66,7 @@ import javax.inject.Provider
 @Suppress("SpellCheckingInspection")
 open class TestBaseWithProfile : TestBase() {
 
-    @Mock open lateinit var activePlugin: ActivePlugin
+    @Mock lateinit var activePlugin: ActivePlugin
     @Mock lateinit var rh: ResourceHelper
     @Mock lateinit var iobCobCalculator: IobCobCalculator
     @Mock lateinit var processedTbrEbData: ProcessedTbrEbData

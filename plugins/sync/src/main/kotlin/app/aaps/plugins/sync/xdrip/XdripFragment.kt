@@ -112,6 +112,11 @@ class XdripFragment : DaggerFragment(), MenuProvider, PluginFragment {
         handler.looper.quitSafely()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun updateGui() {
         if (_binding == null) return
         binding.log.text = xdripPlugin.textLog()
