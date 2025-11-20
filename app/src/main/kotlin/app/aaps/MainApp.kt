@@ -451,6 +451,8 @@ class MainApp : DaggerApplication(), ComposeUiProvider {
 
     override fun onTerminate() {
         aapsLogger.debug(LTag.CORE, "onTerminate")
+        handler.looper.quitSafely()
+        handler.removeCallbacksAndMessages(null)
         unregisterActivityLifecycleCallbacks(activityMonitor)
         uiInteraction.stopAlarm("onTerminate")
         super.onTerminate()

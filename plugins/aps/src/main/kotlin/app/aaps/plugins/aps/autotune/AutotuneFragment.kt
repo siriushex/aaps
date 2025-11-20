@@ -318,10 +318,10 @@ class AutotuneFragment : DaggerFragment() {
     }
 
     @Synchronized
-    override fun onPause() {
-        super.onPause()
-        disposable.clear()
+    override fun onDestroy() {
+        super.onDestroy()
         handler.removeCallbacksAndMessages(null)
+        handler.looper.quitSafely()
     }
 
     override fun onDestroyView() {
