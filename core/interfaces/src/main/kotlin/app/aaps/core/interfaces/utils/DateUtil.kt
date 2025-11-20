@@ -44,7 +44,7 @@ interface DateUtil {
      * @param seconds The number of seconds past midnight.
      * @return The full timestamp in milliseconds for that time on the current day.
      */
-    fun minutesOfTheDayToMilliseconds(seconds: Int): Long
+    fun secondsOfTheDayToMillisecondsOfHoursAndMinutes(seconds: Int): Long
 
     /**
      * Converts a number of seconds from the beginning of today into a full Unix timestamp for that time.

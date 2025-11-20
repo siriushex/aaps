@@ -118,7 +118,7 @@ class DateUtilImplTest {
         val expectedMillis = startOfToday + (61 * 60 * 1000L) // Exactly 61 minutes past the start of the day
 
         // ACT
-        val newResult = dateUtilImplDeter.minutesOfTheDayToMilliseconds(inputSeconds)
+        val newResult = dateUtilImplDeter.secondsOfTheDayToMillisecondsOfHoursAndMinutes(inputSeconds)
         val oldResult = dateUtilOldImpl.secondsOfTheDayToMilliseconds(inputSeconds) // The old function with this logic
 
         // ASSERT

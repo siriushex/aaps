@@ -78,9 +78,7 @@ class DateUtilImpl @Inject constructor(
         return ISO_LOCAL_FORMATTER.format(zonedDateTime)
     }
 
-    override fun minutesOfTheDayToMilliseconds(seconds: Int): Long {
-        //TODO: This function replicates the old "secondsOfTheDayToMilliseconds",
-        // which ignored the seconds component of the input.
+    override fun secondsOfTheDayToMillisecondsOfHoursAndMinutes(seconds: Int): Long {
         val startOfToday = LocalDate.now(clock).atStartOfDay(systemZone)
         val totalMinutes = seconds / 60
         val targetTime = startOfToday.plusMinutes(totalMinutes.toLong())
