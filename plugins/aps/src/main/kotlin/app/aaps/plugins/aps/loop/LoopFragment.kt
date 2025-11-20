@@ -96,7 +96,6 @@ class LoopFragment : DaggerFragment(), MenuProvider {
             else        -> false
         }
 
-    @Synchronized
     override fun onResume() {
         super.onResume()
         disposable += rxBus
@@ -118,14 +117,12 @@ class LoopFragment : DaggerFragment(), MenuProvider {
         preferences.put(BooleanNonKey.ObjectivesLoopUsed, true)
     }
 
-    @Synchronized
-    override fun onPause() {
-        super.onPause()
-        disposable.clear()
+    override fun onDestroy() {
+        super.onDestroy()
         handler.removeCallbacksAndMessages(null)
+        handler.looper.quitSafely()
     }
 
-    @Synchronized
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -162,7 +159,6 @@ class LoopFragment : DaggerFragment(), MenuProvider {
         }
     }
 
-    @Synchronized
     private fun clearGUI() {
         binding.request.text = ""
         binding.constraints.text = ""

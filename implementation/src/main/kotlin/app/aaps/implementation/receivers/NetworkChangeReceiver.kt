@@ -7,8 +7,6 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.wifi.SupplicantState
 import android.net.wifi.WifiManager
-import android.os.Handler
-import android.os.HandlerThread
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.receivers.ReceiverStatusStore
@@ -24,10 +22,9 @@ class NetworkChangeReceiver : DaggerBroadcastReceiver() {
     @Inject lateinit var aapsLogger: AAPSLogger
     @Inject lateinit var receiverStatusStore: ReceiverStatusStore
 
-    private val handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        handler.post { rxBus.send(grabNetworkStatus(context)) }
+        Thread { rxBus.send(grabNetworkStatus(context)) }.start()
     }
 
     @Suppress("DEPRECATION")
