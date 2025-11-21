@@ -90,7 +90,6 @@ class XdripFragment : DaggerFragment(), MenuProvider, PluginFragment {
             else              -> false
         }
 
-    @Synchronized
     override fun onResume() {
         super.onResume()
         disposable += rxBus
