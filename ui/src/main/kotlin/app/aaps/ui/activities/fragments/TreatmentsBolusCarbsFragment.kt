@@ -75,15 +75,9 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
     class MealLink(
         val bolus: BS? = null,
         val carbs: CA? = null,
-        val bolusCalculatorResult: BCR? = null
-    )
-
-    class MealLinkWithLabel(
-        val ml: MealLink,
+        val bolusCalculatorResult: BCR? = null,
         var hasLabel: Boolean? = null
     )
-
-    private fun MealLink.withLabel() = MealLinkWithLabel(this, null)
 
     private val disposable = CompositeDisposable()
     private lateinit var actionHelper: ActionModeHelper<MealLink>
@@ -163,7 +157,7 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
                     }
                     .observeOn(aapsSchedulers.main)
                     .subscribe { list ->
-                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        adapter?.submitList(list) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
                         binding.recyclerview.isLoading = false
                     }
             else
@@ -178,7 +172,7 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
                     }
                     .observeOn(aapsSchedulers.main)
                     .subscribe { list ->
-                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        adapter?.submitList(list) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
                         binding.recyclerview.isLoading = false
                     }
     }
@@ -208,18 +202,17 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
 
     private fun timestamp(ml: MealLink): Long = ml.bolusCalculatorResult?.timestamp ?: ml.bolus?.timestamp ?: ml.carbs?.timestamp ?: 0L
 
-    inner class MealLinkListAdapter : ListAdapter<MealLinkWithLabel, MealLinkListAdapter.MealLinkLoadedViewHolder>(MealLinkDiffCallback()) {
+    inner class MealLinkListAdapter : ListAdapter<MealLink, MealLinkListAdapter.MealLinkLoadedViewHolder>(MealLinkDiffCallback()) {
 
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): MealLinkLoadedViewHolder =
             MealLinkLoadedViewHolder(LayoutInflater.from(viewGroup.context).inflate(R.layout.treatments_bolus_carbs_item, viewGroup, false))
 
         override fun onBindViewHolder(holder: MealLinkLoadedViewHolder, position: Int) {
             val profile = profileFunction.getProfile() ?: return
-            val item = getItem(position)
-            val ml = item.ml
+            val ml = getItem(position)
 
-            val newDay = position == 0 || !dateUtil.isSameDayGroup(timestamp(ml), timestamp(getItem(position - 1).ml))
-            item.hasLabel = newDay
+            val newDay = position == 0 || !dateUtil.isSameDayGroup(timestamp(ml), timestamp(getItem(position - 1)))
+            ml.hasLabel = newDay
             holder.binding.date.visibility = newDay.toVisibility()
             holder.binding.date.text = if (newDay) dateUtil.dateStringRelative(timestamp(ml), rh) else ""
 
@@ -331,29 +324,23 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
         }
     }
 
-    private class MealLinkDiffCallback : DiffUtil.ItemCallback<MealLinkWithLabel>() {
+    private class MealLinkDiffCallback : DiffUtil.ItemCallback<MealLink>() {
 
-        override fun areItemsTheSame(oldItem: MealLinkWithLabel, newItem: MealLinkWithLabel): Boolean {
-            val oldMl = oldItem.ml
-            val newMl = newItem.ml
-            return oldMl.bolus?.id == newMl.bolus?.id &&
-                oldMl.carbs?.id == newMl.carbs?.id &&
-                oldMl.bolusCalculatorResult?.id == newMl.bolusCalculatorResult?.id
-        }
+        override fun areItemsTheSame(oldItem: MealLink, newItem: MealLink): Boolean =
+            oldItem.bolus?.id == newItem.bolus?.id &&
+                oldItem.carbs?.id == newItem.carbs?.id &&
+                oldItem.bolusCalculatorResult?.id == newItem.bolusCalculatorResult?.id
 
-        override fun areContentsTheSame(oldItem: MealLinkWithLabel, newItem: MealLinkWithLabel): Boolean {
-            val oldMl = oldItem.ml
-            val newMl = newItem.ml
-            return oldMl.bolus?.timestamp == newMl.bolus?.timestamp &&
-                oldMl.bolus?.amount == newMl.bolus?.amount &&
-                oldMl.bolus?.isValid == newMl.bolus?.isValid &&
-                oldMl.carbs?.timestamp == newMl.carbs?.timestamp &&
-                oldMl.carbs?.amount == newMl.carbs?.amount &&
-                oldMl.carbs?.isValid == newMl.carbs?.isValid &&
-                oldMl.bolusCalculatorResult?.timestamp == newMl.bolusCalculatorResult?.timestamp &&
-                oldMl.bolusCalculatorResult?.isValid == newMl.bolusCalculatorResult?.isValid &&
+        override fun areContentsTheSame(oldItem: MealLink, newItem: MealLink): Boolean =
+            oldItem.bolus?.timestamp == newItem.bolus?.timestamp &&
+                oldItem.bolus?.amount == newItem.bolus?.amount &&
+                oldItem.bolus?.isValid == newItem.bolus?.isValid &&
+                oldItem.carbs?.timestamp == newItem.carbs?.timestamp &&
+                oldItem.carbs?.amount == newItem.carbs?.amount &&
+                oldItem.carbs?.isValid == newItem.carbs?.isValid &&
+                oldItem.bolusCalculatorResult?.timestamp == newItem.bolusCalculatorResult?.timestamp &&
+                oldItem.bolusCalculatorResult?.isValid == newItem.bolusCalculatorResult?.isValid &&
                 oldItem.hasLabel == newItem.hasLabel
-        }
     }
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
