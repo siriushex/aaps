@@ -9,9 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import app.aaps.core.data.model.UE
 import app.aaps.core.data.time.T
@@ -37,7 +35,6 @@ import app.aaps.ui.databinding.TreatmentsUserEntryItemBinding
 import dagger.android.support.DaggerFragment
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
@@ -54,51 +51,25 @@ class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
     @Inject lateinit var userEntryPresentationHelper: UserEntryPresentationHelper
 
     private val disposable = CompositeDisposable()
-    private var millsToThePastFiltered = T.days(30).msecs()
-    private var millsToThePastUnFiltered = T.days(3).msecs()
+    private val millsToThePastFiltered = T.days(30).msecs()
+    private val millsToThePastUnFiltered = T.days(3).msecs()
     private var menu: Menu? = null
     private var showLoop = false
     private var _binding: TreatmentsUserEntryFragmentBinding? = null
-    private var adapter: UserEntryListAdapter? = null
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
 
-    class UEWithLabel(
-        val ue: UE,
-        var hasLabel: Boolean? = null
-    )
-
-    private fun UE.withLabel() = UEWithLabel(this, null)
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        TreatmentsUserEntryFragmentBinding.inflate(inflater, container, false).also {
-            _binding = it
-            requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
-        }.root
+        TreatmentsUserEntryFragmentBinding.inflate(inflater, container, false).also { _binding = it }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        adapter = UserEntryListAdapter()
         binding.recyclerview.setHasFixedSize(true)
         binding.recyclerview.layoutManager = LinearLayoutManager(view.context)
         binding.recyclerview.emptyView = binding.noRecordsText
         binding.recyclerview.loadingView = binding.progressBar
-        binding.recyclerview.adapter = adapter
-
-        binding.recyclerview.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                // Load more data if scrolled to the bottom
-                if (dy > 0 && !binding.recyclerview.isLoading && (binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
-                    if (showLoop) millsToThePastUnFiltered += T.hours(24).msecs()
-                    else millsToThePastFiltered += T.hours(24).msecs()
-                    ToastUtils.infoToast(requireContext(), rh.gs(app.aaps.core.ui.R.string.loading_more_data))
-                    load(withScroll = false)
-                }
-            }
-        })
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     private fun exportUserEntries() {
@@ -110,7 +81,7 @@ class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
         }
     }
 
-    private fun load(withScroll: Boolean) {
+    private fun swapAdapter() {
         val now = System.currentTimeMillis()
         binding.recyclerview.isLoading = true
         disposable +=
@@ -118,43 +89,38 @@ class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
                 persistenceLayer
                     .getUserEntryDataFromTime(now - millsToThePastUnFiltered)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list ->
-                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
-                        binding.recyclerview.isLoading = false
-                    }
+                    .subscribe { list -> binding.recyclerview.swapAdapter(UserEntryAdapter(list), true) }
             else
                 persistenceLayer
                     .getUserEntryFilteredDataFromTime(now - millsToThePastFiltered)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list ->
-                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
-                        binding.recyclerview.isLoading = false
-                    }
+                    .subscribe { list -> binding.recyclerview.swapAdapter(UserEntryAdapter(list), true) }
     }
 
+    @Synchronized
     override fun onResume() {
         super.onResume()
-        load(withScroll = false)
+        swapAdapter()
         disposable += rxBus
             .toObservable(EventPreferenceChange::class.java)
-            .observeOn(aapsSchedulers.main)
-            .debounce(1L, TimeUnit.SECONDS)
-            .subscribe({ load(withScroll = true) }, fabricPrivacy::logException)
+            .observeOn(aapsSchedulers.io)
+            .subscribe({ swapAdapter() }, fabricPrivacy::logException)
     }
 
+    @Synchronized
     override fun onPause() {
         super.onPause()
         disposable.clear()
     }
 
+    @Synchronized
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.recyclerview.adapter = null
-        adapter = null
+        disposable.clear()
         _binding = null
     }
 
-    inner class UserEntryListAdapter : ListAdapter<UEWithLabel, UserEntryListAdapter.UserEntryViewHolder>(UserEntryDiffCallback()) {
+    inner class UserEntryAdapter internal constructor(private var entries: List<UE>) : RecyclerView.Adapter<UserEntryAdapter.UserEntryViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserEntryViewHolder {
             val view: View = LayoutInflater.from(parent.context).inflate(R.layout.treatments_user_entry_item, parent, false)
@@ -162,10 +128,8 @@ class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
         }
 
         override fun onBindViewHolder(holder: UserEntryViewHolder, position: Int) {
-            val item = getItem(position)
-            val current = item.ue
-            val newDay = position == 0 || !dateUtil.isSameDayGroup(current.timestamp, getItem(position - 1).ue.timestamp)
-            item.hasLabel = newDay
+            val current = entries[position]
+            val newDay = position == 0 || !dateUtil.isSameDayGroup(current.timestamp, entries[position - 1].timestamp)
             holder.binding.date.visibility = newDay.toVisibility()
             holder.binding.date.text = if (newDay) dateUtil.dateStringRelative(current.timestamp, rh) else ""
             holder.binding.time.text = dateUtil.timeStringWithSeconds(current.timestamp)
@@ -181,19 +145,8 @@ class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
 
             val binding = TreatmentsUserEntryItemBinding.bind(itemView)
         }
-    }
 
-    private class UserEntryDiffCallback : DiffUtil.ItemCallback<UEWithLabel>() {
-
-        override fun areItemsTheSame(oldItem: UEWithLabel, newItem: UEWithLabel): Boolean =
-            oldItem.ue.id == newItem.ue.id
-
-        override fun areContentsTheSame(oldItem: UEWithLabel, newItem: UEWithLabel): Boolean =
-            oldItem.ue.timestamp == newItem.ue.timestamp &&
-                oldItem.ue.action == newItem.ue.action &&
-                oldItem.ue.source == newItem.ue.source &&
-                oldItem.ue.note == newItem.ue.note &&
-                oldItem.hasLabel == newItem.hasLabel
+        override fun getItemCount() = entries.size
     }
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
@@ -213,7 +166,7 @@ class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
                 showLoop = true
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.show_loop_records)
-                load(withScroll = false)
+                swapAdapter()
                 true
             }
 
@@ -221,7 +174,7 @@ class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
                 showLoop = false
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.show_hide_records)
-                load(withScroll = false)
+                swapAdapter()
                 true
             }
 

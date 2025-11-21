@@ -9,12 +9,9 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.util.forEach
-import androidx.core.util.size
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import app.aaps.core.data.model.TE
 import app.aaps.core.data.time.T
@@ -38,6 +35,7 @@ import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.ui.R
+import app.aaps.ui.activities.fragments.TreatmentsCareportalFragment.RecyclerViewAdapter.TherapyEventsViewHolder
 import app.aaps.ui.databinding.TreatmentsCareportalFragmentBinding
 import app.aaps.ui.databinding.TreatmentsCareportalItemBinding
 import dagger.android.support.DaggerFragment
@@ -66,61 +64,34 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
     private val binding get() = _binding!!
     private var menu: Menu? = null
     private val disposable = CompositeDisposable()
-    private var millsToThePast = T.days(30).msecs()
+    private val millsToThePast = T.days(30).msecs()
     private lateinit var actionHelper: ActionModeHelper<TE>
     private var showInvalidated = false
-    private var adapter: TherapyEventListAdapter? = null
-
-    class TEWithLabel(
-        /** Original TE value */
-        val te: TE,
-        /** true if displayed with date label */
-        var hasLabel: Boolean? = null
-    )
-
-    private fun TE.withLabel() = TEWithLabel(this, null)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        TreatmentsCareportalFragmentBinding.inflate(inflater, container, false).also {
-            _binding = it
-            actionHelper = ActionModeHelper(rh, activity, this)
-            actionHelper.setUpdateListHandler { adapter?.let { adapter -> for (i in 0 until adapter.currentList.size) adapter.notifyItemChanged(i) } }
-            actionHelper.setOnRemoveHandler { handler -> removeSelected(handler) }
-            requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
-        }.root
+        TreatmentsCareportalFragmentBinding.inflate(inflater, container, false).also { _binding = it }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        adapter = TherapyEventListAdapter()
+        actionHelper = ActionModeHelper(rh, activity, this)
+        actionHelper.setUpdateListHandler { binding.recyclerview.adapter?.notifyDataSetChanged() }
+        actionHelper.setOnRemoveHandler { removeSelected(it) }
         binding.recyclerview.setHasFixedSize(true)
         binding.recyclerview.layoutManager = LinearLayoutManager(view.context)
         binding.recyclerview.emptyView = binding.noRecordsText
         binding.recyclerview.loadingView = binding.progressBar
-        binding.recyclerview.adapter = adapter
-
-        binding.recyclerview.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                // Load more data if scrolled to the bottom
-                if (dy > 0 && !binding.recyclerview.isLoading && (binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
-                    millsToThePast += T.hours(24).msecs()
-                    ToastUtils.infoToast(requireContext(), rh.gs(app.aaps.core.ui.R.string.loading_more_data))
-                    load(withScroll = false)
-                }
-            }
-        })
+        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
     }
 
     private fun removeStartedEvents() {
         activity?.let { activity ->
-            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.careportal), rh.gs(R.string.careportal_remove_started_events), {
+            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.careportal), rh.gs(R.string.careportal_remove_started_events), Runnable {
                 disposable += persistenceLayer.invalidateTherapyEventsWithNote(rh.gs(app.aaps.core.ui.R.string.androidaps_start), Action.RESTART_EVENTS_REMOVED, Sources.Treatments).subscribe()
             })
         }
     }
 
-    private fun load(withScroll: Boolean) {
+    fun swapAdapter() {
         val now = System.currentTimeMillis()
         binding.recyclerview.isLoading = true
         disposable +=
@@ -128,44 +99,40 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
                 persistenceLayer
                     .getTherapyEventDataIncludingInvalidFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe {
-                        list -> adapter?.submitList(list.map { it.withLabel() })  { if (withScroll) binding.recyclerview.scrollToPosition(0) }
-                        binding.recyclerview.isLoading = false
-                    }
+                    .subscribe { list -> binding.recyclerview.swapAdapter(RecyclerViewAdapter(list), true) }
             else
                 persistenceLayer
                     .getTherapyEventDataFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list -> adapter?.submitList(list.map { it.withLabel() })  {
-                        if (withScroll) binding.recyclerview.scrollToPosition(0) }
-                        binding.recyclerview.isLoading = false
-                    }
+                    .subscribe { list -> binding.recyclerview.swapAdapter(RecyclerViewAdapter(list), true) }
     }
 
+    @Synchronized
     override fun onResume() {
         super.onResume()
-        load(withScroll = false)
+        swapAdapter()
         disposable += rxBus
             .toObservable(EventTherapyEventChange::class.java)
             .observeOn(aapsSchedulers.main)
             .debounce(1L, TimeUnit.SECONDS)
-            .subscribe({ load(withScroll = true) }, fabricPrivacy::logException)
+            .subscribe({ swapAdapter() }, fabricPrivacy::logException)
     }
 
+    @Synchronized
     override fun onPause() {
         super.onPause()
         actionHelper.finish()
         disposable.clear()
     }
 
+    @Synchronized
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.recyclerview.adapter = null
-        adapter = null
+        binding.recyclerview.adapter = null // avoid leaks
         _binding = null
     }
 
-    inner class TherapyEventListAdapter : ListAdapter<TEWithLabel, TherapyEventListAdapter.TherapyEventsViewHolder>(TherapyEventDiffCallback()) {
+    inner class RecyclerViewAdapter internal constructor(private var therapyList: List<TE>) : RecyclerView.Adapter<TherapyEventsViewHolder>() {
 
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): TherapyEventsViewHolder {
             val v = LayoutInflater.from(viewGroup.context).inflate(R.layout.treatments_careportal_item, viewGroup, false)
@@ -173,12 +140,10 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
         }
 
         override fun onBindViewHolder(holder: TherapyEventsViewHolder, position: Int) {
-            val item = getItem(position)
-            val therapyEvent = item.te
+            val therapyEvent = therapyList[position]
             holder.binding.ns.visibility = (therapyEvent.ids.nightscoutId != null).toVisibility()
             holder.binding.invalid.visibility = therapyEvent.isValid.not().toVisibility()
-            val newDay = position == 0 || !dateUtil.isSameDayGroup(therapyEvent.timestamp, getItem(position - 1).te.timestamp)
-            item.hasLabel = newDay
+            val newDay = position == 0 || !dateUtil.isSameDayGroup(therapyEvent.timestamp, therapyList[position - 1].timestamp)
             holder.binding.date.visibility = newDay.toVisibility()
             holder.binding.date.text = if (newDay) dateUtil.dateStringRelative(therapyEvent.timestamp, rh) else ""
             holder.binding.time.text = dateUtil.timeString(therapyEvent.timestamp)
@@ -198,24 +163,13 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
             holder.binding.cbRemove.isChecked = actionHelper.isSelected(position)
         }
 
+        override fun getItemCount() = therapyList.size
+
         inner class TherapyEventsViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
             val binding = TreatmentsCareportalItemBinding.bind(view)
         }
-    }
 
-    private class TherapyEventDiffCallback : DiffUtil.ItemCallback<TEWithLabel>() {
-
-        override fun areItemsTheSame(oldItem: TEWithLabel, newItem: TEWithLabel): Boolean = oldItem.te.id == newItem.te.id
-
-        override fun areContentsTheSame(oldItem: TEWithLabel, newItem: TEWithLabel): Boolean =
-            oldItem.te.timestamp == newItem.te.timestamp &&
-                oldItem.te.isValid == newItem.te.isValid &&
-                oldItem.te.type == newItem.te.type &&
-                oldItem.te.note == newItem.te.note &&
-                oldItem.te.duration == newItem.te.duration &&
-                oldItem.te.glucose == newItem.te.glucose &&
-                oldItem.hasLabel == newItem.hasLabel
     }
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
@@ -237,7 +191,7 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
                 showInvalidated = true
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.show_invalidated_records)
-                load(withScroll = false)
+                swapAdapter()
                 true
             }
 
@@ -245,7 +199,7 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
                 showInvalidated = false
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.hide_invalidated_records)
-                load(withScroll = false)
+                swapAdapter()
                 true
             }
 
@@ -258,18 +212,18 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
         }
 
     private fun getConfirmationText(selectedItems: SparseArray<TE>): String {
-        if (selectedItems.size == 1) {
+        if (selectedItems.size() == 1) {
             val therapyEvent = selectedItems.valueAt(0)
             return rh.gs(app.aaps.core.ui.R.string.event_type) + ": " + translator.translate(therapyEvent.type) + "\n" +
                 rh.gs(app.aaps.core.ui.R.string.notes_label) + ": " + (therapyEvent.note ?: "") + "\n" +
                 rh.gs(app.aaps.core.ui.R.string.date) + ": " + dateUtil.dateAndTimeString(therapyEvent.timestamp)
         }
-        return rh.gs(app.aaps.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size)
+        return rh.gs(app.aaps.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size())
     }
 
     private fun removeSelected(selectedItems: SparseArray<TE>) {
         activity?.let { activity ->
-            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.removerecord), getConfirmationText(selectedItems), {
+            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.removerecord), getConfirmationText(selectedItems), Runnable {
                 selectedItems.forEach { _, therapyEvent ->
                     disposable += persistenceLayer.invalidateTherapyEvent(
                         id = therapyEvent.id,
