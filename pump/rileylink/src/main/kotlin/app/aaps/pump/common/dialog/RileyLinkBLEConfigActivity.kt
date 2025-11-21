@@ -147,6 +147,11 @@ class RileyLinkBLEConfigActivity : TranslatedDaggerAppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        binding.rileyLinkBleConfigScanDeviceList.adapter = null
+        binding.rileyLinkBleConfigScanDeviceList.onItemClickListener = null
+        binding.rileyLinkBleConfigScanStart.setOnClickListener(null)
+        binding.rileyLinkBleConfigButtonScanStop.setOnClickListener(null)
+        binding.rileyLinkBleConfigButtonRemoveRileyLink.setOnClickListener(null)
         if (scanning) {
             stopLeDeviceScan()
             rileyLinkUtil.sendBroadcastMessage(RileyLinkConst.Intents.RileyLinkNewAddressSet) // Reconnect current RL

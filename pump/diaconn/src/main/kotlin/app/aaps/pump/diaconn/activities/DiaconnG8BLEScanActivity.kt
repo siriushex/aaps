@@ -90,6 +90,11 @@ class DiaconnG8BLEScanActivity : TranslatedDaggerAppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        binding.bleScannerListview.adapter = null
+    }
+
     @SuppressLint("MissingPermission")
     private fun startScan() =
         try {
