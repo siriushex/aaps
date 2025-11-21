@@ -157,6 +157,7 @@ class XdripPlugin @Inject constructor(
 
     override fun onStop() {
         super.onStop()
+        handler?.looper?.quitSafely()
         handler?.removeCallbacksAndMessages(null)
         handler = null
         disposable.clear()

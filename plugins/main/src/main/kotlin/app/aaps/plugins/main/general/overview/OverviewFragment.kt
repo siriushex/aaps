@@ -260,14 +260,12 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         binding.infoLayout.apsMode.setOnLongClickListener(this)
     }
 
-    @Synchronized
     override fun onPause() {
         super.onPause()
         disposable.clear()
         handler.removeCallbacksAndMessages(null)
     }
 
-    @Synchronized
     override fun onResume() {
         super.onResume()
         disposable += activePlugin.activeOverview.overviewBus
@@ -393,6 +391,12 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         _binding = null
         secondaryGraphs.clear()
         secondaryGraphsLabel.clear()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
+        handler.looper.quitSafely()
     }
 
     override fun onClick(v: View) {
