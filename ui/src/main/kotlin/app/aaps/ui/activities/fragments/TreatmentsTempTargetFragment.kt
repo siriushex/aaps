@@ -1,6 +1,5 @@
 package app.aaps.ui.activities.fragments
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.SparseArray
 import android.view.LayoutInflater
@@ -10,9 +9,12 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.util.forEach
+import androidx.core.util.size
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import app.aaps.core.data.model.TT
 import app.aaps.core.data.time.T
@@ -39,7 +41,6 @@ import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.ui.R
-import app.aaps.ui.activities.fragments.TreatmentsTempTargetFragment.RecyclerViewAdapter.TempTargetsViewHolder
 import app.aaps.ui.databinding.TreatmentsTemptargetFragmentBinding
 import app.aaps.ui.databinding.TreatmentsTemptargetItemBinding
 import dagger.android.support.DaggerFragment
@@ -69,25 +70,50 @@ class TreatmentsTempTargetFragment : DaggerFragment(), MenuProvider {
     private var menu: Menu? = null
     private lateinit var actionHelper: ActionModeHelper<TT>
     private val disposable = CompositeDisposable()
-    private val millsToThePast = T.days(30).msecs()
+    private var millsToThePast = T.days(30).msecs()
     private var showInvalidated = false
+    private var adapter: TempTargetListAdapter? = null
+
+    class TTWithLabel(
+        val tt: TT,
+        var hasLabel: Boolean? = null
+    )
+
+    private fun TT.withLabel() = TTWithLabel(this, null)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        TreatmentsTemptargetFragmentBinding.inflate(inflater, container, false).also { _binding = it }.root
+        TreatmentsTemptargetFragmentBinding.inflate(inflater, container, false).also {
+            _binding = it
+            actionHelper = ActionModeHelper(rh, activity, this)
+            actionHelper.setUpdateListHandler { adapter?.let { adapter -> for (i in 0 until adapter.currentList.size) adapter.notifyItemChanged(i) } }
+            actionHelper.setOnRemoveHandler { removeSelected(it) }
+            requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        }.root
 
-    @SuppressLint("NotifyDataSetChanged")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        adapter = TempTargetListAdapter()
         binding.recyclerview.setHasFixedSize(true)
-        actionHelper = ActionModeHelper(rh, activity, this)
-        actionHelper.setUpdateListHandler { binding.recyclerview.adapter?.notifyDataSetChanged() }
-        actionHelper.setOnRemoveHandler { removeSelected(it) }
         binding.recyclerview.layoutManager = LinearLayoutManager(view.context)
         binding.recyclerview.emptyView = binding.noRecordsText
         binding.recyclerview.loadingView = binding.progressBar
-        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        binding.recyclerview.adapter = adapter
+
+        binding.recyclerview.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                // Load more data if scrolled to the bottom
+                if ((binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
+                    millsToThePast += T.hours(24).msecs()
+                    ToastUtils.infoToast(requireContext(), rh.gs(app.aaps.core.ui.R.string.loading_more_data))
+                    load(withScroll = false)
+                }
+            }
+        })
     }
 
-    private fun swapAdapter() {
+    private fun load(withScroll: Boolean) {
         val now = System.currentTimeMillis()
         binding.recyclerview.isLoading = true
         disposable +=
@@ -95,50 +121,54 @@ class TreatmentsTempTargetFragment : DaggerFragment(), MenuProvider {
                 persistenceLayer
                     .getTemporaryTargetDataIncludingInvalidFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list -> binding.recyclerview.swapAdapter(RecyclerViewAdapter(list), true) }
+                    .subscribe { list ->
+                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        binding.recyclerview.isLoading = false
+                    }
             else
                 persistenceLayer
                     .getTemporaryTargetDataFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list -> binding.recyclerview.swapAdapter(RecyclerViewAdapter(list), true) }
+                    .subscribe { list ->
+                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        binding.recyclerview.isLoading = false
+                    }
     }
 
-    @Synchronized
     override fun onResume() {
         super.onResume()
-        swapAdapter()
+        load(withScroll = false)
         disposable += rxBus
             .toObservable(EventTempTargetChange::class.java)
-            .observeOn(aapsSchedulers.io)
+            .observeOn(aapsSchedulers.main)
             .debounce(1L, TimeUnit.SECONDS)
-            .subscribe({ swapAdapter() }, fabricPrivacy::logException)
+            .subscribe({ load(withScroll = true) }, fabricPrivacy::logException)
     }
 
-    @Synchronized
     override fun onPause() {
         super.onPause()
         actionHelper.finish()
         disposable.clear()
     }
 
-    @Synchronized
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.recyclerview.adapter = null // avoid leaks
+        binding.recyclerview.adapter = null
+        adapter = null
         _binding = null
     }
 
-    private inner class RecyclerViewAdapter(private var tempTargetList: List<TT>) : RecyclerView.Adapter<TempTargetsViewHolder>() {
+    inner class TempTargetListAdapter : ListAdapter<TTWithLabel, TempTargetListAdapter.TempTargetsViewHolder>(TempTargetDiffCallback()) {
 
         private val currentlyActiveTarget = persistenceLayer.getTemporaryTargetActiveAt(dateUtil.now())
 
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): TempTargetsViewHolder =
             TempTargetsViewHolder(LayoutInflater.from(viewGroup.context).inflate(R.layout.treatments_temptarget_item, viewGroup, false))
 
-        @SuppressLint("SetTextI18n")
         override fun onBindViewHolder(holder: TempTargetsViewHolder, position: Int) {
             val units = profileUtil.units
-            val tempTarget = tempTargetList[position]
+            val item = getItem(position)
+            val tempTarget = item.tt
             holder.binding.ns.visibility = (tempTarget.ids.nightscoutId != null).toVisibility()
             holder.binding.invalid.visibility = tempTarget.isValid.not().toVisibility()
             holder.binding.cbRemove.visibility = (tempTarget.isValid && actionHelper.isRemoving).toVisibility()
@@ -152,7 +182,8 @@ class TreatmentsTempTargetFragment : DaggerFragment(), MenuProvider {
                 }
                 holder.binding.cbRemove.isChecked = actionHelper.isSelected(position)
             }
-            val newDay = position == 0 || !dateUtil.isSameDayGroup(tempTarget.timestamp, tempTargetList[position - 1].timestamp)
+            val newDay = position == 0 || !dateUtil.isSameDayGroup(tempTarget.timestamp, getItem(position - 1).tt.timestamp)
+            item.hasLabel = newDay
             holder.binding.date.visibility = newDay.toVisibility()
             holder.binding.date.text = if (newDay) dateUtil.dateStringRelative(tempTarget.timestamp, rh) else ""
             holder.binding.time.text = dateUtil.timeRangeString(tempTarget.timestamp, tempTarget.end)
@@ -169,13 +200,25 @@ class TreatmentsTempTargetFragment : DaggerFragment(), MenuProvider {
             )
         }
 
-        override fun getItemCount() = tempTargetList.size
-
         inner class TempTargetsViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
             val binding = TreatmentsTemptargetItemBinding.bind(view)
-
         }
+    }
+
+    private class TempTargetDiffCallback : DiffUtil.ItemCallback<TTWithLabel>() {
+
+        override fun areItemsTheSame(oldItem: TTWithLabel, newItem: TTWithLabel): Boolean =
+            oldItem.tt.id == newItem.tt.id
+
+        override fun areContentsTheSame(oldItem: TTWithLabel, newItem: TTWithLabel): Boolean =
+            oldItem.tt.timestamp == newItem.tt.timestamp &&
+                oldItem.tt.duration == newItem.tt.duration &&
+                oldItem.tt.lowTarget == newItem.tt.lowTarget &&
+                oldItem.tt.highTarget == newItem.tt.highTarget &&
+                oldItem.tt.reason == newItem.tt.reason &&
+                oldItem.tt.isValid == newItem.tt.isValid &&
+                oldItem.hasLabel == newItem.hasLabel
     }
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
@@ -197,15 +240,15 @@ class TreatmentsTempTargetFragment : DaggerFragment(), MenuProvider {
                 showInvalidated = true
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.show_invalidated_records)
-                swapAdapter()
+                load(withScroll = false)
                 true
             }
 
             R.id.nav_hide_invalidated -> {
                 showInvalidated = false
                 updateMenuVisibility()
-                ToastUtils.infoToast(context, R.string.show_invalidated_records)
-                swapAdapter()
+                ToastUtils.infoToast(context, R.string.hide_invalidated_records)
+                load(withScroll = false)
                 true
             }
 
@@ -213,17 +256,17 @@ class TreatmentsTempTargetFragment : DaggerFragment(), MenuProvider {
         }
 
     private fun getConfirmationText(selectedItems: SparseArray<TT>): String {
-        if (selectedItems.size() == 1) {
+        if (selectedItems.size == 1) {
             val tempTarget = selectedItems.valueAt(0)
             return "${rh.gs(app.aaps.core.ui.R.string.temporary_target)}: ${tempTarget.friendlyDescription(profileUtil.units, rh, profileUtil)}\n" +
                 dateUtil.dateAndTimeString(tempTarget.timestamp)
         }
-        return rh.gs(app.aaps.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size())
+        return rh.gs(app.aaps.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size)
     }
 
     private fun removeSelected(selectedItems: SparseArray<TT>) {
         activity?.let { activity ->
-            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.removerecord), getConfirmationText(selectedItems), Runnable {
+            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.removerecord), getConfirmationText(selectedItems), {
                 selectedItems.forEach { _, tempTarget ->
                     disposable += persistenceLayer.invalidateTemporaryTarget(
                         id = tempTarget.id,

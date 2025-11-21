@@ -1,6 +1,5 @@
 package app.aaps.ui.activities.fragments
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.SparseArray
 import android.view.LayoutInflater
@@ -10,9 +9,12 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.util.forEach
+import androidx.core.util.size
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import app.aaps.core.data.model.RM
 import app.aaps.core.data.time.T
@@ -65,25 +67,50 @@ class TreatmentsRunningModeFragment : DaggerFragment(), MenuProvider {
     private var menu: Menu? = null
     private lateinit var actionHelper: ActionModeHelper<RM>
     private val disposable = CompositeDisposable()
-    private val millsToThePast = T.days(30).msecs()
+    private var millsToThePast = T.days(30).msecs()
     private var showInvalidated = false
+    private var adapter: RunningModeListAdapter? = null
+
+    class RMWithLabel(
+        val rm: RM,
+        var hasLabel: Boolean? = null
+    )
+
+    private fun RM.withLabel() = RMWithLabel(this, null)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        TreatmentsRunningModeFragmentBinding.inflate(inflater, container, false).also { _binding = it }.root
+        TreatmentsRunningModeFragmentBinding.inflate(inflater, container, false).also {
+            _binding = it
+            actionHelper = ActionModeHelper(rh, activity, this)
+            actionHelper.setUpdateListHandler { adapter?.let { adapter -> for (i in 0 until adapter.currentList.size) adapter.notifyItemChanged(i) } }
+            actionHelper.setOnRemoveHandler { removeSelected(it) }
+            requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        }.root
 
-    @SuppressLint("NotifyDataSetChanged")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        adapter = RunningModeListAdapter()
         binding.recyclerview.setHasFixedSize(true)
-        actionHelper = ActionModeHelper(rh, activity, this)
-        actionHelper.setUpdateListHandler { binding.recyclerview.adapter?.notifyDataSetChanged() }
-        actionHelper.setOnRemoveHandler { removeSelected(it) }
         binding.recyclerview.layoutManager = LinearLayoutManager(view.context)
         binding.recyclerview.emptyView = binding.noRecordsText
         binding.recyclerview.loadingView = binding.progressBar
-        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        binding.recyclerview.adapter = adapter
+
+        binding.recyclerview.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                // Load more data if scrolled to the bottom
+                if ((binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
+                    millsToThePast += T.hours(24).msecs()
+                    ToastUtils.infoToast(requireContext(), rh.gs(app.aaps.core.ui.R.string.loading_more_data))
+                    load(withScroll = false)
+                }
+            }
+        })
     }
 
-    private fun swapAdapter() {
+    private fun load(withScroll: Boolean) {
         val now = System.currentTimeMillis()
         binding.recyclerview.isLoading = true
         disposable +=
@@ -91,49 +118,53 @@ class TreatmentsRunningModeFragment : DaggerFragment(), MenuProvider {
                 persistenceLayer
                     .getRunningModesIncludingInvalidFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list -> binding.recyclerview.swapAdapter(RecyclerViewAdapter(list), true) }
+                    .subscribe { list ->
+                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        binding.recyclerview.isLoading = false
+                    }
             else
                 persistenceLayer
                     .getRunningModesFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list -> binding.recyclerview.swapAdapter(RecyclerViewAdapter(list), true) }
+                    .subscribe { list ->
+                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        binding.recyclerview.isLoading = false
+                    }
     }
 
-    @Synchronized
     override fun onResume() {
         super.onResume()
-        swapAdapter()
+        load(withScroll = false)
         disposable += rxBus
             .toObservable(EventRunningModeChange::class.java)
-            .observeOn(aapsSchedulers.io)
+            .observeOn(aapsSchedulers.main)
             .debounce(1L, TimeUnit.SECONDS)
-            .subscribe({ swapAdapter() }, fabricPrivacy::logException)
+            .subscribe({ load(withScroll = true) }, fabricPrivacy::logException)
     }
 
-    @Synchronized
     override fun onPause() {
         super.onPause()
         actionHelper.finish()
         disposable.clear()
     }
 
-    @Synchronized
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.recyclerview.adapter = null // avoid leaks
+        binding.recyclerview.adapter = null
+        adapter = null
         _binding = null
     }
 
-    private inner class RecyclerViewAdapter(private var runningModesList: List<RM>) : RecyclerView.Adapter<RecyclerViewAdapter.RunningModeViewHolder>() {
+    inner class RunningModeListAdapter : ListAdapter<RMWithLabel, RunningModeListAdapter.RunningModeViewHolder>(RunningModeDiffCallback()) {
 
         private val currentlyActiveMode = persistenceLayer.getRunningModeActiveAt(dateUtil.now())
 
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): RunningModeViewHolder =
             RunningModeViewHolder(LayoutInflater.from(viewGroup.context).inflate(R.layout.treatments_running_mode_item, viewGroup, false))
 
-        @SuppressLint("SetTextI18n")
         override fun onBindViewHolder(holder: RunningModeViewHolder, position: Int) {
-            val runningMode = runningModesList[position]
+            val item = getItem(position)
+            val runningMode = item.rm
             holder.binding.ns.visibility = (runningMode.ids.nightscoutId != null).toVisibility()
             holder.binding.invalid.visibility = runningMode.isValid.not().toVisibility()
             holder.binding.cbRemove.visibility = (runningMode.isValid && actionHelper.isRemoving).toVisibility()
@@ -147,7 +178,8 @@ class TreatmentsRunningModeFragment : DaggerFragment(), MenuProvider {
                 }
                 holder.binding.cbRemove.isChecked = actionHelper.isSelected(position)
             }
-            val newDay = position == 0 || !dateUtil.isSameDayGroup(runningMode.timestamp, runningModesList[position - 1].timestamp)
+            val newDay = position == 0 || !dateUtil.isSameDayGroup(runningMode.timestamp, getItem(position - 1).rm.timestamp)
+            item.hasLabel = newDay
             holder.binding.date.visibility = newDay.toVisibility()
             holder.binding.date.text = if (newDay) dateUtil.dateStringRelative(runningMode.timestamp, rh) else ""
             holder.binding.time.text = dateUtil.timeString(runningMode.timestamp)
@@ -165,13 +197,23 @@ class TreatmentsRunningModeFragment : DaggerFragment(), MenuProvider {
             )
         }
 
-        override fun getItemCount() = runningModesList.size
-
         inner class RunningModeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
             val binding = TreatmentsRunningModeItemBinding.bind(view)
-
         }
+    }
+
+    private class RunningModeDiffCallback : DiffUtil.ItemCallback<RMWithLabel>() {
+
+        override fun areItemsTheSame(oldItem: RMWithLabel, newItem: RMWithLabel): Boolean =
+            oldItem.rm.id == newItem.rm.id
+
+        override fun areContentsTheSame(oldItem: RMWithLabel, newItem: RMWithLabel): Boolean =
+            oldItem.rm.timestamp == newItem.rm.timestamp &&
+                oldItem.rm.duration == newItem.rm.duration &&
+                oldItem.rm.mode == newItem.rm.mode &&
+                oldItem.rm.isValid == newItem.rm.isValid &&
+                oldItem.hasLabel == newItem.hasLabel
     }
 
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
@@ -193,15 +235,15 @@ class TreatmentsRunningModeFragment : DaggerFragment(), MenuProvider {
                 showInvalidated = true
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.show_invalidated_records)
-                swapAdapter()
+                load(withScroll = false)
                 true
             }
 
             R.id.nav_hide_invalidated -> {
                 showInvalidated = false
                 updateMenuVisibility()
-                ToastUtils.infoToast(context, R.string.show_invalidated_records)
-                swapAdapter()
+                ToastUtils.infoToast(context, R.string.hide_invalidated_records)
+                load(withScroll = false)
                 true
             }
 
@@ -209,17 +251,17 @@ class TreatmentsRunningModeFragment : DaggerFragment(), MenuProvider {
         }
 
     private fun getConfirmationText(selectedItems: SparseArray<RM>): String {
-        if (selectedItems.size() == 1) {
+        if (selectedItems.size == 1) {
             val runningMode = selectedItems.valueAt(0)
             return "${rh.gs(app.aaps.core.ui.R.string.running_mode)}: ${runningMode.mode.name}\n" +
                 dateUtil.dateAndTimeString(runningMode.timestamp)
         }
-        return rh.gs(app.aaps.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size())
+        return rh.gs(app.aaps.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size)
     }
 
     private fun removeSelected(selectedItems: SparseArray<RM>) {
         activity?.let { activity ->
-            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.removerecord), getConfirmationText(selectedItems), Runnable {
+            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.removerecord), getConfirmationText(selectedItems), {
                 selectedItems.forEach { _, runningMode ->
                     disposable += persistenceLayer.invalidateRunningMode(
                         id = runningMode.id,
