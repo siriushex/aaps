@@ -36,6 +36,7 @@ import app.aaps.core.objects.ui.ActionModeHelper
 import app.aaps.core.ui.dialogs.OKDialog
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.core.ui.extensions.toVisibilityKeepSpace
+import app.aaps.core.ui.toast.ToastUtils
 import app.aaps.plugins.source.databinding.SourceFragmentBinding
 import app.aaps.plugins.source.databinding.SourceItemBinding
 import dagger.android.support.DaggerFragment
@@ -65,10 +66,10 @@ class BGSourceFragment : DaggerFragment(), MenuProvider {
         /** Original GV value */
         val gv: GV,
         /** true if displayed with date label */
-        var hasLabel: Boolean = false
+        var hasLabel: Boolean? = null
     )
 
-    fun GV.withLabel() = GVWithLabel(this, false)
+    fun GV.withLabel() = GVWithLabel(this, null)
 
     // This property is only valid between onCreateView and onDestroyView.
     private val binding get() = _binding!!
@@ -97,11 +98,11 @@ class BGSourceFragment : DaggerFragment(), MenuProvider {
                 // Load more data if scrolled to the bottom
                 if ((binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
                     millsToThePast += T.hours(24).msecs()
+                    ToastUtils.infoToast(requireContext(), rh.gs(app.aaps.core.ui.R.string.loading_more_data))
                     load(withScroll = false)
                 }
             }
         })
-
     }
 
     private fun load(withScroll: Boolean) {

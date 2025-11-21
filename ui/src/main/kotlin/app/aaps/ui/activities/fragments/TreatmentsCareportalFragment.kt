@@ -66,7 +66,7 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
     private val binding get() = _binding!!
     private var menu: Menu? = null
     private val disposable = CompositeDisposable()
-    private val millsToThePast = T.days(30).msecs()
+    private var millsToThePast = T.days(30).msecs()
     private lateinit var actionHelper: ActionModeHelper<TE>
     private var showInvalidated = false
     private var adapter: TherapyEventListAdapter? = null
@@ -75,17 +75,17 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
         /** Original TE value */
         val te: TE,
         /** true if displayed with date label */
-        var hasLabel: Boolean = false
+        var hasLabel: Boolean? = null
     )
 
-    private fun TE.withLabel() = TEWithLabel(this, false)
+    private fun TE.withLabel() = TEWithLabel(this, null)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
         TreatmentsCareportalFragmentBinding.inflate(inflater, container, false).also {
             _binding = it
             actionHelper = ActionModeHelper(rh, activity, this)
             actionHelper.setUpdateListHandler { adapter?.let { adapter -> for (i in 0 until adapter.currentList.size) adapter.notifyItemChanged(i) } }
-            actionHelper.setOnRemoveHandler { removeSelected(it) }
+            actionHelper.setOnRemoveHandler { handler -> removeSelected(handler) }
             requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
         }.root
 
@@ -97,6 +97,19 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
         binding.recyclerview.emptyView = binding.noRecordsText
         binding.recyclerview.loadingView = binding.progressBar
         binding.recyclerview.adapter = adapter
+
+        binding.recyclerview.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                // Load more data if scrolled to the bottom
+                if ((binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
+                    millsToThePast += T.hours(24).msecs()
+                    ToastUtils.infoToast(requireContext(), rh.gs(app.aaps.core.ui.R.string.loading_more_data))
+                    load(withScroll = false)
+                }
+            }
+        })
     }
 
     private fun removeStartedEvents() {
@@ -107,7 +120,7 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
         }
     }
 
-    private fun load() {
+    private fun load(withScroll: Boolean) {
         val now = System.currentTimeMillis()
         binding.recyclerview.isLoading = true
         disposable +=
@@ -115,22 +128,28 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
                 persistenceLayer
                     .getTherapyEventDataIncludingInvalidFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list -> adapter?.submitList(list.map { it.withLabel() }) }
+                    .subscribe {
+                        list -> adapter?.submitList(list.map { it.withLabel() })  { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        binding.recyclerview.isLoading = false
+                    }
             else
                 persistenceLayer
                     .getTherapyEventDataFromTime(now - millsToThePast, false)
                     .observeOn(aapsSchedulers.main)
-                    .subscribe { list -> adapter?.submitList(list.map { it.withLabel() }) }
+                    .subscribe { list -> adapter?.submitList(list.map { it.withLabel() })  {
+                        if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        binding.recyclerview.isLoading = false
+                    }
     }
 
     override fun onResume() {
         super.onResume()
-        load()
+        load(withScroll = false)
         disposable += rxBus
             .toObservable(EventTherapyEventChange::class.java)
             .observeOn(aapsSchedulers.main)
             .debounce(1L, TimeUnit.SECONDS)
-            .subscribe({ load() }, fabricPrivacy::logException)
+            .subscribe({ load(withScroll = true) }, fabricPrivacy::logException)
     }
 
     override fun onPause() {
@@ -218,7 +237,7 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
                 showInvalidated = true
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.show_invalidated_records)
-                load()
+                load(withScroll = false)
                 true
             }
 
@@ -226,7 +245,7 @@ class TreatmentsCareportalFragment : DaggerFragment(), MenuProvider {
                 showInvalidated = false
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.hide_invalidated_records)
-                load()
+                load(withScroll = false)
                 true
             }
 
