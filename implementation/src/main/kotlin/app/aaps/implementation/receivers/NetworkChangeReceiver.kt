@@ -14,6 +14,9 @@ import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventNetworkChange
 import app.aaps.core.utils.receivers.StringUtils
 import dagger.android.DaggerBroadcastReceiver
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class NetworkChangeReceiver : DaggerBroadcastReceiver() {
@@ -24,7 +27,9 @@ class NetworkChangeReceiver : DaggerBroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        Thread { rxBus.send(grabNetworkStatus(context)) }.start()
+        CoroutineScope(Dispatchers.IO).launch {
+            rxBus.send(grabNetworkStatus(context))
+        }
     }
 
     @Suppress("DEPRECATION")
