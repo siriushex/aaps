@@ -91,7 +91,7 @@ class TreatmentsUserEntryFragment : DaggerFragment(), MenuProvider {
                 super.onScrolled(recyclerView, dx, dy)
 
                 // Load more data if scrolled to the bottom
-                if ((binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
+                if (dy > 0 && !binding.recyclerview.isLoading && (binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
                     if (showLoop) millsToThePastUnFiltered += T.hours(24).msecs()
                     else millsToThePastFiltered += T.hours(24).msecs()
                     ToastUtils.infoToast(requireContext(), rh.gs(app.aaps.core.ui.R.string.loading_more_data))
