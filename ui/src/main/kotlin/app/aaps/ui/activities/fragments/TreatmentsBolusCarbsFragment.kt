@@ -1,6 +1,5 @@
 package app.aaps.ui.activities.fragments
 
-import android.annotation.SuppressLint
 import android.graphics.Paint
 import android.os.Bundle
 import android.util.SparseArray
@@ -11,9 +10,12 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.util.forEach
+import androidx.core.util.size
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import app.aaps.core.data.model.BCR
 import app.aaps.core.data.model.BS
@@ -76,25 +78,49 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
         val bolusCalculatorResult: BCR? = null
     )
 
+    class MealLinkWithLabel(
+        val ml: MealLink,
+        var hasLabel: Boolean? = null
+    )
+
+    private fun MealLink.withLabel() = MealLinkWithLabel(this, null)
+
     private val disposable = CompositeDisposable()
     private lateinit var actionHelper: ActionModeHelper<MealLink>
-    private val millsToThePast = T.days(30).msecs()
+    private var millsToThePast = T.days(30).msecs()
     private var showInvalidated = false
+    private var adapter: MealLinkListAdapter? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        TreatmentsBolusCarbsFragmentBinding.inflate(inflater, container, false).also { _binding = it }.root
+        TreatmentsBolusCarbsFragmentBinding.inflate(inflater, container, false).also {
+            _binding = it
+            actionHelper = ActionModeHelper(rh, activity, this)
+            actionHelper.setUpdateListHandler { adapter?.let { adapter -> for (i in 0 until adapter.currentList.size) adapter.notifyItemChanged(i) } }
+            actionHelper.setOnRemoveHandler { handler -> removeSelected(handler) }
+            requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        }.root
 
-    @SuppressLint("NotifyDataSetChanged")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        actionHelper = ActionModeHelper(rh, activity, this)
-        actionHelper.setUpdateListHandler { binding.recyclerview.adapter?.notifyDataSetChanged() }
-        actionHelper.setOnRemoveHandler { removeSelected(it) }
+        adapter = MealLinkListAdapter()
         binding.recyclerview.setHasFixedSize(true)
         binding.recyclerview.layoutManager = LinearLayoutManager(view.context)
         binding.recyclerview.emptyView = binding.noRecordsText
         binding.recyclerview.loadingView = binding.progressBar
-        requireActivity().addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        binding.recyclerview.adapter = adapter
+
+        binding.recyclerview.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                // Load more data if scrolled to the bottom
+                if ((binding.recyclerview.layoutManager as LinearLayoutManager?)?.findLastCompletelyVisibleItemPosition() == (adapter?.currentList?.size ?: -1000) - 1) {
+                    millsToThePast += T.hours(24).msecs()
+                    ToastUtils.infoToast(requireContext(), rh.gs(app.aaps.core.ui.R.string.loading_more_data))
+                    load(withScroll = false)
+                }
+            }
+        })
     }
 
     private fun bolusMealLinksWithInvalid(now: Long) = persistenceLayer
@@ -121,7 +147,7 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
         .getBolusCalculatorResultsFromTime(now - millsToThePast, false)
         .map { calc -> calc.map { MealLink(bolusCalculatorResult = it) } }
 
-    private fun swapAdapter() {
+    private fun load(withScroll: Boolean) {
         val now = System.currentTimeMillis()
         binding.recyclerview.isLoading = true
         disposable +=
@@ -137,7 +163,8 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
                     }
                     .observeOn(aapsSchedulers.main)
                     .subscribe { list ->
-                        binding.recyclerview.swapAdapter(RecyclerViewAdapter(list), true)
+                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        binding.recyclerview.isLoading = false
                     }
             else
                 carbsMealLinks(now)
@@ -151,48 +178,48 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
                     }
                     .observeOn(aapsSchedulers.main)
                     .subscribe { list ->
-                        binding.recyclerview.swapAdapter(RecyclerViewAdapter(list), true)
+                        adapter?.submitList(list.map { it.withLabel() }) { if (withScroll) binding.recyclerview.scrollToPosition(0) }
+                        binding.recyclerview.isLoading = false
                     }
-
     }
 
-    @Synchronized
     override fun onResume() {
         super.onResume()
-        swapAdapter()
+        load(withScroll = false)
         disposable += rxBus
             .toObservable(EventTreatmentChange::class.java)
             .observeOn(aapsSchedulers.main)
             .debounce(1L, TimeUnit.SECONDS)
-            .subscribe({ swapAdapter() }, fabricPrivacy::logException)
+            .subscribe({ load(withScroll = true) }, fabricPrivacy::logException)
     }
 
-    @Synchronized
     override fun onPause() {
         super.onPause()
         actionHelper.finish()
         disposable.clear()
     }
 
-    @Synchronized
     override fun onDestroyView() {
         super.onDestroyView()
-        binding.recyclerview.adapter = null // avoid leaks
+        binding.recyclerview.adapter = null
+        adapter = null
         _binding = null
     }
 
     private fun timestamp(ml: MealLink): Long = ml.bolusCalculatorResult?.timestamp ?: ml.bolus?.timestamp ?: ml.carbs?.timestamp ?: 0L
 
-    inner class RecyclerViewAdapter internal constructor(private var mealLinks: List<MealLink>) : RecyclerView.Adapter<RecyclerViewAdapter.MealLinkLoadedViewHolder>() {
+    inner class MealLinkListAdapter : ListAdapter<MealLinkWithLabel, MealLinkListAdapter.MealLinkLoadedViewHolder>(MealLinkDiffCallback()) {
 
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): MealLinkLoadedViewHolder =
             MealLinkLoadedViewHolder(LayoutInflater.from(viewGroup.context).inflate(R.layout.treatments_bolus_carbs_item, viewGroup, false))
 
         override fun onBindViewHolder(holder: MealLinkLoadedViewHolder, position: Int) {
             val profile = profileFunction.getProfile() ?: return
-            val ml = mealLinks[position]
+            val item = getItem(position)
+            val ml = item.ml
 
-            val newDay = position == 0 || !dateUtil.isSameDayGroup(timestamp(ml), timestamp(mealLinks[position - 1]))
+            val newDay = position == 0 || !dateUtil.isSameDayGroup(timestamp(ml), timestamp(getItem(position - 1).ml))
+            item.hasLabel = newDay
             holder.binding.date.visibility = newDay.toVisibility()
             holder.binding.date.text = if (newDay) dateUtil.dateStringRelative(timestamp(ml), rh) else ""
 
@@ -283,8 +310,6 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
             holder.binding.notes.visibility = if (notes != "") View.VISIBLE else View.GONE
         }
 
-        override fun getItemCount() = mealLinks.size
-
         inner class MealLinkLoadedViewHolder internal constructor(view: View) : RecyclerView.ViewHolder(view) {
 
             val binding = TreatmentsBolusCarbsItemBinding.bind(view)
@@ -306,11 +331,36 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
         }
     }
 
+    private class MealLinkDiffCallback : DiffUtil.ItemCallback<MealLinkWithLabel>() {
+
+        override fun areItemsTheSame(oldItem: MealLinkWithLabel, newItem: MealLinkWithLabel): Boolean {
+            val oldMl = oldItem.ml
+            val newMl = newItem.ml
+            return oldMl.bolus?.id == newMl.bolus?.id &&
+                oldMl.carbs?.id == newMl.carbs?.id &&
+                oldMl.bolusCalculatorResult?.id == newMl.bolusCalculatorResult?.id
+        }
+
+        override fun areContentsTheSame(oldItem: MealLinkWithLabel, newItem: MealLinkWithLabel): Boolean {
+            val oldMl = oldItem.ml
+            val newMl = newItem.ml
+            return oldMl.bolus?.timestamp == newMl.bolus?.timestamp &&
+                oldMl.bolus?.amount == newMl.bolus?.amount &&
+                oldMl.bolus?.isValid == newMl.bolus?.isValid &&
+                oldMl.carbs?.timestamp == newMl.carbs?.timestamp &&
+                oldMl.carbs?.amount == newMl.carbs?.amount &&
+                oldMl.carbs?.isValid == newMl.carbs?.isValid &&
+                oldMl.bolusCalculatorResult?.timestamp == newMl.bolusCalculatorResult?.timestamp &&
+                oldMl.bolusCalculatorResult?.isValid == newMl.bolusCalculatorResult?.isValid &&
+                oldItem.hasLabel == newItem.hasLabel
+        }
+    }
+
     override fun onCreateMenu(menu: Menu, inflater: MenuInflater) {
         this.menu = menu
         inflater.inflate(R.menu.menu_treatments_carbs_bolus, menu)
         updateMenuVisibility()
-        val hasItems = (binding.recyclerview.adapter?.itemCount ?: 0) > 0
+        val hasItems = (adapter?.currentList?.size ?: 0) > 0
         menu.findItem(R.id.nav_delete_future)?.isVisible = hasItems
     }
 
@@ -327,7 +377,7 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
                 showInvalidated = true
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.show_invalidated_records)
-                swapAdapter()
+                load(withScroll = false)
                 true
             }
 
@@ -335,7 +385,7 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
                 showInvalidated = false
                 updateMenuVisibility()
                 ToastUtils.infoToast(context, R.string.hide_invalidated_records)
-                swapAdapter()
+                load(withScroll = false)
                 true
             }
 
@@ -349,7 +399,7 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
 
     private fun deleteFutureTreatments() {
         activity?.let { activity ->
-            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.overview_treatment_label), rh.gs(app.aaps.core.ui.R.string.delete_future_treatments) + "?", Runnable {
+            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.overview_treatment_label), rh.gs(app.aaps.core.ui.R.string.delete_future_treatments) + "?", {
                 disposable += persistenceLayer
                     .getBolusesFromTime(dateUtil.now(), false)
                     .observeOn(aapsSchedulers.main)
@@ -391,7 +441,7 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
     }
 
     private fun getConfirmationText(selectedItems: SparseArray<MealLink>): String {
-        if (selectedItems.size() == 1) {
+        if (selectedItems.size == 1) {
             val mealLink = selectedItems.valueAt(0)
             val bolus = mealLink.bolus
             if (bolus != null)
@@ -402,12 +452,12 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
                 return rh.gs(app.aaps.core.ui.R.string.carbs) + ": " + rh.gs(app.aaps.core.objects.R.string.format_carbs, carbs.amount.toInt()) + "\n" +
                     rh.gs(app.aaps.core.ui.R.string.date) + ": " + dateUtil.dateAndTimeString(carbs.timestamp)
         }
-        return rh.gs(app.aaps.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size())
+        return rh.gs(app.aaps.core.ui.R.string.confirm_remove_multiple_items, selectedItems.size)
     }
 
     private fun removeSelected(selectedItems: SparseArray<MealLink>) {
         activity?.let { activity ->
-            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.removerecord), getConfirmationText(selectedItems), Runnable {
+            OKDialog.showConfirmation(activity, rh.gs(app.aaps.core.ui.R.string.removerecord), getConfirmationText(selectedItems), {
                 selectedItems.forEach { _, ml ->
                     ml.bolus?.let { bolus ->
                         disposable += persistenceLayer.invalidateBolus(
@@ -443,5 +493,4 @@ class TreatmentsBolusCarbsFragment : DaggerFragment(), MenuProvider {
             })
         }
     }
-
 }
