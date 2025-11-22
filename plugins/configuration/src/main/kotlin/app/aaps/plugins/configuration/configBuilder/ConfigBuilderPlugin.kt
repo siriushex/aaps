@@ -86,7 +86,6 @@ class ConfigBuilderPlugin @Inject constructor(
 ), ConfigBuilder {
 
     private val scope = CoroutineScope(Dispatchers.Default + Job())
-    private var expandAnimation: AnimationDrawable? = null
 
     override fun initialize() {
         loadSettings()
@@ -289,11 +288,11 @@ class ConfigBuilderPlugin @Inject constructor(
         }
         layout.categoryVisibility.visibility = preferences.simpleMode.not().toVisibility()
         layout.categoryDescription.text = rh.gs(description)
-        expandAnimation = layout.categoryExpandMore.background as AnimationDrawable?
-        expandAnimation?.setEnterFadeDuration(200)
-        expandAnimation?.setExitFadeDuration(200)
-        if (expandAnimation?.isRunning == false)
-            expandAnimation?.start()
+        (layout.categoryExpandMore.background as AnimationDrawable).let { expandAnimation ->
+            expandAnimation.setEnterFadeDuration(200)
+            expandAnimation.setExitFadeDuration(200)
+            if (!expandAnimation.isRunning) expandAnimation.start()
+        }
         layout.categoryExpandLess.setOnClickListener {
             layout.categoryExpandLess.visibility = false.toVisibility()
             layout.categoryExpandMore.visibility = (plugins.size > 1).toVisibility()
