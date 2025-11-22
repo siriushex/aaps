@@ -390,6 +390,8 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+        carbAnimation?.stop()
+        carbAnimation = null
         secondaryGraphs.clear()
         secondaryGraphsLabel.clear()
     }
