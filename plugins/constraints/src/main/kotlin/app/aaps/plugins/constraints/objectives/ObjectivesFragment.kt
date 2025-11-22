@@ -115,6 +115,7 @@ class ObjectivesFragment : DaggerFragment() {
     @Synchronized
     override fun onDestroyView() {
         super.onDestroyView()
+        binding.recyclerview.adapter = null
         _binding = null
     }
 
