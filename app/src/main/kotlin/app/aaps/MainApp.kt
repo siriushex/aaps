@@ -33,6 +33,7 @@ import app.aaps.core.interfaces.ui.compose.ComposeUi
 import app.aaps.core.interfaces.ui.compose.ComposeUiProvider
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.SafeParse
+import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
 import app.aaps.core.interfaces.versionChecker.VersionCheckerUtils
 import app.aaps.core.keys.BooleanKey
 import app.aaps.core.keys.IntKey
@@ -107,6 +108,7 @@ class MainApp : DaggerApplication(), ComposeUiProvider {
     @Inject lateinit var rh: Provider<ResourceHelper>
     @Inject lateinit var loop: Loop
     @Inject lateinit var profileFunction: ProfileFunction
+    @Inject lateinit var fabricPrivacy: FabricPrivacy
     lateinit var appComponent: AppComponent
 
     private var handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)
@@ -119,7 +121,12 @@ class MainApp : DaggerApplication(), ComposeUiProvider {
         // Here should be everything injected
         aapsLogger.debug("onCreate")
         ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleListener.get())
-        if (config.disableLeakCanary()) configureLeakCanary(false)
+        // Configure LeakCanary with Firebase reporting
+        // Memory leaks will be uploaded to Firebase Crashlytics via FabricPrivacy.logException
+        configureLeakCanary(
+            isEnabled = !config.disableLeakCanary(),
+            fabricPrivacy = fabricPrivacy
+        )
 
         // Do necessary migrations
         doMigrations()
