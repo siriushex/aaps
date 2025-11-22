@@ -117,6 +117,11 @@ class LoopFragment : DaggerFragment(), MenuProvider {
         preferences.put(BooleanNonKey.ObjectivesLoopUsed, true)
     }
 
+    override fun onPause() {
+        super.onPause()
+        disposable.clear()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
@@ -125,6 +130,7 @@ class LoopFragment : DaggerFragment(), MenuProvider {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        _binding?.swipeRefresh?.setOnRefreshListener(null)
         _binding = null
     }
 
