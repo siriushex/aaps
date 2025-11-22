@@ -389,6 +389,15 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     @Synchronized
     override fun onDestroyView() {
         super.onDestroyView()
+        // Remove listeners and detach series to prevent memory leaks
+        _binding?.graphsLayout?.bgGraph?.let { graph ->
+            graph.setOnLongClickListener(null)
+            graph.removeAllSeries()
+        }
+        for (graph in secondaryGraphs) {
+            graph.setOnLongClickListener(null)
+            graph.removeAllSeries()
+        }
         _binding = null
         carbAnimation?.stop()
         carbAnimation = null
