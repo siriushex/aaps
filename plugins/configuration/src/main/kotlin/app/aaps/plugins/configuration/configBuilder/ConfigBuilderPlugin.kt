@@ -5,8 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.drawable.AnimationDrawable
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
@@ -45,6 +43,7 @@ import app.aaps.core.interfaces.sync.NsClient
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.dialogs.OKDialog
+import app.aaps.core.ui.extensions.runOnUiThreadDelayed
 import app.aaps.core.ui.extensions.scanForActivity
 import app.aaps.core.ui.extensions.toVisibility
 import app.aaps.plugins.configuration.R
@@ -93,7 +92,7 @@ class ConfigBuilderPlugin @Inject constructor(
         loadSettings()
         setAlwaysEnabledPluginsEnabled()
         // Wait for MainActivity start
-        Handler(Looper.getMainLooper()).postDelayed({ rxBus.send(EventAppInitialized()) }, 5000)
+        runOnUiThreadDelayed(5000) { rxBus.send(EventAppInitialized()) }
     }
 
     private fun setAlwaysEnabledPluginsEnabled() {
