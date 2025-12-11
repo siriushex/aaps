@@ -6,16 +6,21 @@ import android.app.PendingIntent
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationText
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.wear.data.RawDisplayData
 import app.aaps.wear.interaction.utils.DisplayFormat
 import app.aaps.wear.interaction.utils.SmallestDoubleString
 import dagger.android.AndroidInjection
 import kotlin.math.max
 
-/*
- * Created by dlvoy on 2019-11-12
+/**
+ * Basal Rate + COB + IOB Extended Complication 2
+ *
+ * Shows basal rate, carbs on board (COB), and insulin on board (IOB) from AAPSClient2 (dataset 2)
+ * Used in follower/caregiver mode to monitor a third patient
+ * Text: Basal rate with symbol
+ * Title: COB and IOB values (both minimized to fit)
+ *
  */
-class BrCobIobComplicationExt2 : BaseComplicationProviderService() {
+class BrCobIobComplicationExt2 : ModernBaseComplicationProviderService() {
 
     // Not derived from DaggerService, do injection here
     override fun onCreate() {
@@ -23,20 +28,31 @@ class BrCobIobComplicationExt2 : BaseComplicationProviderService() {
         super.onCreate()
     }
 
-    override fun buildComplicationData(dataType: Int, raw: RawDisplayData, complicationPendingIntent: PendingIntent): ComplicationData? {
-        var complicationData: ComplicationData? = null
-        if (dataType == ComplicationData.TYPE_SHORT_TEXT) {
-            val cob = SmallestDoubleString(raw.status[2].cob, SmallestDoubleString.Units.USE).minimise(DisplayFormat.MIN_FIELD_LEN_COB)
-            val iob = SmallestDoubleString(raw.status[2].iobSum, SmallestDoubleString.Units.USE).minimise(max(DisplayFormat.MIN_FIELD_LEN_IOB, DisplayFormat.MAX_FIELD_LEN_SHORT - 1 - cob.length))
-            val builder = ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                .setShortText(ComplicationText.plainText(displayFormat.basalRateSymbol() + raw.status[2].currentBasal))
-                .setShortTitle(ComplicationText.plainText("$cob $iob"))
-                .setTapAction(complicationPendingIntent)
-            complicationData = builder.build()
-        } else {
-            aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+    override fun buildComplicationData(
+        dataType: Int,
+        data: app.aaps.wear.data.ComplicationData,
+        complicationPendingIntent: PendingIntent
+    ): ComplicationData? {
+        // Use dataset 2 (AAPSClient2)
+        val statusData2 = data.statusData2
+
+        return when (dataType) {
+            ComplicationData.TYPE_SHORT_TEXT -> {
+                val cob = SmallestDoubleString(statusData2.cob, SmallestDoubleString.Units.USE).minimise(DisplayFormat.MIN_FIELD_LEN_COB)
+                val iob = SmallestDoubleString(statusData2.iobSum, SmallestDoubleString.Units.USE).minimise(max(DisplayFormat.MIN_FIELD_LEN_IOB, DisplayFormat.MAX_FIELD_LEN_SHORT - 1 - cob.length))
+
+                ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
+                    .setShortText(ComplicationText.plainText(displayFormat.basalRateSymbol() + statusData2.currentBasal))
+                    .setShortTitle(ComplicationText.plainText("$cob $iob"))
+                    .setTapAction(complicationPendingIntent)
+                    .build()
+            }
+
+            else                             -> {
+                aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+                null
+            }
         }
-        return complicationData
     }
 
     override fun getProviderCanonicalName(): String = BrCobIobComplicationExt2::class.java.canonicalName!!

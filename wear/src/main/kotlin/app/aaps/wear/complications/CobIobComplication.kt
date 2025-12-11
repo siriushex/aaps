@@ -6,29 +6,50 @@ import android.app.PendingIntent
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationText
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.wear.data.RawDisplayData
 import app.aaps.wear.interaction.utils.DisplayFormat
 import app.aaps.wear.interaction.utils.SmallestDoubleString
+import dagger.android.AndroidInjection
 
-/*
- * Created by dlvoy on 2019-11-12
+/**
+ * COB+IOB Complication
+ *
+ * Shows both carbs on board (COB) and insulin on board (IOB)
+ * Text: COB value
+ * Title: IOB value (minimized to fit)
+ *
  */
-class CobIobComplication : BaseComplicationProviderService() {
+class CobIobComplication : ModernBaseComplicationProviderService() {
 
-    override fun buildComplicationData(dataType: Int, raw: RawDisplayData, complicationPendingIntent: PendingIntent): ComplicationData? {
-        var complicationData: ComplicationData? = null
-        if (dataType == ComplicationData.TYPE_SHORT_TEXT) {
-            val cob = raw.status[0].cob
-            val iob = SmallestDoubleString(raw.status[0].iobSum, SmallestDoubleString.Units.USE).minimise(DisplayFormat.MAX_FIELD_LEN_SHORT)
-            val builder = ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                .setShortText(ComplicationText.plainText(cob))
-                .setShortTitle(ComplicationText.plainText(iob))
-                .setTapAction(complicationPendingIntent)
-            complicationData = builder.build()
-        } else {
-            aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+    // Not derived from DaggerService, do injection here
+    override fun onCreate() {
+        AndroidInjection.inject(this)
+        super.onCreate()
+    }
+
+    override fun buildComplicationData(
+        dataType: Int,
+        data: app.aaps.wear.data.ComplicationData,
+        complicationPendingIntent: PendingIntent
+    ): ComplicationData? {
+        val statusData = data.statusData
+
+        return when (dataType) {
+            ComplicationData.TYPE_SHORT_TEXT -> {
+                val cob = statusData.cob
+                val iob = SmallestDoubleString(statusData.iobSum, SmallestDoubleString.Units.USE).minimise(DisplayFormat.MAX_FIELD_LEN_SHORT)
+
+                ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
+                    .setShortText(ComplicationText.plainText(cob))
+                    .setShortTitle(ComplicationText.plainText(iob))
+                    .setTapAction(complicationPendingIntent)
+                    .build()
+            }
+
+            else                             -> {
+                aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+                null
+            }
         }
-        return complicationData
     }
 
     override fun getProviderCanonicalName(): String = CobIobComplication::class.java.canonicalName!!

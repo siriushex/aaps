@@ -4,11 +4,13 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import android.support.wearable.complications.ProviderUpdateRequester
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -26,6 +28,23 @@ import app.aaps.core.keys.DoubleKey
 import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.wear.R
+import app.aaps.wear.complications.BrCobIobComplication
+import app.aaps.wear.complications.BrCobIobComplicationExt1
+import app.aaps.wear.complications.BrCobIobComplicationExt2
+import app.aaps.wear.complications.BrComplication
+import app.aaps.wear.complications.BrIobComplication
+import app.aaps.wear.complications.CobDetailedComplication
+import app.aaps.wear.complications.CobIconComplication
+import app.aaps.wear.complications.CobIobComplication
+import app.aaps.wear.complications.IobDetailedComplication
+import app.aaps.wear.complications.IobIconComplication
+import app.aaps.wear.complications.LongStatusComplication
+import app.aaps.wear.complications.LongStatusFlippedComplication
+import app.aaps.wear.complications.SgvComplication
+import app.aaps.wear.complications.SgvComplicationExt1
+import app.aaps.wear.complications.SgvComplicationExt2
+import app.aaps.wear.complications.UploaderBatteryComplication
+import app.aaps.wear.data.ComplicationDataRepository
 import app.aaps.wear.interaction.WatchfaceConfigurationActivity
 import app.aaps.wear.interaction.actions.AcceptActivity
 import app.aaps.wear.interaction.actions.ProfileSwitchActivity
@@ -38,6 +57,10 @@ import app.aaps.wear.tile.UserActionTileService
 import com.google.android.gms.wearable.WearableListenerService
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.kotlin.plusAssign
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -49,8 +72,12 @@ class DataHandlerWear @Inject constructor(
     private val sp: SP,
     private val preferences: Preferences,
     private val aapsLogger: AAPSLogger,
-    private val persistence: Persistence
+    private val persistence: Persistence,
+    private val complicationDataRepository: ComplicationDataRepository
 ) {
+
+    // Coroutine scope for DataStore operations
+    private val dataStoreScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val disposable = CompositeDisposable()
 
@@ -127,16 +154,36 @@ class DataHandlerWear @Inject constructor(
             .toObservable(EventData.Status::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe {
-                aapsLogger.debug(LTag.WEAR, "Status${it.dataset} received from ${it.sourceNodeId}")
+                aapsLogger.debug(LTag.WEAR, "Status received: dataset=${it.dataset} iob=${it.iobSum} cob=${it.cob}")
+                // Store in legacy SharedPreferences (backwards compatibility)
                 persistence.store(it)
+                // Store in DataStore (new, efficient storage) - supports all datasets (0, 1, 2)
+                dataStoreScope.launch {
+                    complicationDataRepository.updateStatusData(it)
+
+                    // Trigger complications AFTER DataStore write completes
+                    // This ensures complications showing IOB/COB/BR update immediately
+                    triggerComplicationUpdates()
+                }
                 LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(DataLayerListenerServiceWear.INTENT_NEW_DATA))
             }
         disposable += rxBus
             .toObservable(EventData.SingleBg::class.java)
             .observeOn(aapsSchedulers.io)
             .subscribe {
-                aapsLogger.debug(LTag.WEAR, "SingleBg${it.dataset} received from ${it.sourceNodeId}")
+                aapsLogger.debug(LTag.WEAR, "BG received: dataset=${it.dataset} sgv=${it.sgvString} arrow=${it.slopeArrow}")
+
+                // Store in legacy SharedPreferences (backwards compatibility)
                 persistence.store(it)
+                // Store in DataStore (new, efficient storage) - supports all datasets (0, 1, 2)
+                dataStoreScope.launch {
+                    complicationDataRepository.updateBgData(it)
+
+                    // Trigger complications AFTER DataStore write completes
+                    triggerComplicationUpdates()
+                }
+
+                LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(DataLayerListenerServiceWear.INTENT_NEW_DATA))
             }
         disposable += rxBus
             .toObservable(EventData.GraphData::class.java)
@@ -144,6 +191,7 @@ class DataHandlerWear @Inject constructor(
             .subscribe {
                 aapsLogger.debug(LTag.WEAR, "GraphData received from ${it.sourceNodeId}")
                 persistence.store(it)
+                LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(DataLayerListenerServiceWear.INTENT_NEW_DATA))
             }
         disposable += rxBus
             .toObservable(EventData.TreatmentData::class.java)
@@ -151,6 +199,7 @@ class DataHandlerWear @Inject constructor(
             .subscribe {
                 aapsLogger.debug(LTag.WEAR, "TreatmentData received from ${it.sourceNodeId}")
                 persistence.store(it)
+                LocalBroadcastManager.getInstance(context).sendBroadcast(Intent(DataLayerListenerServiceWear.INTENT_NEW_DATA))
             }
         disposable += rxBus
             .toObservable(EventData.Preferences::class.java)
@@ -348,5 +397,53 @@ class DataHandlerWear @Inject constructor(
             SystemClock.sleep(seconds * 1000L)
             NotificationManagerCompat.from(context).cancel(DataLayerListenerServiceWear.BOLUS_PROGRESS_NOTIF_ID)
         }.start()
+    }
+
+    /**
+     * Trigger all modern complications to update when new data arrives
+     * This ensures complications show fresh data immediately instead of waiting for UPDATE_PERIOD
+     *
+     * TODO: Migrate to androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
+     *       when the full complications migration from old support library to modern AndroidX happens
+     */
+    @Suppress("DEPRECATION")
+    private fun triggerComplicationUpdates() {
+        val modernComplications = listOf(
+            // SGV complications (show glucose values)
+            SgvComplication::class.java,
+            SgvComplicationExt1::class.java,
+            SgvComplicationExt2::class.java,
+            // Long status complications (show detailed glucose + status info)
+            LongStatusComplication::class.java,
+            LongStatusFlippedComplication::class.java,
+            // IOB complications
+            IobIconComplication::class.java,
+            IobDetailedComplication::class.java,
+            // COB complications
+            CobIconComplication::class.java,
+            CobDetailedComplication::class.java,
+            CobIobComplication::class.java,
+            // Basal rate complications
+            BrComplication::class.java,
+            BrIobComplication::class.java,
+            BrCobIobComplication::class.java,
+            BrCobIobComplicationExt1::class.java,
+            BrCobIobComplicationExt2::class.java,
+            // Battery complication
+            UploaderBatteryComplication::class.java
+            // Note: WallpaperComplication is abstract, subclasses will auto-update
+        )
+
+        for (complicationClass in modernComplications) {
+            try {
+                val componentName = ComponentName(context, complicationClass)
+
+                @Suppress("DEPRECATION")
+                val requester = ProviderUpdateRequester(context, componentName)
+                requester.requestUpdateAll()
+            } catch (e: Exception) {
+                aapsLogger.error(LTag.WEAR, "Failed to trigger complication update: ${complicationClass.simpleName}", e)
+            }
+        }
     }
 }

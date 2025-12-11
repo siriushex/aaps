@@ -6,13 +6,19 @@ import android.app.PendingIntent
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationText
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.wear.data.RawDisplayData
 import dagger.android.AndroidInjection
 
-/*
- * Created by dlvoy on 2019-11-12
+/**
+ * Long Status Complication
+ *
+ * Shows comprehensive glucose and status information in long text format
+ * Title: Glucose value, arrow, delta, and time
+ * Text: COB, IOB, and basal rate
+ *
  */
-class LongStatusComplication : BaseComplicationProviderService() {
+class LongStatusComplication : ModernBaseComplicationProviderService() {
 
     // Not derived from DaggerService, do injection here
     override fun onCreate() {
@@ -20,24 +26,72 @@ class LongStatusComplication : BaseComplicationProviderService() {
         super.onCreate()
     }
 
-    override fun buildComplicationData(dataType: Int, raw: RawDisplayData, complicationPendingIntent: PendingIntent): ComplicationData? {
-        var complicationData: ComplicationData? = null
-        when (dataType) {
+    override fun buildComplicationData(
+        dataType: Int,
+        data: app.aaps.wear.data.ComplicationData,
+        complicationPendingIntent: PendingIntent
+    ): ComplicationData? {
+        val bgData = data.bgData
+        val statusData = data.statusData
+
+        return when (dataType) {
             ComplicationData.TYPE_LONG_TEXT -> {
+                // Create RawDisplayData for compatibility with existing displayFormat methods
+                val raw = RawDisplayData()
+                raw.singleBg[0] = EventData.SingleBg(
+                    dataset = 0,
+                    timeStamp = bgData.timeStamp,
+                    sgvString = bgData.sgvString,
+                    glucoseUnits = bgData.glucoseUnits,
+                    slopeArrow = bgData.slopeArrow,
+                    delta = bgData.delta,
+                    deltaDetailed = bgData.deltaDetailed,
+                    avgDelta = bgData.avgDelta,
+                    avgDeltaDetailed = bgData.avgDeltaDetailed,
+                    sgvLevel = bgData.sgvLevel,
+                    sgv = bgData.sgv,
+                    high = bgData.high,
+                    low = bgData.low,
+                    color = bgData.color,
+                    deltaMgdl = null,
+                    avgDeltaMgdl = null
+                )
+                raw.status[0] = EventData.Status(
+                    dataset = 0,
+                    externalStatus = statusData.externalStatus,
+                    iobSum = statusData.iobSum,
+                    iobDetail = statusData.iobDetail,
+                    cob = statusData.cob,
+                    currentBasal = statusData.currentBasal,
+                    battery = statusData.battery,
+                    rigBattery = statusData.rigBattery,
+                    openApsStatus = statusData.openApsStatus,
+                    bgi = statusData.bgi,
+                    batteryLevel = statusData.batteryLevel,
+                    patientName = statusData.patientName,
+                    tempTarget = statusData.tempTarget,
+                    tempTargetLevel = statusData.tempTargetLevel,
+                    reservoirString = statusData.reservoirString,
+                    reservoir = statusData.reservoir,
+                    reservoirLevel = statusData.reservoirLevel
+                )
+
                 val glucoseLine = displayFormat.longGlucoseLine(raw, 0)
                 val detailsLine = displayFormat.longDetailsLine(raw, 0)
-                val builderLong = ComplicationData.Builder(ComplicationData.TYPE_LONG_TEXT)
+
+                ComplicationData.Builder(ComplicationData.TYPE_LONG_TEXT)
                     .setLongTitle(ComplicationText.plainText(glucoseLine))
                     .setLongText(ComplicationText.plainText(detailsLine))
                     .setTapAction(complicationPendingIntent)
-                complicationData = builderLong.build()
+                    .build()
             }
 
-            else                            -> aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+            else                            -> {
+                aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+                null
+            }
         }
-        return complicationData
     }
 
     override fun getProviderCanonicalName(): String = LongStatusComplication::class.java.canonicalName!!
-    override fun usesSinceField(): Boolean = true
 }

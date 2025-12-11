@@ -1,4 +1,3 @@
-import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -6,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     id("com.android.application")
     id("kotlin-android")
+    kotlin("plugin.serialization")
     id("android-app-dependencies")
     id("test-app-dependencies")
     id("jacoco-app-dependencies")
@@ -108,6 +108,10 @@ dependencies {
     implementation(libs.androidx.wear)
     implementation(libs.androidx.wear.tiles)
     implementation(libs.androidx.constraintlayout)
+
+    // DataStore for efficient, type-safe data persistence
+    implementation(libs.androidx.datastore)
+    implementation(libs.kotlinx.serialization.protobuf)
 
     compileOnly(libs.com.google.android.wearable)
     implementation(libs.com.google.android.wearable.support)

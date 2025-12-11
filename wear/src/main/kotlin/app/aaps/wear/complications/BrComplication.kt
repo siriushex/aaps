@@ -6,13 +6,15 @@ import android.app.PendingIntent
 import android.support.wearable.complications.ComplicationData
 import android.support.wearable.complications.ComplicationText
 import app.aaps.core.interfaces.logging.LTag
-import app.aaps.wear.data.RawDisplayData
 import dagger.android.AndroidInjection
 
-/*
- * Created by olorinmaia on 2025-01-12
+/**
+ * Basal Rate (BR) Complication
+ *
+ * Shows current basal rate with basal symbol
+ *
  */
-class BrComplication : BaseComplicationProviderService() {
+class BrComplication : ModernBaseComplicationProviderService() {
 
     // Not derived from DaggerService, do injection here
     override fun onCreate() {
@@ -20,17 +22,26 @@ class BrComplication : BaseComplicationProviderService() {
         super.onCreate()
     }
 
-    override fun buildComplicationData(dataType: Int, raw: RawDisplayData, complicationPendingIntent: PendingIntent): ComplicationData? {
-        var complicationData: ComplicationData? = null
-        if (dataType == ComplicationData.TYPE_SHORT_TEXT) {
-            val builder = ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                .setShortText(ComplicationText.plainText(displayFormat.basalRateSymbol() + raw.status[0].currentBasal))
-                .setTapAction(complicationPendingIntent)
-            complicationData = builder.build()
-        } else {
-            aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+    override fun buildComplicationData(
+        dataType: Int,
+        data: app.aaps.wear.data.ComplicationData,
+        complicationPendingIntent: PendingIntent
+    ): ComplicationData? {
+        val statusData = data.statusData
+
+        return when (dataType) {
+            ComplicationData.TYPE_SHORT_TEXT -> {
+                ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
+                    .setShortText(ComplicationText.plainText(displayFormat.basalRateSymbol() + statusData.currentBasal))
+                    .setTapAction(complicationPendingIntent)
+                    .build()
+            }
+
+            else                             -> {
+                aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+                null
+            }
         }
-        return complicationData
     }
 
     override fun getProviderCanonicalName(): String = BrComplication::class.java.canonicalName!!
