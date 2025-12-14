@@ -312,4 +312,5 @@
     <string name="wizard_insulin_format">%1$s U</string>
     <string name="insulin_unit_short">U</string>
     <string name="wizard_result_correction_percentage">Corr. %1$d%%</string>
+    <string name="expand_calculation_details">Click to expand calculation details</string>
 </resources>

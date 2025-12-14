@@ -32,7 +32,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="9dp"
+                    android:padding="10dp"
                     android:gravity="center_horizontal">
 
                     <TextView
@@ -56,7 +56,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="0.0"
-                            android:textSize="26sp"
+                            android:textSize="28sp"
                             android:textStyle="bold"
                             android:textColor="#FFFFFF" />
 
@@ -64,7 +64,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/units_short"
-                            android:textSize="26sp"
+                            android:textSize="28sp"
                             android:textStyle="bold"
                             android:textColor="#FFFFFF"
                             android:layout_marginStart="4dp" />
@@ -77,6 +77,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/wizard_carbs_format"
                         android:textSize="14sp"
+                        android:textStyle="bold"
                         android:textColor="@color/carbs"
                         android:gravity="center" />
                 </LinearLayout>
@@ -119,6 +120,7 @@
 
                         <TextView
                             android:id="@+id/expand_icon"
+                            android:contentDescription="@string/expand_calculation_details"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="▼"
@@ -149,7 +151,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="IC: 10g/U | ISF: 40"
-                                android:textSize="10sp"
+                                android:textSize="11sp"
                                 android:textColor="#B0BEC5" />
                         </LinearLayout>
 
@@ -177,14 +179,15 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:paddingVertical="8dp">
+                android:paddingVertical="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/wizard_swipe_left_confirm"
-                    android:textSize="12sp"
-                    android:textColor="#B0BEC5"
+                    android:textSize="11sp"
+                    android:textColor="#90A4AE"
+                    android:alpha="0.9"
                     android:gravity="center"
                     android:layout_marginBottom="4dp" />
 
@@ -199,25 +202,26 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="◀"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textColor="#4CAF50"
-                        android:alpha="0.5" />
+                        android:alpha="0.4" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="◀"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textColor="#66BB6A"
-                        android:alpha="0.75"
+                        android:alpha="0.6"
                         android:layout_marginStart="2dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="◀"
-                        android:textSize="18sp"
+                        android:textSize="16sp"
                         android:textColor="#66BB6A"
+                        android:alpha="0.9"
                         android:layout_marginStart="2dp" />
                 </LinearLayout>
             </LinearLayout>
