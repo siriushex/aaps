@@ -3,6 +3,7 @@ package app.aaps.wear.interaction.actions
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -70,6 +71,7 @@ class WizardConfirmFragment : DaggerFragment() {
         view.findViewById<ImageView>(R.id.confirm_button).setOnClickListener { button ->
             if (confirmationSent) return@setOnClickListener
             confirmationSent = true
+            button.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
             button.isClickable = false
 
             // Send confirmation to phone
