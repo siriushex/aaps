@@ -1,18 +1,21 @@
 package app.aaps.wear.interaction.actions
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.wear.activity.ConfirmationActivity
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventWearToMobile
 import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.wear.R
 import dagger.android.support.AndroidSupportInjection
 import dagger.android.support.DaggerFragment
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.text.DecimalFormat
 import javax.inject.Inject
 
@@ -21,8 +24,9 @@ class WizardConfirmFragment : DaggerFragment() {
     @Inject lateinit var rxBus: RxBus
 
     private val decimalFormat = DecimalFormat("0.00")
+    private val disposable = CompositeDisposable()
     private var timestamp: Long = 0
-    private var confirmationSent = false  // Prevent double-clicking
+    private var confirmationSent = false
 
     companion object {
         private const val ARG_TIMESTAMP = "timestamp"
@@ -64,35 +68,31 @@ class WizardConfirmFragment : DaggerFragment() {
             getString(R.string.wizard_carbs_format, carbs)
 
         view.findViewById<ImageView>(R.id.confirm_button).setOnClickListener { button ->
-            // Prevent double-clicking
             if (confirmationSent) return@setOnClickListener
             confirmationSent = true
-
-            // Disable button to prevent further clicks
             button.isClickable = false
 
             // Send confirmation to phone
             rxBus.send(EventWearToMobile(EventData.ActionWizardConfirmed(timestamp)))
 
-            // Visual feedback: scale up the checkmark
-            button.animate()
-                .scaleX(1.2f)
-                .scaleY(1.2f)
-                .setDuration(150)
-                .withEndAction {
-                    // Fade out the entire view
-                    view.animate()
-                        .alpha(0f)
-                        .setDuration(250)
-                        .withEndAction {
-                            // Check if fragment is still attached before finishing activity
-                            if (isAdded && !isDetached) {
-                                requireActivity().finish()
-                            }
-                        }
-                        .start()
-                }
-                .start()
+            // Show success confirmation
+            showConfirmation()
         }
+    }
+
+    private fun showConfirmation() {
+        if (!isAdded || isDetached) return  // Safety check
+
+        val intent = Intent(requireContext(), ConfirmationActivity::class.java).apply {
+            putExtra(ConfirmationActivity.EXTRA_ANIMATION_TYPE, ConfirmationActivity.SUCCESS_ANIMATION)
+            putExtra(ConfirmationActivity.EXTRA_MESSAGE, getString(R.string.wizard_confirmation_sent))
+        }
+        startActivity(intent)
+        requireActivity().finish()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        disposable.clear()
     }
 }
