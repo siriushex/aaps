@@ -1,14 +1,12 @@
 package app.aaps.wear.interaction.actions
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.wear.activity.ConfirmationActivity
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventWearToMobile
 import app.aaps.core.interfaces.rx.weardata.EventData
@@ -24,14 +22,19 @@ class WizardConfirmFragment : DaggerFragment() {
 
     private val decimalFormat = DecimalFormat("0.00")
     private var timestamp: Long = 0
+    private var confirmationSent = false  // Prevent double-clicking
 
     companion object {
+        private const val ARG_TIMESTAMP = "timestamp"
+        private const val ARG_TOTAL_INSULIN = "total_insulin"
+        private const val ARG_CARBS = "carbs"
+
         fun newInstance(timestamp: Long, totalInsulin: Double, carbs: Int): WizardConfirmFragment {
             return WizardConfirmFragment().apply {
                 arguments = Bundle().apply {
-                    putLong("timestamp", timestamp)
-                    putDouble("total_insulin", totalInsulin)
-                    putInt("carbs", carbs)
+                    putLong(ARG_TIMESTAMP, timestamp)
+                    putDouble(ARG_TOTAL_INSULIN, totalInsulin)
+                    putInt(ARG_CARBS, carbs)
                 }
             }
         }
@@ -51,22 +54,45 @@ class WizardConfirmFragment : DaggerFragment() {
 
         val args = arguments ?: return
 
-        timestamp = args.getLong("timestamp")
-        val totalInsulin = args.getDouble("total_insulin")
-        val carbs = args.getInt("carbs")
+        timestamp = args.getLong(ARG_TIMESTAMP)
+        val totalInsulin = args.getDouble(ARG_TOTAL_INSULIN)
+        val carbs = args.getInt(ARG_CARBS)
 
-        view.findViewById<TextView>(R.id.confirm_total_insulin).text = getString(R.string.wizard_insulin_format, decimalFormat.format(totalInsulin))
-        view.findViewById<TextView>(R.id.confirm_carbs).text = getString(R.string.wizard_carbs_format, carbs)
+        view.findViewById<TextView>(R.id.confirm_total_insulin).text =
+            getString(R.string.wizard_insulin_format, decimalFormat.format(totalInsulin))
+        view.findViewById<TextView>(R.id.confirm_carbs).text =
+            getString(R.string.wizard_carbs_format, carbs)
 
-        view.findViewById<ImageView>(R.id.confirm_button).setOnClickListener {
+        view.findViewById<ImageView>(R.id.confirm_button).setOnClickListener { button ->
+            // Prevent double-clicking
+            if (confirmationSent) return@setOnClickListener
+            confirmationSent = true
+
+            // Disable button to prevent further clicks
+            button.isClickable = false
+
+            // Send confirmation to phone
             rxBus.send(EventWearToMobile(EventData.ActionWizardConfirmed(timestamp)))
 
-            val intent = Intent(requireContext(), ConfirmationActivity::class.java).apply {
-                putExtra(ConfirmationActivity.EXTRA_ANIMATION_TYPE, ConfirmationActivity.SUCCESS_ANIMATION)
-                putExtra(ConfirmationActivity.EXTRA_MESSAGE, getString(R.string.wizard_success))
-            }
-            startActivity(intent)
-            requireActivity().finishAffinity()
+            // Visual feedback: scale up the checkmark
+            button.animate()
+                .scaleX(1.2f)
+                .scaleY(1.2f)
+                .setDuration(150)
+                .withEndAction {
+                    // Fade out the entire view
+                    view.animate()
+                        .alpha(0f)
+                        .setDuration(250)
+                        .withEndAction {
+                            // Check if fragment is still attached before finishing activity
+                            if (isAdded && !isDetached) {
+                                requireActivity().finish()
+                            }
+                        }
+                        .start()
+                }
+                .start()
         }
     }
 }

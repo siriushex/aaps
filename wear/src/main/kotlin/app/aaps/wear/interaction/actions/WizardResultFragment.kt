@@ -140,18 +140,22 @@ class WizardResultFragment : Fragment() {
 
         // Add percentage breakdown if needed
         if (percentage != 100 && !totalBeforePercentage.isNaN() && totalBeforePercentage > 0) {
-            val divider = View(requireContext())
-            divider.layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                2
-            ).apply {
-                setMargins(0, 8, 0, 8)
+
+            // Only show divider + subtotal if there's more than 1 calculation row
+            if (rows.size > 1) {
+                val divider = View(requireContext())
+                divider.layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    2
+                ).apply {
+                    setMargins(0, 8, 0, 8)
+                }
+                divider.setBackgroundColor(resources.getColor(R.color.divider, null))
+                calculationRowsContainer.addView(divider)
+
+                builder.addCalculationRow(calculationRowsContainer, WizardCalculationRow(getString(R.string.wizard_result_subtotal), totalBeforePercentage))
             }
-            divider.setBackgroundColor(resources.getColor(R.color.divider, null))
-            calculationRowsContainer.addView(divider)
-
-            builder.addCalculationRow(calculationRowsContainer, WizardCalculationRow(getString(R.string.wizard_result_subtotal), totalBeforePercentage))
-
+            // Always show the percentage correction row
             val percentageAdjustment = totalInsulin - totalBeforePercentage
             builder.addCalculationRow(calculationRowsContainer, WizardCalculationRow(getString(R.string.wizard_result_correction_percentage, percentage), percentageAdjustment))
         }
