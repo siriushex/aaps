@@ -3,7 +3,6 @@
 package app.aaps.wear.watchfaces
 
 import android.annotation.SuppressLint
-import android.support.wearable.watchface.WatchFaceStyle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.LinearLayout
@@ -27,13 +26,6 @@ class DigitalStyleWatchface : BaseWatchFace() {
         return binding
     }
 
-    override fun getWatchFaceStyle(): WatchFaceStyle {
-        return WatchFaceStyle.Builder(this)
-            .setAcceptsTapEvents(true)
-            .setHideNotificationIndicator(false)
-            .setShowUnreadCountIndicator(true)
-            .build()
-    }
 
     override fun setColorDark() {
         val color = when (singleBg[0].sgvLevel) {

@@ -20,7 +20,7 @@ import app.aaps.wear.R
 import app.aaps.wear.comm.DataLayerListenerServiceWear
 import app.aaps.wear.comm.IntentCancelNotification
 import app.aaps.wear.comm.IntentWearToMobile
-import app.aaps.wear.nondeprecated.GridPagerAdapterNonDeprecated
+import app.aaps.wear.widgets.PagerAdapter
 import kotlin.math.roundToInt
 
 class AcceptActivity : ViewSelectorActivity() {
@@ -40,7 +40,7 @@ class AcceptActivity : ViewSelectorActivity() {
             finish()
             return
         }
-        setAdapter(MyGridViewPagerAdapter())
+        setAdapter(MyPagerAdapter())
         val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
         val vibratePattern = longArrayOf(0, 100, 50, 100, 50)
         vibrator.vibrate(vibratePattern, -1)
@@ -51,56 +51,55 @@ class AcceptActivity : ViewSelectorActivity() {
         finish()
     }
 
-    private inner class MyGridViewPagerAdapter : GridPagerAdapterNonDeprecated() {
+    private inner class MyPagerAdapter : PagerAdapter() {
 
-        override fun getColumnCount(arg0: Int): Int = 2
-        override fun getRowCount(): Int = 1
+        override fun getPageCount(): Int = 2
 
-        override fun instantiateItem(container: ViewGroup, row: Int, col: Int): View = when (col) {
+        override fun instantiateItem(container: ViewGroup, position: Int): View = when (position) {
             0    -> {
-                val view = LayoutInflater.from(applicationContext).inflate(R.layout.action_confirm_text, container, false)
-                val textView = view.findViewById<TextView>(R.id.message)
-                val scrollView = view.findViewById<View>(R.id.message_scroll)
-                textView.text = message
-                container.addView(view)
-                scrollView.setOnGenericMotionListener { v: View, ev: MotionEvent ->
-                    if (ev.action == MotionEvent.ACTION_SCROLL &&
-                        ev.isFromSource(InputDeviceCompat.SOURCE_ROTARY_ENCODER)
-                    ) {
-                        val delta = -ev.getAxisValue(MotionEventCompat.AXIS_SCROLL) *
-                            ViewConfigurationCompat.getScaledVerticalScrollFactor(
-                                ViewConfiguration.get(container.context),
-                                container.context
-                            )
-                        v.scrollBy(0, delta.roundToInt())
-                        return@setOnGenericMotionListener true
+                // Page 0: Message page
+                LayoutInflater.from(applicationContext).inflate(R.layout.action_confirm_text, container, false).apply {
+                    val textView = findViewById<TextView>(R.id.message)
+                    val scrollView = findViewById<View>(R.id.message_scroll)
+                    textView.text = message
+                    scrollView.setOnGenericMotionListener { v: View, ev: MotionEvent ->
+                        if (ev.action == MotionEvent.ACTION_SCROLL &&
+                            ev.isFromSource(InputDeviceCompat.SOURCE_ROTARY_ENCODER)
+                        ) {
+                            val delta = -ev.getAxisValue(MotionEventCompat.AXIS_SCROLL) *
+                                ViewConfigurationCompat.getScaledVerticalScrollFactor(
+                                    ViewConfiguration.get(container.context),
+                                    container.context
+                                )
+                            v.scrollBy(0, delta.roundToInt())
+                            return@setOnGenericMotionListener true
+                        }
+                        false
                     }
-                    false
+                    scrollView.requestFocus()
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 }
-                scrollView.requestFocus()
-                view
             }
 
             else -> {
-                val view = LayoutInflater.from(applicationContext).inflate(R.layout.action_confirm_ok, container, false)
-                val confirmButton = view.findViewById<ImageView>(R.id.confirmbutton)
-                confirmButton.setOnClickListener {
-                    if (actionKey.isNotEmpty()) startService(IntentWearToMobile(this@AcceptActivity, actionKey))
-                    startForegroundService(IntentCancelNotification(this@AcceptActivity))
-                    finishAffinity()
+                // Page 1: Confirm page
+                LayoutInflater.from(applicationContext).inflate(R.layout.action_confirm_ok, container, false).apply {
+                    val confirmButton = findViewById<ImageView>(R.id.confirmbutton)
+                    confirmButton.setOnClickListener {
+                        if (actionKey.isNotEmpty()) startService(IntentWearToMobile(this@AcceptActivity, actionKey))
+                        startForegroundService(IntentCancelNotification(this@AcceptActivity))
+                        finishAffinity()
+                    }
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
                 }
-                container.addView(view)
-                view
             }
         }
-
-        override fun destroyItem(container: ViewGroup, row: Int, col: Int, view: Any) {
-            // Handle this to get the data before the view is destroyed?
-            // Object should still be kept by this, just setup for re-init?
-            container.removeView(view as View)
-        }
-
-        override fun isViewFromObject(view: View, `object`: Any): Boolean = view === `object`
     }
 
     @Synchronized public override fun onDestroy() {

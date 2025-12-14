@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
 import app.aaps.wear.BuildConfig
-import preference.WearListPreference
+import app.aaps.wear.preference.WearListPreference
 
 /**
  * Created by adrian on 07/08/17.

@@ -2,6 +2,7 @@ package app.aaps.wear.watchfaces.utils
 
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Context.WINDOW_SERVICE
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Canvas
@@ -15,8 +16,6 @@ import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.core.interfaces.sharedPreferences.SP
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.wear.R
-import com.ustwo.clockwise.common.WatchMode
-import com.ustwo.clockwise.wearable.WatchFace
 import javax.inject.Inject
 
 class SimpleUi @Inject constructor(
@@ -40,7 +39,7 @@ class SimpleUi @Inject constructor(
     fun onCreate(callback: () -> Unit) {
         this.callback = callback
         @Suppress("DEPRECATION")
-        (context.getSystemService(WatchFace.WINDOW_SERVICE) as WindowManager).defaultDisplay.getSize(displaySize)
+        (context.getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay.getSize(displaySize)
         setupBatteryReceiver()
         setupUi()
     }

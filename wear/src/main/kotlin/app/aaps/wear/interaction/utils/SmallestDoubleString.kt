@@ -11,7 +11,7 @@ import java.util.regex.Pattern
  *
  * Created by dlvoy on 2019-11-12
  */
-class SmallestDoubleString @JvmOverloads constructor(inputString: String, withUnits: Units = Units.SKIP) {
+class SmallestDoubleString(inputString: String, withUnits: Units = Units.SKIP) {
 
     private var sign: String
     private var decimal: String

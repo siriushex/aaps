@@ -7,8 +7,8 @@ import androidx.core.content.ContextCompat
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.wear.R
+import app.aaps.wear.preference.WearPreferenceActivity
 import dagger.android.AndroidInjection
-import preference.WearPreferenceActivity
 import javax.inject.Inject
 
 class ConfigurationActivity : WearPreferenceActivity() {

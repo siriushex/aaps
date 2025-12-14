@@ -1,10 +1,10 @@
-@file:Suppress("DEPRECATION")
-
 package app.aaps.wear.complications
 
 import android.app.PendingIntent
-import android.support.wearable.complications.ComplicationData
-import android.support.wearable.complications.ComplicationText
+import androidx.wear.watchface.complications.data.ComplicationData
+import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.PlainComplicationText
+import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import app.aaps.core.interfaces.logging.LTag
 import dagger.android.AndroidInjection
 
@@ -23,22 +23,24 @@ class BrComplication : ModernBaseComplicationProviderService() {
     }
 
     override fun buildComplicationData(
-        dataType: Int,
+        type: ComplicationType,
         data: app.aaps.wear.data.ComplicationData,
         complicationPendingIntent: PendingIntent
     ): ComplicationData? {
         val statusData = data.statusData
 
-        return when (dataType) {
-            ComplicationData.TYPE_SHORT_TEXT -> {
-                ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                    .setShortText(ComplicationText.plainText(displayFormat.basalRateSymbol() + statusData.currentBasal))
+        return when (type) {
+            ComplicationType.SHORT_TEXT      -> {
+                ShortTextComplicationData.Builder(
+                    text = PlainComplicationText.Builder(text = displayFormat.basalRateSymbol() + statusData.currentBasal).build(),
+                    contentDescription = PlainComplicationText.Builder(text = "Basal Rate").build()
+                )
                     .setTapAction(complicationPendingIntent)
                     .build()
             }
 
             else                             -> {
-                aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+                aapsLogger.warn(LTag.WEAR, "Unexpected complication type $type")
                 null
             }
         }

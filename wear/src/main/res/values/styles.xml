@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Wear OS text appearance styles - from deprecated wearable support library -->
+    <style name="TextAppearance.Wearable.Small" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+</resources>

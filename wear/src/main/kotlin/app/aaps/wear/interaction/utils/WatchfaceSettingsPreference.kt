@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
 import app.aaps.wear.R
-import preference.WearListPreference
+import app.aaps.wear.preference.WearListPreference
 
 @Suppress("unused")
 class WatchfaceSettingsPreference(context: Context, attrs: AttributeSet?) : WearListPreference(context, attrs) {

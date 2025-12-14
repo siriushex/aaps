@@ -1,12 +1,17 @@
-@file:Suppress("DEPRECATION")
-
 package app.aaps.wear.complications
 
 import android.app.PendingIntent
-import android.support.wearable.complications.ComplicationData
-import android.support.wearable.complications.ComplicationText
+import androidx.wear.watchface.complications.data.ComplicationData
+import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.CountDownTimeReference
+import androidx.wear.watchface.complications.data.PlainComplicationText
+import androidx.wear.watchface.complications.data.ShortTextComplicationData
+import androidx.wear.watchface.complications.data.TimeDifferenceComplicationText
+import androidx.wear.watchface.complications.data.TimeDifferenceStyle
 import app.aaps.core.interfaces.logging.LTag
 import dagger.android.AndroidInjection
+import java.time.Instant
+import java.util.concurrent.TimeUnit
 
 /**
  * SGV Extended Complication 2
@@ -24,7 +29,7 @@ class SgvComplicationExt2 : ModernBaseComplicationProviderService() {
     }
 
     override fun buildComplicationData(
-        dataType: Int,
+        type: ComplicationType,
         data: app.aaps.wear.data.ComplicationData,
         complicationPendingIntent: PendingIntent
     ): ComplicationData? {
@@ -32,27 +37,29 @@ class SgvComplicationExt2 : ModernBaseComplicationProviderService() {
         val bgData2 = data.bgData2
         aapsLogger.debug(LTag.WEAR, "SgvComplicationExt2 building: dataset=2 sgv=${bgData2.sgvString} arrow=${bgData2.slopeArrow}")
 
-        return when (dataType) {
-            ComplicationData.TYPE_SHORT_TEXT -> {
+        return when (type) {
+            ComplicationType.SHORT_TEXT      -> {
                 val shortText = bgData2.sgvString + bgData2.slopeArrow + "\uFE0E"
 
-                val shortTitle = ComplicationText.TimeDifferenceBuilder()
-                    .setReferencePeriodStart(bgData2.timeStamp)
-                    .setReferencePeriodEnd(bgData2.timeStamp + 60000)
-                    .setMinimumUnit(java.util.concurrent.TimeUnit.MINUTES)
-                    .setStyle(ComplicationText.DIFFERENCE_STYLE_STOPWATCH)
-                    .setShowNowText(false)
+                val shortTitle = TimeDifferenceComplicationText.Builder(
+                    style = TimeDifferenceStyle.STOPWATCH,
+                    countDownTimeReference = CountDownTimeReference(Instant.ofEpochMilli(bgData2.timeStamp))
+                )
+                    .setMinimumTimeUnit(TimeUnit.MINUTES)
+                    .setDisplayAsNow(false)
                     .build()
 
-                ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                    .setShortText(ComplicationText.plainText(shortText))
-                    .setShortTitle(shortTitle)
+                ShortTextComplicationData.Builder(
+                    text = PlainComplicationText.Builder(text = shortText).build(),
+                    contentDescription = PlainComplicationText.Builder(text = "Glucose $shortText").build()
+                )
+                    .setTitle(shortTitle)
                     .setTapAction(complicationPendingIntent)
                     .build()
             }
 
             else                             -> {
-                aapsLogger.warn(LTag.WEAR, "SgvComplicationExt2 unexpected type: $dataType")
+                aapsLogger.warn(LTag.WEAR, "SgvComplicationExt2 unexpected type: $type")
                 null
             }
         }

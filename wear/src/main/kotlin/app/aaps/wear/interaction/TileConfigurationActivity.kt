@@ -5,10 +5,10 @@ import android.view.ViewGroup
 import androidx.wear.tiles.TileService
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.wear.preference.WearPreferenceActivity
 import app.aaps.wear.tile.ActionsTileService
 import app.aaps.wear.tile.TempTargetTileService
 import dagger.android.AndroidInjection
-import preference.WearPreferenceActivity
 import javax.inject.Inject
 
 class TileConfigurationActivity : WearPreferenceActivity() {

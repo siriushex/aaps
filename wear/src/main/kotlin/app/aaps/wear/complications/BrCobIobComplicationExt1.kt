@@ -1,10 +1,10 @@
-@file:Suppress("DEPRECATION")
-
 package app.aaps.wear.complications
 
 import android.app.PendingIntent
-import android.support.wearable.complications.ComplicationData
-import android.support.wearable.complications.ComplicationText
+import androidx.wear.watchface.complications.data.ComplicationData
+import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.PlainComplicationText
+import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.wear.interaction.utils.DisplayFormat
 import app.aaps.wear.interaction.utils.SmallestDoubleString
@@ -29,27 +29,29 @@ class BrCobIobComplicationExt1 : ModernBaseComplicationProviderService() {
     }
 
     override fun buildComplicationData(
-        dataType: Int,
+        type: ComplicationType,
         data: app.aaps.wear.data.ComplicationData,
         complicationPendingIntent: PendingIntent
     ): ComplicationData? {
         // Use dataset 1 (AAPSClient1)
         val statusData1 = data.statusData1
 
-        return when (dataType) {
-            ComplicationData.TYPE_SHORT_TEXT -> {
+        return when (type) {
+            ComplicationType.SHORT_TEXT      -> {
                 val cob = SmallestDoubleString(statusData1.cob, SmallestDoubleString.Units.USE).minimise(DisplayFormat.MIN_FIELD_LEN_COB)
                 val iob = SmallestDoubleString(statusData1.iobSum, SmallestDoubleString.Units.USE).minimise(max(DisplayFormat.MIN_FIELD_LEN_IOB, DisplayFormat.MAX_FIELD_LEN_SHORT - 1 - cob.length))
 
-                ComplicationData.Builder(ComplicationData.TYPE_SHORT_TEXT)
-                    .setShortText(ComplicationText.plainText(displayFormat.basalRateSymbol() + statusData1.currentBasal))
-                    .setShortTitle(ComplicationText.plainText("$cob $iob"))
+                ShortTextComplicationData.Builder(
+                    text = PlainComplicationText.Builder(text = displayFormat.basalRateSymbol() + statusData1.currentBasal).build(),
+                    contentDescription = PlainComplicationText.Builder(text = "Basal Rate, COB, IOB").build()
+                )
+                    .setTitle(PlainComplicationText.Builder(text = "$cob $iob").build())
                     .setTapAction(complicationPendingIntent)
                     .build()
             }
 
             else                             -> {
-                aapsLogger.warn(LTag.WEAR, "Unexpected complication type $dataType")
+                aapsLogger.warn(LTag.WEAR, "Unexpected complication type $type")
                 null
             }
         }

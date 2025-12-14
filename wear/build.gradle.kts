@@ -107,6 +107,10 @@ dependencies {
     implementation(libs.androidx.preference)
     implementation(libs.androidx.wear)
     implementation(libs.androidx.wear.tiles)
+    implementation(libs.androidx.wear.watchface)
+    implementation(libs.androidx.wear.watchface.complications.data)
+    implementation(libs.androidx.wear.watchface.complications.datasource)
+    implementation(libs.androidx.wear.watchface.complications.datasource.ktx)
     implementation(libs.androidx.constraintlayout)
 
     // DataStore for efficient, type-safe data persistence
@@ -114,10 +118,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.protobuf)
 
     compileOnly(libs.com.google.android.wearable)
-    implementation(libs.com.google.android.wearable.support)
     implementation(libs.com.google.android.gms.playservices.wearable)
-    implementation(files("${rootDir}/wear/libs/ustwo-clockwise-debug.aar"))
-    implementation(files("${rootDir}/wear/libs/wearpreferenceactivity-0.5.0.aar"))
     implementation(files("${rootDir}/wear/libs/hellocharts-library-1.5.8.aar"))
 
     implementation(libs.kotlinx.coroutines.core)

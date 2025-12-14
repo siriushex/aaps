@@ -12,7 +12,7 @@ import androidx.preference.PreferenceManager
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.wear.R
-import preference.WearPreferenceActivity
+import app.aaps.wear.preference.WearPreferenceActivity
 import javax.inject.Inject
 
 class WatchfaceConfigurationActivity : WearPreferenceActivity(), SharedPreferences.OnSharedPreferenceChangeListener {

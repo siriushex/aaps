@@ -7,9 +7,13 @@ import androidx.datastore.core.Serializer
 import androidx.datastore.dataStoreFile
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.rx.weardata.CwfData
+import app.aaps.core.interfaces.rx.weardata.CwfMetadataKey
 import app.aaps.core.interfaces.rx.weardata.EventData
+import app.aaps.shared.impl.weardata.ResFileMap
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.protobuf.ProtoBuf
 import java.io.InputStream
@@ -55,34 +59,16 @@ class ComplicationDataRepository @Inject constructor(
      */
     suspend fun updateBgData(singleBg: EventData.SingleBg) {
         try {
-            val newBgData = BgData(
-                timeStamp = singleBg.timeStamp,
-                sgvString = singleBg.sgvString,
-                glucoseUnits = singleBg.glucoseUnits,
-                slopeArrow = singleBg.slopeArrow,
-                delta = singleBg.delta,
-                deltaDetailed = singleBg.deltaDetailed,
-                avgDelta = singleBg.avgDelta,
-                avgDeltaDetailed = singleBg.avgDeltaDetailed,
-                sgvLevel = singleBg.sgvLevel,
-                sgv = singleBg.sgv,
-                high = singleBg.high,
-                low = singleBg.low,
-                color = singleBg.color
-            )
-
             dataStore.updateData { current ->
-                val updated = when (singleBg.dataset) {
-                    0    -> current.copy(bgData = newBgData, lastUpdateTimestamp = System.currentTimeMillis())
-                    1    -> current.copy(bgData1 = newBgData, lastUpdateTimestamp = System.currentTimeMillis())
-                    2    -> current.copy(bgData2 = newBgData, lastUpdateTimestamp = System.currentTimeMillis())
-
+                when (singleBg.dataset) {
+                    0 -> current.copy(bgData = singleBg, lastUpdateTimestamp = System.currentTimeMillis())
+                    1 -> current.copy(bgData1 = singleBg, lastUpdateTimestamp = System.currentTimeMillis())
+                    2 -> current.copy(bgData2 = singleBg, lastUpdateTimestamp = System.currentTimeMillis())
                     else -> {
                         aapsLogger.warn(LTag.WEAR, "Unknown BG dataset ${singleBg.dataset}, ignoring")
                         current
                     }
                 }
-                updated
             }
         } catch (e: Exception) {
             aapsLogger.error(LTag.WEAR, "Failed to update BG data", e)
@@ -95,40 +81,51 @@ class ComplicationDataRepository @Inject constructor(
      */
     suspend fun updateStatusData(status: EventData.Status) {
         try {
-            val newStatusData = StatusData(
-                externalStatus = status.externalStatus,
-                iobSum = status.iobSum,
-                iobDetail = status.iobDetail,
-                cob = status.cob,
-                currentBasal = status.currentBasal,
-                battery = status.battery,
-                rigBattery = status.rigBattery,
-                openApsStatus = status.openApsStatus,
-                bgi = status.bgi,
-                batteryLevel = status.batteryLevel,
-                patientName = status.patientName,
-                tempTarget = status.tempTarget,
-                tempTargetLevel = status.tempTargetLevel,
-                reservoirString = status.reservoirString,
-                reservoir = status.reservoir,
-                reservoirLevel = status.reservoirLevel
-            )
-
             dataStore.updateData { current ->
-                val updated = when (status.dataset) {
-                    0    -> current.copy(statusData = newStatusData, lastUpdateTimestamp = System.currentTimeMillis())
-                    1    -> current.copy(statusData1 = newStatusData, lastUpdateTimestamp = System.currentTimeMillis())
-                    2    -> current.copy(statusData2 = newStatusData, lastUpdateTimestamp = System.currentTimeMillis())
-
+                when (status.dataset) {
+                    0 -> current.copy(statusData = status, lastUpdateTimestamp = System.currentTimeMillis())
+                    1 -> current.copy(statusData1 = status, lastUpdateTimestamp = System.currentTimeMillis())
+                    2 -> current.copy(statusData2 = status, lastUpdateTimestamp = System.currentTimeMillis())
                     else -> {
                         aapsLogger.warn(LTag.WEAR, "Unknown Status dataset ${status.dataset}, ignoring")
                         current
                     }
                 }
-                updated
             }
         } catch (e: Exception) {
             aapsLogger.error(LTag.WEAR, "Failed to update status data", e)
+        }
+    }
+
+    /**
+     * Update Graph data from phone
+     */
+    suspend fun updateGraphData(graphData: EventData.GraphData) {
+        try {
+            dataStore.updateData { current ->
+                current.copy(
+                    graphData = graphData,
+                    lastUpdateTimestamp = System.currentTimeMillis()
+                )
+            }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.WEAR, "Failed to update graph data", e)
+        }
+    }
+
+    /**
+     * Update Treatment data from phone
+     */
+    suspend fun updateTreatmentData(treatmentData: EventData.TreatmentData) {
+        try {
+            dataStore.updateData { current ->
+                current.copy(
+                    treatmentData = treatmentData,
+                    lastUpdateTimestamp = System.currentTimeMillis()
+                )
+            }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.WEAR, "Failed to update treatment data", e)
         }
     }
 
@@ -146,6 +143,122 @@ class ComplicationDataRepository @Inject constructor(
         } catch (e: Exception) {
             aapsLogger.error(LTag.WEAR, "Failed to get last update timestamp", e)
             0L
+        }
+    }
+
+    /**
+     * Store custom watchface data
+     * @param customWatchface Main watchface to store
+     * @param customWatchfaceFull Optional full version with all resources
+     * @param isDefault If true, store as default instead of current
+     */
+    suspend fun storeCustomWatchface(
+        customWatchface: CwfData,
+        customWatchfaceFull: CwfData? = null,
+        isDefault: Boolean = false
+    ) {
+        try {
+            dataStore.updateData { current ->
+                if (isDefault) {
+                    current.copy(
+                        customWatchfaceDefault = customWatchface,
+                        customWatchfaceDefaultFull = customWatchfaceFull
+                    )
+                } else {
+                    current.copy(customWatchface = customWatchface)
+                }
+            }
+            aapsLogger.debug(LTag.WEAR, "Stored custom watchface ${if (isDefault) "(default)" else ""}: ${customWatchface.metadata}")
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.WEAR, "Failed to store custom watchface", e)
+        }
+    }
+
+    /**
+     * Update custom watchface metadata only (preserves resources)
+     * Used when syncing metadata changes without re-sending all resources
+     */
+    suspend fun updateCustomWatchfaceMetadata(newMetadata: Map<CwfMetadataKey, String>) {
+        try {
+            dataStore.updateData { current ->
+                current.customWatchface?.let { savedCwf ->
+                    // Check if name and version match before updating
+                    if (newMetadata[CwfMetadataKey.CWF_NAME] == savedCwf.metadata[CwfMetadataKey.CWF_NAME] &&
+                        newMetadata[CwfMetadataKey.CWF_AUTHOR_VERSION] == savedCwf.metadata[CwfMetadataKey.CWF_AUTHOR_VERSION]
+                    ) {
+                        val updatedCwf = CwfData(savedCwf.json, newMetadata.toMutableMap(), savedCwf.resData)
+                        aapsLogger.debug(LTag.WEAR, "Updated custom watchface metadata: $newMetadata")
+                        current.copy(customWatchface = updatedCwf)
+                    } else {
+                        current
+                    }
+                } ?: current
+            }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.WEAR, "Failed to update custom watchface metadata", e)
+        }
+    }
+
+    /**
+     * Reset current watchface to default
+     */
+    suspend fun setDefaultWatchface() {
+        try {
+            dataStore.updateData { current ->
+                current.customWatchfaceDefault?.let { default ->
+                    aapsLogger.debug(LTag.WEAR, "Reset to default watchface")
+                    current.copy(customWatchface = default)
+                } ?: current
+            }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.WEAR, "Failed to set default watchface", e)
+        }
+    }
+
+    /**
+     * Get custom watchface with fallback to default
+     * @param isDefault If true, read default instead of current
+     * @return CwfData or null if not set
+     */
+    suspend fun getCustomWatchface(isDefault: Boolean = false): CwfData? {
+        return try {
+            val current = complicationData.first()
+            if (isDefault) {
+                current.customWatchfaceDefault
+            } else {
+                current.customWatchface ?: current.customWatchfaceDefault
+            }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.WEAR, "Failed to get custom watchface", e)
+            null
+        }
+    }
+
+    /**
+     * Get simplified custom watchface (only main resource file)
+     * Used for exporting without external resources
+     * @param useDefault If true, read from default storage
+     * @return Simplified CwfData or null
+     */
+    suspend fun getSimplifiedCustomWatchface(useDefault: Boolean = false): CwfData? {
+        return try {
+            val current = complicationData.first()
+            val source = if (useDefault) {
+                current.customWatchfaceDefaultFull ?: current.customWatchfaceDefault
+            } else {
+                current.customWatchface
+            }
+
+            source?.let { cwf ->
+                // Simplify by keeping only the main CUSTOM_WATCHFACE resource
+                cwf.resData[ResFileMap.CUSTOM_WATCHFACE.fileName]?.let { mainRes ->
+                    val simplifiedResData = mutableMapOf(ResFileMap.CUSTOM_WATCHFACE.fileName to mainRes)
+                    CwfData(cwf.json, cwf.metadata, simplifiedResData)
+                }
+            }
+        } catch (e: Exception) {
+            aapsLogger.error(LTag.WEAR, "Failed to get simplified custom watchface", e)
+            null
         }
     }
 }
