@@ -2,37 +2,32 @@ package app.aaps.wear.tile
 
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
-import androidx.wear.tiles.ActionBuilders
-import androidx.wear.tiles.ColorBuilders.argb
-import androidx.wear.tiles.DeviceParametersBuilders.DeviceParameters
-import androidx.wear.tiles.DeviceParametersBuilders.SCREEN_SHAPE_ROUND
-import androidx.wear.tiles.DimensionBuilders.SpProp
-import androidx.wear.tiles.DimensionBuilders.dp
-import androidx.wear.tiles.DimensionBuilders.sp
-import androidx.wear.tiles.LayoutElementBuilders.Box
-import androidx.wear.tiles.LayoutElementBuilders.Column
-import androidx.wear.tiles.LayoutElementBuilders.FONT_WEIGHT_BOLD
-import androidx.wear.tiles.LayoutElementBuilders.FontStyle
-import androidx.wear.tiles.LayoutElementBuilders.Image
-import androidx.wear.tiles.LayoutElementBuilders.Layout
-import androidx.wear.tiles.LayoutElementBuilders.LayoutElement
-import androidx.wear.tiles.LayoutElementBuilders.Row
-import androidx.wear.tiles.LayoutElementBuilders.Spacer
-import androidx.wear.tiles.LayoutElementBuilders.Text
-import androidx.wear.tiles.ModifiersBuilders.Background
-import androidx.wear.tiles.ModifiersBuilders.Clickable
-import androidx.wear.tiles.ModifiersBuilders.Corner
-import androidx.wear.tiles.ModifiersBuilders.Modifiers
-import androidx.wear.tiles.ModifiersBuilders.Semantics
+import androidx.wear.protolayout.ActionBuilders
+import androidx.wear.protolayout.ColorBuilders.argb
+import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
+import androidx.wear.protolayout.DeviceParametersBuilders.SCREEN_SHAPE_ROUND
+import androidx.wear.protolayout.DimensionBuilders.SpProp
+import androidx.wear.protolayout.DimensionBuilders.dp
+import androidx.wear.protolayout.DimensionBuilders.sp
+import androidx.wear.protolayout.LayoutElementBuilders.Box
+import androidx.wear.protolayout.LayoutElementBuilders.Column
+import androidx.wear.protolayout.LayoutElementBuilders.FONT_WEIGHT_BOLD
+import androidx.wear.protolayout.LayoutElementBuilders.FontStyle
+import androidx.wear.protolayout.LayoutElementBuilders.Image
+import androidx.wear.protolayout.LayoutElementBuilders.LayoutElement
+import androidx.wear.protolayout.LayoutElementBuilders.Row
+import androidx.wear.protolayout.LayoutElementBuilders.Spacer
+import androidx.wear.protolayout.LayoutElementBuilders.Text
+import androidx.wear.protolayout.ModifiersBuilders.Background
+import androidx.wear.protolayout.ModifiersBuilders.Clickable
+import androidx.wear.protolayout.ModifiersBuilders.Corner
+import androidx.wear.protolayout.ModifiersBuilders.Modifiers
+import androidx.wear.protolayout.ModifiersBuilders.Semantics
+import androidx.wear.protolayout.TimelineBuilders.Timeline
 import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.RequestBuilders.ResourcesRequest
-import androidx.wear.tiles.ResourceBuilders.AndroidImageResourceByResId
-import androidx.wear.tiles.ResourceBuilders.ImageResource
-import androidx.wear.tiles.ResourceBuilders.Resources
 import androidx.wear.tiles.TileBuilders.Tile
 import androidx.wear.tiles.TileService
-import androidx.wear.tiles.TimelineBuilders.Timeline
-import androidx.wear.tiles.TimelineBuilders.TimelineEntry
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.core.keys.BooleanKey
@@ -167,15 +162,17 @@ abstract class TileBase : TileService() {
     ): ListenableFuture<Tile> = serviceScope.future {
         val actionsSelected = getSelectedActions()
         val wearControl = getWearControl()
+        val deviceParams = requestParams.deviceConfiguration
+
+        // Build layout using protolayout (non-deprecated)
+        val layoutElement = layout(wearControl, actionsSelected, deviceParams)
+
+        // Create protolayout Timeline from LayoutElement
+        val protoTimeline = Timeline.fromLayoutElement(layoutElement)
+
         val tile = Tile.Builder()
             .setResourcesVersion(resourceVersion)
-            .setTimeline(
-                Timeline.Builder().addTimelineEntry(
-                    TimelineEntry.Builder().setLayout(
-                        Layout.Builder().setRoot(layout(wearControl, actionsSelected, requestParams.deviceParameters!!)).build()
-                    ).build()
-                ).build()
-            )
+            .setTileTimeline(protoTimeline)
 
         val validFor = validFor()
         if (validFor != null) {
@@ -193,18 +190,21 @@ abstract class TileBase : TileService() {
         return source.getValidFor()
     }
 
+    @Deprecated("Deprecated in TileService but still required for now")
+    @Suppress("DEPRECATION") // Resources still use tiles API (simpler than protolayout for image references)
     override fun onResourcesRequest(
         requestParams: ResourcesRequest
-    ): ListenableFuture<Resources> = serviceScope.future {
-        Resources.Builder()
+    ): ListenableFuture<androidx.wear.tiles.ResourceBuilders.Resources> = serviceScope.future {
+        // Build resources using tiles (Resources are simple references, no complex UI)
+        androidx.wear.tiles.ResourceBuilders.Resources.Builder()
             .setVersion(resourceVersion)
             .apply {
                 source.getResourceReferences(resources).forEach { resourceId ->
                     addIdToImageMapping(
                         resourceId.toString(),
-                        ImageResource.Builder()
+                        androidx.wear.tiles.ResourceBuilders.ImageResource.Builder()
                             .setAndroidResourceByResId(
-                                AndroidImageResourceByResId.Builder()
+                                androidx.wear.tiles.ResourceBuilders.AndroidImageResourceByResId.Builder()
                                     .setResourceId(resourceId)
                                     .build()
                             )

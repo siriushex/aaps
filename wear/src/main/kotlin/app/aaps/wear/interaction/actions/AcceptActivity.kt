@@ -39,9 +39,10 @@ class AcceptActivity : ViewSelectorActivity() {
             return
         }
         setAdapter(MyPagerAdapter())
-        val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+        val vibrator = getSystemService(Vibrator::class.java)
         val vibratePattern = longArrayOf(0, 100, 50, 100, 50)
-        vibrator.vibrate(vibratePattern, -1)
+        val effect = android.os.VibrationEffect.createWaveform(vibratePattern, -1)
+        vibrator?.vibrate(effect)
     }
 
     override fun onPause() {
