@@ -111,6 +111,7 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core)
+    implementation(libs.androidx.datastore)
     implementation(libs.androidx.legacy.support)
     implementation(libs.androidx.preference)
     implementation(libs.androidx.wear)
@@ -122,21 +123,15 @@ dependencies {
     implementation(libs.androidx.wear.watchface.complications.datasource)
     implementation(libs.androidx.wear.watchface.complications.datasource.ktx)
     implementation(libs.androidx.constraintlayout)
-
-    // DataStore for efficient, type-safe data persistence
-    implementation(libs.androidx.datastore)
-    implementation(libs.kotlinx.serialization.protobuf)
-
-    compileOnly(libs.com.google.android.wearable)
-    implementation(libs.com.google.android.gms.playservices.wearable)
-    implementation(files("${rootDir}/wear/libs/hellocharts-library-1.5.8.aar"))
-
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.guava)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.kotlinx.datetime)
-    implementation(libs.kotlin.stdlib.jdk8)
+    implementation(libs.kotlinx.serialization.protobuf)
+
+    implementation(libs.com.google.android.gms.playservices.wearable)
+    implementation(files("${rootDir}/wear/libs/hellocharts-library-1.5.8.aar"))
 
     ksp(libs.com.google.dagger.android.processor)
     ksp(libs.com.google.dagger.compiler)
