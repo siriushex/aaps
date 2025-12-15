@@ -51,7 +51,7 @@ class SmallestDoubleString(inputString: String, withUnits: Units = Units.SKIP) {
             val remainingForFraction = maxSize - currentLen() + fractional.length
             var formatCandidate = "#"
             if (remainingForFraction >= 1) {
-                formatCandidate = "#." + "#######".substring(0, remainingForFraction)
+                formatCandidate = "#." + "#######".take(remainingForFraction)
             }
             val df = DecimalFormat(formatCandidate)
             df.roundingMode = RoundingMode.HALF_UP

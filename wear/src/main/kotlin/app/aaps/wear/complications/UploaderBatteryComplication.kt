@@ -101,7 +101,7 @@ class UploaderBatteryComplication : ModernBaseComplicationProviderService() {
                 // Try to add icon, but skip if context not initialized (e.g., during preview)
                 try {
                     builder.setMonochromaticImage(MonochromaticImage.Builder(image = Icon.createWithResource(this, batteryIcon)).build())
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Icon creation failed - likely preview mode, continue without icon
                 }
                 builder.setTapAction(complicationPendingIntent).build()
@@ -115,7 +115,7 @@ class UploaderBatteryComplication : ModernBaseComplicationProviderService() {
                 // Try to add icon, but skip if context not initialized (e.g., during preview)
                 try {
                     builder.setMonochromaticImage(MonochromaticImage.Builder(image = Icon.createWithResource(this, batteryIcon)).build())
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Icon creation failed - likely preview mode, continue without icon
                 }
                 builder.setTapAction(complicationPendingIntent).build()

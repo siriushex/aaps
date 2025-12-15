@@ -1,5 +1,8 @@
+@file:Suppress("DEPRECATION")
+
 package app.aaps.wear.tile
 
+import android.content.res.Resources
 import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 import androidx.wear.protolayout.ActionBuilders
@@ -26,6 +29,7 @@ import androidx.wear.protolayout.ModifiersBuilders.Semantics
 import androidx.wear.protolayout.TimelineBuilders.Timeline
 import androidx.wear.tiles.RequestBuilders
 import androidx.wear.tiles.RequestBuilders.ResourcesRequest
+import androidx.wear.tiles.ResourceBuilders
 import androidx.wear.tiles.TileBuilders.Tile
 import androidx.wear.tiles.TileService
 import app.aaps.core.interfaces.logging.AAPSLogger
@@ -71,7 +75,7 @@ interface TileSource {
      * @param resources Android resources for accessing drawables
      * @return List of drawable resource IDs (e.g., R.drawable.ic_bolus)
      */
-    fun getResourceReferences(resources: android.content.res.Resources): List<Int>
+    fun getResourceReferences(resources: Resources): List<Int>
 
     /**
      * Get list of actions to display on the tile.
@@ -191,20 +195,19 @@ abstract class TileBase : TileService() {
     }
 
     @Deprecated("Deprecated in TileService but still required for now")
-    @Suppress("DEPRECATION") // Resources still use tiles API (simpler than protolayout for image references)
     override fun onResourcesRequest(
         requestParams: ResourcesRequest
-    ): ListenableFuture<androidx.wear.tiles.ResourceBuilders.Resources> = serviceScope.future {
+    ): ListenableFuture<ResourceBuilders.Resources> = serviceScope.future {
         // Build resources using tiles (Resources are simple references, no complex UI)
-        androidx.wear.tiles.ResourceBuilders.Resources.Builder()
+        ResourceBuilders.Resources.Builder()
             .setVersion(resourceVersion)
             .apply {
                 source.getResourceReferences(resources).forEach { resourceId ->
                     addIdToImageMapping(
                         resourceId.toString(),
-                        androidx.wear.tiles.ResourceBuilders.ImageResource.Builder()
+                        ResourceBuilders.ImageResource.Builder()
                             .setAndroidResourceByResId(
-                                androidx.wear.tiles.ResourceBuilders.AndroidImageResourceByResId.Builder()
+                                ResourceBuilders.AndroidImageResourceByResId.Builder()
                                     .setResourceId(resourceId)
                                     .build()
                             )

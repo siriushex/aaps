@@ -41,7 +41,8 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
 
-@SuppressLint("Deprecated") class CircleWatchface : WatchFace() {
+@SuppressLint("Deprecated")
+class CircleWatchface : WatchFace() {
 
     @Inject lateinit var rxBus: RxBus
     @Inject lateinit var aapsSchedulers: AapsSchedulers

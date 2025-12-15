@@ -81,7 +81,7 @@ class WatchFaceTime {
         // Convert milliseconds to ZonedDateTime in the stored timezone
         val zoneId = try {
             ZoneId.of(timezone)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             ZoneId.systemDefault()
         }
 

@@ -8,6 +8,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowInsets
@@ -551,7 +552,7 @@ abstract class BaseWatchFace : WatchFace() {
             binding.dayName?.text = dateUtil.dayNameString(dayNameFormat).substringBeforeLast(".")
             binding.day?.text = dateUtil.dayString()
             binding.month?.text = dateUtil.monthString(monthFormat).substringBeforeLast(".")
-            binding.timePeriod?.visibility = android.text.format.DateFormat.is24HourFormat(this).not().toVisibility()
+            binding.timePeriod?.visibility = DateFormat.is24HourFormat(this).not().toVisibility()
             binding.timePeriod?.text = dateUtil.amPm()
             binding.weekNumber?.visibility = sp.getBoolean(R.string.key_show_week_number, false).toVisibility()
             binding.weekNumber?.text = "(" + dateUtil.weekString() + ")"

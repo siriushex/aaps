@@ -64,9 +64,14 @@ class DigitalStyleWatchface : BaseWatchFace() {
             val displayFrameColorOpacity = sp.getString(R.string.key_digital_style_frame_color_opacity, "1")
 
             // Load image with shapes
+            // Note: getIdentifier is used here because resource names are constructed dynamically
+            // from user preferences. There are many possible combinations of styles and colors,
+            // making a static mapping impractical.
             val styleDrawableName = "digital_style_bg_$displayStyle"
             try {
-                mShapesElements.background = ContextCompat.getDrawable(this, resources.getIdentifier(styleDrawableName, "drawable", this.packageName))
+                @Suppress("DiscouragedApi")
+                val drawableId = resources.getIdentifier(styleDrawableName, "drawable", this.packageName)
+                mShapesElements.background = ContextCompat.getDrawable(this, drawableId)
             } catch (_: Exception) {
                 aapsLogger.error("digital_style_frameStyle", "RESOURCE NOT FOUND >> $styleDrawableName")
             }
@@ -78,7 +83,9 @@ class DigitalStyleWatchface : BaseWatchFace() {
                 val strColorName = if (displayFrameColor == "white" || displayFrameColor == "black") displayFrameColor else displayFrameColor + "_" + displayFrameColorSaturation
                 aapsLogger.debug(LTag.WEAR, "digital_style_strColorName", strColorName)
                 try {
-                    val colorStateList = ContextCompat.getColorStateList(this, resources.getIdentifier(strColorName, "color", this.packageName))
+                    @Suppress("DiscouragedApi")
+                    val colorId = resources.getIdentifier(strColorName, "color", this.packageName)
+                    val colorStateList = ContextCompat.getColorStateList(this, colorId)
                     mShapesElements.backgroundTintList = colorStateList
                 } catch (_: Exception) {
                     mShapesElements.backgroundTintList = null

@@ -8,6 +8,7 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
+import android.text.format.DateFormat
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -456,7 +457,7 @@ class CustomWatchface : BaseWatchFace() {
         binding.background.visibility = View.VISIBLE
         updateSecondVisibility()
         setSecond() // Update second visibility for time view
-        binding.timePeriod.visibility = (binding.timePeriod.isVisible && android.text.format.DateFormat.is24HourFormat(this).not()).toVisibility()
+        binding.timePeriod.visibility = (binding.timePeriod.isVisible && DateFormat.is24HourFormat(this).not()).toVisibility()
     }
 
     private enum class ViewMap(
@@ -771,8 +772,8 @@ class CustomWatchface : BaseWatchFace() {
     private enum class GravityMap(val key: String, val gravity: Int) {
 
         CENTER(JsonKeyValues.CENTER.key, Gravity.CENTER),
-        LEFT(JsonKeyValues.LEFT.key, Gravity.LEFT),
-        RIGHT(JsonKeyValues.RIGHT.key, Gravity.RIGHT);
+        LEFT(JsonKeyValues.LEFT.key, Gravity.START),
+        RIGHT(JsonKeyValues.RIGHT.key, Gravity.END);
 
         companion object {
 

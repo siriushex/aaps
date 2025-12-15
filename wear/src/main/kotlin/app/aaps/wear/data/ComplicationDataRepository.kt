@@ -130,23 +130,6 @@ class ComplicationDataRepository @Inject constructor(
     }
 
     /**
-     * Get current data timestamp (for stale data detection)
-     */
-    suspend fun getLastUpdateTimestamp(): Long {
-        return try {
-            var timestamp = 0L
-            dataStore.updateData { current ->
-                timestamp = current.lastUpdateTimestamp
-                current
-            }
-            timestamp
-        } catch (e: Exception) {
-            aapsLogger.error(LTag.WEAR, "Failed to get last update timestamp", e)
-            0L
-        }
-    }
-
-    /**
      * Store custom watchface data
      * @param customWatchface Main watchface to store
      * @param customWatchfaceFull Optional full version with all resources

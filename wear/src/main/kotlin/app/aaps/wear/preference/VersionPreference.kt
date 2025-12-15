@@ -1,10 +1,9 @@
-package app.aaps.wear.interaction.utils
+package app.aaps.wear.preference
 
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
 import app.aaps.wear.BuildConfig
-import app.aaps.wear.preference.WearListPreference
 
 /**
  * Preference for displaying the app version
@@ -21,7 +20,7 @@ class VersionPreference(context: Context, attrs: AttributeSet?) : WearListPrefer
     }
 
     init {
-        setEntries(arrayOf<CharSequence>(BuildConfig.BUILDVERSION))
-        setEntryValues(arrayOf<CharSequence>(BuildConfig.BUILDVERSION))
+        entries = arrayOf<CharSequence>(BuildConfig.BUILDVERSION)
+        entryValues = arrayOf<CharSequence>(BuildConfig.BUILDVERSION)
     }
 }

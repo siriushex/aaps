@@ -74,42 +74,6 @@ class DisplayFormat @Inject internal constructor() {
     }
 
     /**
-     * Format BG trend display for SHORT_TEXT complications (max 7 chars).
-     *
-     * Combines timestamp age and BG delta in compact form:
-     * - Preferred: "15' Δ+2.5" (time, delta symbol, change)
-     * - If too long: Minimizes delta precision: "15' +2"
-     * - If still too long: Drops delta symbol: "15' +2"
-     *
-     * Uses SmallestDoubleString to intelligently minimize delta while preserving
-     * clinical relevance (removes trailing zeros, unnecessary precision).
-     *
-     * Delta display controlled by user preference (simple vs detailed delta).
-     *
-     * @param singleBg Array of BG data for all datasets (0=primary, 1-2=followers)
-     * @param dataSet Dataset index to format (0-2)
-     * @return Formatted trend string fitting SHORT_TEXT limit (≤7 chars)
-     */
-    fun shortTrend(singleBg: Array<EventData.SingleBg>, dataSet: Int): String {
-        var minutes = "--"
-        val rawDelta = if (sp.getBoolean(R.string.key_show_detailed_delta, false)) singleBg[dataSet].deltaDetailed else singleBg[dataSet].delta
-        if (singleBg[dataSet].timeStamp > 0) {
-            minutes = shortTimeSince(singleBg[dataSet].timeStamp)
-        }
-        if (minutes.length + rawDelta.length + deltaSymbol().length + 1 <= MAX_FIELD_LEN_SHORT) {
-            return minutes + " " + deltaSymbol() + rawDelta
-        }
-
-        // that only optimizes obvious things like 0 before . or at end, + at beginning
-        val delta = SmallestDoubleString(rawDelta).minimise(MAX_FIELD_LEN_SHORT - 1)
-        if (minutes.length + delta.length + deltaSymbol().length + 1 <= MAX_FIELD_LEN_SHORT) {
-            return minutes + " " + deltaSymbol() + delta
-        }
-        val shortDelta = SmallestDoubleString(rawDelta).minimise(MAX_FIELD_LEN_SHORT - (1 + minutes.length))
-        return "$minutes $shortDelta"
-    }
-
-    /**
      * Format comprehensive BG info line for LONG_TEXT complications (max 22 chars).
      *
      * Displays full glucose status:

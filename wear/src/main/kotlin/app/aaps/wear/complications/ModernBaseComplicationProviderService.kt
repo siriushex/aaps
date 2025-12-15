@@ -2,6 +2,7 @@ package app.aaps.wear.complications
 
 import android.app.PendingIntent
 import android.content.ComponentName
+import android.content.Intent
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceService
@@ -171,7 +172,7 @@ abstract class ModernBaseComplicationProviderService : ComplicationDataSourceSer
         // Return preview data for complication configuration
         // Using empty PendingIntent since preview doesn't respond to taps
         val emptyIntent = PendingIntent.getActivity(
-            this, 0, android.content.Intent(),
+            this, 0, Intent(),
             PendingIntent.FLAG_IMMUTABLE
         )
         // Return preview with realistic sample data

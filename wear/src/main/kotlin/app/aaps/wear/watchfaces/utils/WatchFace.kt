@@ -27,6 +27,9 @@ import androidx.wear.watchface.WatchFaceService
 import androidx.wear.watchface.WatchFaceType
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
+import androidx.wear.watchface.TapEvent
+import androidx.wear.watchface.ComplicationSlot
+import android.view.WindowInsets
 import java.time.ZonedDateTime
 import java.util.TimeZone
 
@@ -91,7 +94,8 @@ abstract class WatchFace : WatchFaceService() {
      * @param screenBounds Full screen dimensions as Rect
      * @param screenInsets System UI insets (chin, notches, etc.) - may be null
      */
-    protected open fun onLayout(shape: WatchShape, screenBounds: Rect, screenInsets: android.view.WindowInsets?) {}
+    @Suppress("SameParameterValue")
+    protected open fun onLayout(shape: WatchShape, screenBounds: Rect, screenInsets: WindowInsets?) {}
 
     /**
      * Called when time changes.
@@ -203,7 +207,7 @@ abstract class WatchFace : WatchFaceService() {
             watchFaceType = WatchFaceType.DIGITAL,
             renderer = renderer!!
         ).setTapListener(object : WatchFace.TapListener {
-            override fun onTapEvent(tapType: Int, tapEvent: androidx.wear.watchface.TapEvent, complicationSlot: androidx.wear.watchface.ComplicationSlot?) {
+            override fun onTapEvent(tapType: Int, tapEvent: TapEvent, complicationSlot: ComplicationSlot?) {
                 // Ignore complication taps - they're handled by the system
                 if (complicationSlot != null) return
 
@@ -349,7 +353,7 @@ abstract class WatchFace : WatchFaceService() {
             super.onDestroy()
             try {
                 context.unregisterReceiver(dateTimeChangedReceiver)
-            } catch (e: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 // Receiver not registered, ignore
             }
         }

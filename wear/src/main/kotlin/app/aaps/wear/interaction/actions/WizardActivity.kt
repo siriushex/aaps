@@ -40,8 +40,8 @@ class WizardActivity : ViewSelectorActivity() {
         private val increment2 = preferences.get(IntKey.OverviewCarbsButtonIncrement2).toDouble()
         val stepValues = listOf(1.0, increment1, increment2)
 
-        override fun instantiateItem(container: ViewGroup, position: Int): View = when {
-            position == 0                  -> {
+        override fun instantiateItem(container: ViewGroup, position: Int): View = when (position) {
+            0                  -> {
                 // Page 0: Carbs input page
                 val frameLayout = FrameLayout(applicationContext).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -60,8 +60,7 @@ class WizardActivity : ViewSelectorActivity() {
                     )
                 }
             }
-
-            position == 1 && hasPercentage -> {
+            1 if hasPercentage -> {
                 // Page 1: Percentage input page (only if hasPercentage is true)
                 val frameLayout = FrameLayout(applicationContext).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -80,8 +79,7 @@ class WizardActivity : ViewSelectorActivity() {
                     )
                 }
             }
-
-            else                      -> {
+            else               -> {
                 // Page 2 (or 1 if no percentage): Confirm page
                 LayoutInflater.from(applicationContext).inflate(R.layout.action_confirm_ok, container, false).apply {
                     findViewById<ImageView>(R.id.confirmbutton)

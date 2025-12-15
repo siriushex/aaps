@@ -55,7 +55,7 @@ class ComplicationTapActivity : DaggerAppCompatActivity() {
             action: ComplicationAction
         ): PendingIntent {
             val intent = Intent(context, ComplicationTapActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 putExtra(EXTRA_PROVIDER_COMPONENT, provider)
                 putExtra(EXTRA_COMPLICATION_ID, complicationId)
                 putExtra(EXTRA_COMPLICATION_ACTION, action.toString())
@@ -82,7 +82,7 @@ class ComplicationTapActivity : DaggerAppCompatActivity() {
             since: Long
         ): PendingIntent {
             val intent = Intent(context, ComplicationTapActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 putExtra(EXTRA_PROVIDER_COMPONENT, provider)
                 putExtra(EXTRA_COMPLICATION_ID, complicationId)
                 putExtra(EXTRA_COMPLICATION_ACTION, action.toString())

@@ -1,10 +1,10 @@
 package app.aaps.wear.complications
 
 import android.app.PendingIntent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
 import android.view.WindowManager
+import androidx.core.graphics.scale
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
 import androidx.wear.watchface.complications.data.PhotoImageComplicationData
@@ -40,7 +40,7 @@ abstract class WallpaperComplication : ModernBaseComplicationProviderService() {
                 try {
                     assetManager.open(wallpaperAssetsFileName).use { iStr ->
                         val bitmap = BitmapFactory.decodeStream(iStr)
-                        val scaled = Bitmap.createScaledBitmap(bitmap, width, height, true)
+                        val scaled = bitmap.scale(width, height)
                         photoIcon = Icon.createWithBitmap(scaled)
                     }
                 } catch (e: IOException) {

@@ -29,7 +29,12 @@ class TileConfigurationActivity : WearPreferenceActivity() {
     }
 
     override fun createPreferenceFragment(): PreferenceFragmentCompat {
-        val resXmlId = resources.getIdentifier(configFileName, "xml", applicationContext.packageName)
+        // Map action strings to resource IDs directly instead of using reflection
+        val resXmlId = when (configFileName) {
+            "tile_configuration_activity" -> app.aaps.wear.R.xml.tile_configuration_activity
+            "tile_configuration_tempt"    -> app.aaps.wear.R.xml.tile_configuration_tempt
+            else                           -> 0
+        }
         aapsLogger.debug(LTag.WEAR, "TileConfigurationActivity::createPreferenceFragment --->> getIntent().getAction() $configFileName")
         aapsLogger.debug(LTag.WEAR, "TileConfigurationActivity::createPreferenceFragment --->> resXmlId $resXmlId")
 

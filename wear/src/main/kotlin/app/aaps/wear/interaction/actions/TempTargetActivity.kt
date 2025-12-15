@@ -39,8 +39,8 @@ class TempTargetActivity : ViewSelectorActivity() {
 
         override fun getPageCount(): Int = if (isSingleTarget) 3 else 4
 
-        override fun instantiateItem(container: ViewGroup, position: Int): View = when {
-            position == 0                    -> {
+        override fun instantiateItem(container: ViewGroup, position: Int): View = when (position) {
+            0                    -> {
                 // Page 0: Duration input page
                 val frameLayout = FrameLayout(applicationContext).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -58,8 +58,7 @@ class TempTargetActivity : ViewSelectorActivity() {
                     )
                 }
             }
-
-            position == 1                    -> {
+            1                    -> {
                 // Page 1: Low/Target input page
                 val frameLayout = FrameLayout(applicationContext).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -84,8 +83,7 @@ class TempTargetActivity : ViewSelectorActivity() {
                     )
                 }
             }
-
-            position == 2 && !isSingleTarget -> {
+            2 if !isSingleTarget -> {
                 // Page 2: High input page (only if not single target)
                 val frameLayout = FrameLayout(applicationContext).apply {
                     layoutParams = ViewGroup.LayoutParams(
@@ -109,8 +107,7 @@ class TempTargetActivity : ViewSelectorActivity() {
                     )
                 }
             }
-
-            else                        -> {
+            else                 -> {
                 // Page 3 (or 2 if single target): Confirm page
                 LayoutInflater.from(applicationContext).inflate(R.layout.action_confirm_ok, container, false).apply {
                     val confirmButton = findViewById<ImageView>(R.id.confirmbutton)

@@ -1,10 +1,9 @@
-package app.aaps.wear.interaction.utils
+package app.aaps.wear.preference
 
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
 import app.aaps.wear.R
-import app.aaps.wear.preference.WearListPreference
 
 /**
  * Preference for accessing watchface settings
@@ -22,7 +21,7 @@ class WatchfaceSettingsPreference(context: Context, attrs: AttributeSet?) : Wear
     }
 
     init {
-        setEntries(arrayOf<CharSequence>(prefMoreWatchfaceSettings))
-        setEntryValues(arrayOf<CharSequence>(""))
+        entries = arrayOf<CharSequence>(prefMoreWatchfaceSettings)
+        entryValues = arrayOf<CharSequence>("")
     }
 }

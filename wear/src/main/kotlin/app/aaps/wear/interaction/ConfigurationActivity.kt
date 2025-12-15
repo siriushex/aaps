@@ -29,6 +29,10 @@ class ConfigurationActivity : WearPreferenceActivity() {
 
     override fun createPreferenceFragment(): PreferenceFragmentCompat {
         val configFileName = intent.action
+        // Note: This appears to be legacy code. The manifest only defines the standard
+        // watchface editor action, not custom XML resource names. Consider using
+        // WatchfaceConfigurationActivity instead, which passes resource IDs properly.
+        @Suppress("DiscouragedApi")
         val resXmlId = resources.getIdentifier(configFileName, "xml", applicationContext.packageName)
         aapsLogger.debug(LTag.WEAR, "ConfigurationActivity::createPreferenceFragment --->> getIntent().getAction() $configFileName")
         aapsLogger.debug(LTag.WEAR, "ConfigurationActivity::createPreferenceFragment --->> resXmlId $resXmlId")

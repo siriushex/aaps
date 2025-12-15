@@ -23,14 +23,6 @@ abstract class PagerAdapter : RecyclerView.Adapter<PagerAdapter.PageViewHolder>(
      */
     abstract fun instantiateItem(container: ViewGroup, position: Int): View
 
-    /**
-     * Remove/destroy the view for the given page position.
-     * Override if you need custom cleanup.
-     */
-    open fun destroyItem(container: ViewGroup, position: Int, view: View) {
-        // Default: no-op, RecyclerView handles view recycling
-    }
-
     // RecyclerView.Adapter implementation
     override fun getItemCount(): Int = getPageCount()
 

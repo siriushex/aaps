@@ -3,6 +3,7 @@ package app.aaps.wear.interaction.actions
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
+import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -41,7 +42,7 @@ class AcceptActivity : ViewSelectorActivity() {
         setAdapter(MyPagerAdapter())
         val vibrator = getSystemService(Vibrator::class.java)
         val vibratePattern = longArrayOf(0, 100, 50, 100, 50)
-        val effect = android.os.VibrationEffect.createWaveform(vibratePattern, -1)
+        val effect = VibrationEffect.createWaveform(vibratePattern, -1)
         vibrator?.vibrate(effect)
     }
 

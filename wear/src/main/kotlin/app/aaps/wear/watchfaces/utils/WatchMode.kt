@@ -1,11 +1,3 @@
-/*
- * The MIT License (MIT)
- *
- * Copyright (c) 2015 ustwo studio inc (www.ustwo.com)
- *
- * Adapted for AndroidAPS
- */
-
 package app.aaps.wear.watchfaces.utils
 
 /**
