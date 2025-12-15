@@ -1,6 +1,5 @@
 package app.aaps.wear.comm
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -375,13 +374,12 @@ class DataHandlerWear @Inject constructor(
         // Register the channel with the system; you can't change the importance
         // or other notification behaviors after this
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
-        @Suppress("DEPRECATION")
         var builder = NotificationCompat.Builder(context, DataLayerListenerServiceWear.AAPS_NOTIFY_CHANNEL_ID_OPEN_LOOP)
             .setSmallIcon(R.drawable.notif_icon)
             .setContentTitle(command.title)
             .setContentText(command.message)
             .setVibrate(longArrayOf(1000, 1000, 1000, 1000, 1000))
-            .setPriority(Notification.PRIORITY_HIGH) // suppress deprecation, ignored for API >= 26
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
 
         // Creates an explicit intent for an Activity in your app
         val intent = Intent(context, AcceptActivity::class.java).apply {
@@ -414,7 +412,6 @@ class DataHandlerWear @Inject constructor(
      * TODO: Migrate to androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
      *       when the full complications migration from old support library to modern AndroidX happens
      */
-    @Suppress("DEPRECATION")
     private fun triggerComplicationUpdates() {
         val modernComplications = listOf(
             // SGV complications (show glucose values)

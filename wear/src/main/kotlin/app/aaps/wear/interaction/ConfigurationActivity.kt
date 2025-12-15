@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceFragmentCompat
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.wear.R
@@ -19,15 +20,20 @@ class ConfigurationActivity : WearPreferenceActivity() {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
         title = "Watchface"
-        val configFileName = intent.action
-        val resXmlId = resources.getIdentifier(configFileName, "xml", applicationContext.packageName)
-        aapsLogger.debug(LTag.WEAR, "ConfigurationActivity::onCreate --->> getIntent().getAction() $configFileName")
-        aapsLogger.debug(LTag.WEAR, "ConfigurationActivity::onCreate --->> resXmlId $resXmlId")
-        addPreferencesFromResource(resXmlId)
+
         val view = window.decorView as ViewGroup
         removeBackgroundRecursively(view)
         view.background = ContextCompat.getDrawable(this, R.drawable.settings_background)
         view.requestFocus()
+    }
+
+    override fun createPreferenceFragment(): PreferenceFragmentCompat {
+        val configFileName = intent.action
+        val resXmlId = resources.getIdentifier(configFileName, "xml", applicationContext.packageName)
+        aapsLogger.debug(LTag.WEAR, "ConfigurationActivity::createPreferenceFragment --->> getIntent().getAction() $configFileName")
+        aapsLogger.debug(LTag.WEAR, "ConfigurationActivity::createPreferenceFragment --->> resXmlId $resXmlId")
+
+        return ConfigurationFragment.newInstance(resXmlId)
     }
 
     override fun onPause() {
@@ -40,5 +46,30 @@ class ConfigurationActivity : WearPreferenceActivity() {
             for (i in 0 until parent.childCount)
                 removeBackgroundRecursively(parent.getChildAt(i))
         parent.background = null
+    }
+
+    /**
+     * Fragment for loading watchface configuration preferences
+     */
+    class ConfigurationFragment : PreferenceFragmentCompat() {
+
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            val resXmlId = arguments?.getInt(ARG_XML_RES_ID) ?: 0
+            if (resXmlId != 0) {
+                setPreferencesFromResource(resXmlId, rootKey)
+            }
+        }
+
+        companion object {
+            private const val ARG_XML_RES_ID = "xml_res_id"
+
+            fun newInstance(xmlResId: Int): ConfigurationFragment {
+                return ConfigurationFragment().apply {
+                    arguments = Bundle().apply {
+                        putInt(ARG_XML_RES_ID, xmlResId)
+                    }
+                }
+            }
+        }
     }
 }

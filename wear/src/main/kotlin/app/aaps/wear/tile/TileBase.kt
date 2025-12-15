@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package app.aaps.wear.tile
 
 import androidx.annotation.DrawableRes
@@ -195,7 +193,6 @@ abstract class TileBase : TileService() {
         return source.getValidFor()
     }
 
-    @Deprecated("Deprecated in Java")
     override fun onResourcesRequest(
         requestParams: ResourcesRequest
     ): ListenableFuture<Resources> = serviceScope.future {

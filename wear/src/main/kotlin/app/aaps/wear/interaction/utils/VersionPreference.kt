@@ -7,12 +7,12 @@ import app.aaps.wear.BuildConfig
 import app.aaps.wear.preference.WearListPreference
 
 /**
- * Created by adrian on 07/08/17.
+ * Preference for displaying the app version
  */
 @Suppress("unused")
-class VersionPreference(context: Context?, attrs: AttributeSet?) : WearListPreference(context, attrs) {
+class VersionPreference(context: Context, attrs: AttributeSet?) : WearListPreference(context, attrs) {
 
-    override fun getSummary(context: Context): CharSequence {
+    override fun getSummaryText(context: Context): CharSequence {
         return BuildConfig.BUILDVERSION
     }
 
@@ -21,7 +21,7 @@ class VersionPreference(context: Context?, attrs: AttributeSet?) : WearListPrefe
     }
 
     init {
-        entries = arrayOf<CharSequence>(BuildConfig.BUILDVERSION)
-        entryValues = arrayOf<CharSequence>(BuildConfig.BUILDVERSION)
+        setEntries(arrayOf<CharSequence>(BuildConfig.BUILDVERSION))
+        setEntryValues(arrayOf<CharSequence>(BuildConfig.BUILDVERSION))
     }
 }

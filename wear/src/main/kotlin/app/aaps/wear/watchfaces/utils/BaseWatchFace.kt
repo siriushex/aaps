@@ -5,8 +5,8 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Point
 import android.graphics.Rect
+import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.LayoutInflater
 import android.view.View
@@ -118,7 +118,8 @@ abstract class BaseWatchFace : WatchFace() {
      */
     abstract fun inflateLayout(inflater: LayoutInflater): ViewBinding
 
-    private val displaySize = Point()
+    private var displayWidth = 0
+    private var displayHeight = 0
 
     var loopLevel = -1
     var loopLevelExt1 = -1
@@ -175,14 +176,16 @@ abstract class BaseWatchFace : WatchFace() {
         AndroidInjection.inject(this)
         super.onCreate()
         simpleUi.onCreate(::forceUpdate)
-        @Suppress("DEPRECATION")
-        (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay.getSize(displaySize)
-        specW = View.MeasureSpec.makeMeasureSpec(displaySize.x, View.MeasureSpec.EXACTLY)
-        specH = if (forceSquareCanvas) specW else View.MeasureSpec.makeMeasureSpec(displaySize.y, View.MeasureSpec.EXACTLY)
+        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val bounds = windowManager.currentWindowMetrics.bounds
+        displayWidth = bounds.width()
+        displayHeight = bounds.height()
+        specW = View.MeasureSpec.makeMeasureSpec(displayWidth, View.MeasureSpec.EXACTLY)
+        specH = if (forceSquareCanvas) specW else View.MeasureSpec.makeMeasureSpec(displayHeight, View.MeasureSpec.EXACTLY)
         disposable += rxBus
             .toObservable(EventWearPreferenceChange::class.java)
             .observeOn(aapsSchedulers.main)
-            .subscribe { event: EventWearPreferenceChange ->
+            .subscribe { _: EventWearPreferenceChange ->
                 simpleUi.updatePreferences()
                 if (::binding.isInitialized && layoutSet) setDataFields()
                 invalidate()
@@ -293,7 +296,7 @@ abstract class BaseWatchFace : WatchFace() {
             return "--"
         }
         val minutesAgo = floor(timeSince(id) / (1000 * 60)).toInt()
-        return minutesAgo.toString() + "'"
+        return "$minutesAgo'"
     }
 
     override fun onDestroy() {
@@ -323,8 +326,8 @@ abstract class BaseWatchFace : WatchFace() {
         } else {
             if (layoutSet) {
                 binding.mainLayout.measure(specW, specH)
-                val y = if (forceSquareCanvas) displaySize.x else displaySize.y // Square Steampunk
-                binding.mainLayout.layout(0, 0, displaySize.x, y)
+                val y = if (forceSquareCanvas) displayWidth else displayHeight // Square Steampunk
+                binding.mainLayout.layout(0, 0, displayWidth, y)
                 binding.mainLayout.draw(canvas)
             }
         }
@@ -340,19 +343,17 @@ abstract class BaseWatchFace : WatchFace() {
         }
     }
 
-    @SuppressLint("MissingPermission")
-    @Suppress("DEPRECATION")
     private fun checkVibrateHourly(oldTime: WatchFaceTime, newTime: WatchFaceTime) {
         val hourlyVibratePref = sp.getBoolean(R.string.key_vibrate_hourly, false)
         if (hourlyVibratePref && layoutSet && newTime.hasHourChanged(oldTime)) {
             aapsLogger.info(LTag.WEAR, "hourlyVibratePref", "true --> $newTime")
-            val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
+            val vibrator = getSystemService(Vibrator::class.java)
             val vibrationPattern = longArrayOf(0, 150, 125, 100)
-            vibrator.vibrate(vibrationPattern, -1)
+            val vibrationEffect = VibrationEffect.createWaveform(vibrationPattern, -1)
+            vibrator?.vibrate(vibrationEffect)
         }
     }
 
-    @SuppressLint("SetTextI18n")
     open fun setDataFields() {
         if (!::binding.isInitialized) return
         detailedIob = sp.getBoolean(R.string.key_show_detailed_iob, false)

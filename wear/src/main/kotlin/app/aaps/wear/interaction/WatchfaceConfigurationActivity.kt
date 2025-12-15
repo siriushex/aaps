@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -22,15 +23,27 @@ class WatchfaceConfigurationActivity : WearPreferenceActivity(), SharedPreferenc
     @Suppress("PrivatePropertyName")
     private val PHYSICAL_ACTIVITY = 1
 
+    private var preferenceFile: Int = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Inject dependencies first
+        dagger.android.AndroidInjection.inject(this)
+
+        // MUST set preferenceFile BEFORE calling super.onCreate() because super creates the fragment
+        preferenceFile = intent.getIntExtra(getString(R.string.key_preference_id), R.xml.display_preferences)
+
         super.onCreate(savedInstanceState)
-        val preferenceFile = intent.getIntExtra(getString(R.string.key_preference_id), R.xml.display_preferences)
-        addPreferencesFromResource(preferenceFile)
+
         PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this)
+
         val view = window.decorView as ViewGroup
         removeBackgroundRecursively(view)
         view.background = ContextCompat.getDrawable(this, R.drawable.settings_background)
         view.requestFocus()
+    }
+
+    override fun createPreferenceFragment(): PreferenceFragmentCompat {
+        return WatchfaceConfigurationFragment.newInstance(preferenceFile)
     }
 
     private fun removeBackgroundRecursively(parent: View) {
@@ -76,8 +89,32 @@ class WatchfaceConfigurationActivity : WearPreferenceActivity(), SharedPreferenc
         }
     }
 
-    companion object {
+    /**
+     * Fragment for loading watchface configuration preferences
+     */
+    class WatchfaceConfigurationFragment : PreferenceFragmentCompat() {
 
+        override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+            val resXmlId = arguments?.getInt(ARG_XML_RES_ID) ?: 0
+            if (resXmlId != 0) {
+                setPreferencesFromResource(resXmlId, rootKey)
+            }
+        }
+
+        companion object {
+            private const val ARG_XML_RES_ID = "xml_res_id"
+
+            fun newInstance(xmlResId: Int): WatchfaceConfigurationFragment {
+                return WatchfaceConfigurationFragment().apply {
+                    arguments = Bundle().apply {
+                        putInt(ARG_XML_RES_ID, xmlResId)
+                    }
+                }
+            }
+        }
+    }
+
+    companion object {
         private const val BODY_SENSOR_PERMISSION_REQUEST_CODE = 1
     }
 }

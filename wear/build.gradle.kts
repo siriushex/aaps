@@ -65,22 +65,30 @@ android {
             isDefault = true
             applicationId = "info.nightscout.androidaps"
             dimension = "standard"
+            resValue("string", "app_name", "AAPS")
             versionName = Versions.appVersion
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_launcher"
         }
         create("pumpcontrol") {
             applicationId = "info.nightscout.aapspumpcontrol"
             dimension = "standard"
+            resValue("string", "app_name", "Pumpcontrol")
             versionName = Versions.appVersion + "-pumpcontrol"
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_pumpcontrol"
         }
         create("aapsclient") {
             applicationId = "info.nightscout.aapsclient"
             dimension = "standard"
+            resValue("string", "app_name", "AAPSClient")
             versionName = Versions.appVersion + "-aapsclient"
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_yellowowl"
         }
         create("aapsclient2") {
             applicationId = "info.nightscout.aapsclient2"
             dimension = "standard"
+            resValue("string", "app_name", "AAPSClient2")
             versionName = Versions.appVersion + "-aapsclient2"
+            manifestPlaceholders["appIcon"] = "@mipmap/ic_blueowl"
         }
     }
     buildFeatures {

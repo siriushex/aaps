@@ -3,6 +3,7 @@ package app.aaps.wear.di
 import app.aaps.wear.complications.ComplicationTapActivity
 import app.aaps.wear.interaction.ConfigurationActivity
 import app.aaps.wear.interaction.TileConfigurationActivity
+import app.aaps.wear.interaction.WatchfaceConfigurationActivity
 import app.aaps.wear.interaction.actions.AcceptActivity
 import app.aaps.wear.interaction.actions.BackgroundActionActivity
 import app.aaps.wear.interaction.actions.BolusActivity
@@ -30,6 +31,7 @@ abstract class WearActivitiesModule {
 
     @ContributesAndroidInjector abstract fun contributesTileConfigurationActivity(): TileConfigurationActivity
     @ContributesAndroidInjector abstract fun contributesConfigurationActivity(): ConfigurationActivity
+    @ContributesAndroidInjector abstract fun contributesWatchfaceConfigurationActivity(): WatchfaceConfigurationActivity
     @ContributesAndroidInjector abstract fun contributesComplicationTapActivity(): ComplicationTapActivity
 
     @ContributesAndroidInjector abstract fun contributesBackgroundActionActivity(): BackgroundActionActivity

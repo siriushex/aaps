@@ -1,25 +1,20 @@
 /*
- * Simplified replacement for denley/WearPreferenceActivity WearListPreference
- * Original: https://github.com/denley/WearPreferenceActivity
- * License: Apache 2.0
- *
- * Adapted for AndroidAPS - minimal implementation with only used functionality
+ * Modernized WearListPreference using AndroidX Preferences
+ * Replaces deprecated android.preference.ListPreference with androidx.preference.ListPreference
  */
 
 package app.aaps.wear.preference
 
 import android.content.Context
-import android.preference.ListPreference
 import android.util.AttributeSet
+import androidx.preference.ListPreference
 
 /**
- * Simplified WearListPreference for Wear OS
- * Uses deprecated ListPreference to match WearPreferenceActivity
- * Only implements the methods and properties that are actually used in the codebase
+ * Base class for custom Wear OS list preferences using AndroidX Preferences
+ * Subclasses override getSummary() and onPreferenceClick() for custom behavior
  */
-@Suppress("DEPRECATION")
 abstract class WearListPreference @JvmOverloads constructor(
-    context: Context?,
+    context: Context,
     attrs: AttributeSet? = null
 ) : ListPreference(context, attrs) {
 
@@ -27,7 +22,7 @@ abstract class WearListPreference @JvmOverloads constructor(
      * Get the summary text for this preference
      * Subclasses override this to provide custom summary text
      */
-    abstract fun getSummary(context: Context): CharSequence
+    abstract fun getSummaryText(context: Context): CharSequence
 
     /**
      * Called when the preference is clicked
@@ -37,10 +32,12 @@ abstract class WearListPreference @JvmOverloads constructor(
 
     init {
         // Update summary
-        summary = context?.let { getSummary(it) }
-    }
+        summary = getSummaryText(context)
 
-    override fun onClick() {
-        context?.let { onPreferenceClick(it) }
+        // Set click listener
+        setOnPreferenceClickListener {
+            onPreferenceClick(context)
+            true
+        }
     }
 }

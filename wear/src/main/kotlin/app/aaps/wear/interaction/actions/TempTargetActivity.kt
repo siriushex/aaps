@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package app.aaps.wear.interaction.actions
 
 import android.os.Bundle

@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package app.aaps.wear.watchfaces
 
 import android.annotation.SuppressLint
@@ -15,6 +13,7 @@ import app.aaps.wear.databinding.ActivityDigitalstyleBinding
 import app.aaps.wear.watchfaces.utils.BaseWatchFace
 import app.aaps.wear.watchfaces.utils.WatchfaceViewAdapter.Companion.SelectedWatchFace
 
+@SuppressLint("Deprecated")
 class DigitalStyleWatchface : BaseWatchFace() {
 
     private lateinit var binding: ActivityDigitalstyleBinding
@@ -55,7 +54,6 @@ class DigitalStyleWatchface : BaseWatchFace() {
 
     }
 
-    @SuppressLint("SetTextI18n")
     private fun setWatchfaceStyle() {
         /* frame styles*/
         val mShapesElements = layoutView?.findViewById<LinearLayout>(R.id.shapes_elements)

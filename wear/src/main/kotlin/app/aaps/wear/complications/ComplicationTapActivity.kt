@@ -4,10 +4,10 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.annotation.StringRes
+import androidx.core.os.BundleCompat
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
@@ -116,12 +116,7 @@ class ComplicationTapActivity : DaggerAppCompatActivity() {
     private fun handleComplicationTap() {
         val extras = intent.extras ?: return
 
-        val provider = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            extras.getParcelable(EXTRA_PROVIDER_COMPONENT, ComponentName::class.java)
-        } else {
-            @Suppress("DEPRECATION")
-            extras.getParcelable(EXTRA_PROVIDER_COMPONENT)
-        }
+        val provider = BundleCompat.getParcelable(extras, EXTRA_PROVIDER_COMPONENT, ComponentName::class.java)
 
         val complicationId = extras.getInt(EXTRA_COMPLICATION_ID)
         val complicationActionStr = extras.getString(EXTRA_COMPLICATION_ACTION, ComplicationAction.MENU.toString())

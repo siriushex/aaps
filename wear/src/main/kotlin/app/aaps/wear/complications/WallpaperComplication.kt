@@ -4,7 +4,6 @@ import android.app.PendingIntent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
-import android.util.DisplayMetrics
 import android.view.WindowManager
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
@@ -32,11 +31,10 @@ abstract class WallpaperComplication : ModernBaseComplicationProviderService() {
     ): ComplicationData? {
         return when (type) {
             ComplicationType.PHOTO_IMAGE      -> {
-                val metrics = DisplayMetrics()
                 val windowManager = applicationContext.getSystemService(WINDOW_SERVICE) as WindowManager
-                windowManager.defaultDisplay.getMetrics(metrics)
-                val width = metrics.widthPixels
-                val height = metrics.heightPixels
+                val bounds = windowManager.currentWindowMetrics.bounds
+                val width = bounds.width()
+                val height = bounds.height()
                 val assetManager = assets
                 var photoIcon: Icon? = null
                 try {

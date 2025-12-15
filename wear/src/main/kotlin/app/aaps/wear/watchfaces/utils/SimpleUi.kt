@@ -33,13 +33,16 @@ class SimpleUi @Inject constructor(
     private val colorDarkHigh = ContextCompat.getColor(context, R.color.dark_highColor)
     private var colorDarkMid = ContextCompat.getColor(context, R.color.dark_midColor)
     private var colorDarkLow = ContextCompat.getColor(context, R.color.dark_lowColor)
-    private val displaySize = Point()
+    private var displayWidth = 0
+    private var displayHeight = 0
     private lateinit var callback: () -> Unit
 
     fun onCreate(callback: () -> Unit) {
         this.callback = callback
-        @Suppress("DEPRECATION")
-        (context.getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay.getSize(displaySize)
+        val windowManager = context.getSystemService(WINDOW_SERVICE) as WindowManager
+        val bounds = windowManager.currentWindowMetrics.bounds
+        displayWidth = bounds.width()
+        displayHeight = bounds.height()
         setupBatteryReceiver()
         setupUi()
     }
@@ -63,9 +66,9 @@ class SimpleUi @Inject constructor(
     }
 
     fun onDraw(canvas: Canvas, singleBg: EventData.SingleBg) {
-        canvas.drawRect(0f, 0f, displaySize.x.toFloat(), displaySize.y.toFloat(), mBackgroundPaint)
-        val xHalf = displaySize.x / 2f
-        val yThird = displaySize.y / 3f
+        canvas.drawRect(0f, 0f, displayWidth.toFloat(), displayHeight.toFloat(), mBackgroundPaint)
+        val xHalf = displayWidth / 2f
+        val yThird = displayHeight / 3f
 
         mSvgPaint.isStrikeThruText = isOutdated(singleBg)
         mSvgPaint.color = getBgColour(singleBg.sgvLevel)

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Point
 import android.graphics.RectF
 import android.os.PowerManager
 import android.util.TypedValue
@@ -42,8 +41,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
 
-@SuppressLint("Deprecated")
-class CircleWatchface : WatchFace() {
+@SuppressLint("Deprecated") class CircleWatchface : WatchFace() {
 
     @Inject lateinit var rxBus: RxBus
     @Inject lateinit var aapsSchedulers: AapsSchedulers
@@ -91,7 +89,8 @@ class CircleWatchface : WatchFace() {
     private lateinit var rect: RectF
     private lateinit var rectDelete: RectF
     private var overlapping = false
-    private var displaySize = Point()
+    private var displayWidth = 0
+    private var displayHeight = 0
     private var bgDataList = ArrayList<SingleBg>()
     private var specW = 0
     private var specH = 0
@@ -99,7 +98,6 @@ class CircleWatchface : WatchFace() {
     private var mSgv: TextView? = null
     private var sgvTapTime: Long = 0
 
-    @SuppressLint("InflateParams")
     override fun onCreate() {
         AndroidInjection.inject(this)
         super.onCreate()
@@ -108,10 +106,12 @@ class CircleWatchface : WatchFace() {
         val powerManager = getSystemService(POWER_SERVICE) as PowerManager
         val wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AndroidAPS:CircleWatchface")
         wakeLock.acquire(30000)
-        val display = (getSystemService(WINDOW_SERVICE) as WindowManager).defaultDisplay
-        display.getSize(displaySize)
-        specW = View.MeasureSpec.makeMeasureSpec(displaySize.x, View.MeasureSpec.EXACTLY)
-        specH = View.MeasureSpec.makeMeasureSpec(displaySize.y, View.MeasureSpec.EXACTLY)
+        val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+        val bounds = windowManager.currentWindowMetrics.bounds
+        displayWidth = bounds.width()
+        displayHeight = bounds.height()
+        specW = View.MeasureSpec.makeMeasureSpec(displayWidth, View.MeasureSpec.EXACTLY)
+        specH = View.MeasureSpec.makeMeasureSpec(displayHeight, View.MeasureSpec.EXACTLY)
 
         // Layout inflation deferred to first onDraw to avoid deadlock in headless engine creation
         // prepareDrawTime() also deferred as it depends on display size setup
@@ -290,8 +290,8 @@ class CircleWatchface : WatchFace() {
         removePaint.strokeWidth = CIRCLE_WIDTH
         removePaint.isAntiAlias = true
         removePaint.color = backgroundColor
-        rect = RectF(PADDING, PADDING, displaySize.x - PADDING, displaySize.y - PADDING)
-        rectDelete = RectF(PADDING - CIRCLE_WIDTH / 2, PADDING - CIRCLE_WIDTH / 2, displaySize.x - PADDING + CIRCLE_WIDTH / 2, displaySize.y - PADDING + CIRCLE_WIDTH / 2)
+        rect = RectF(PADDING, PADDING, displayWidth - PADDING, displayHeight - PADDING)
+        rectDelete = RectF(PADDING - CIRCLE_WIDTH / 2, PADDING - CIRCLE_WIDTH / 2, displayWidth - PADDING + CIRCLE_WIDTH / 2, displayHeight - PADDING + CIRCLE_WIDTH / 2)
         overlapping = ALWAYS_HIGHLIGHT_SMALL || areOverlapping(angleSMALL, angleSMALL + SMALL_HAND_WIDTH + NEAR, angleBig, angleBig + BIG_HAND_WIDTH + NEAR)
         aapsLogger.debug(LTag.WEAR, "end prepareDrawTime")
     }
@@ -375,7 +375,7 @@ class CircleWatchface : WatchFace() {
         val paint = Paint()
         paint.color = color
         val rectTemp =
-            RectF(PADDING + offset - CIRCLE_WIDTH / 2, PADDING + offset - CIRCLE_WIDTH / 2, displaySize.x - PADDING - offset + CIRCLE_WIDTH / 2, displaySize.y - PADDING - offset + CIRCLE_WIDTH / 2)
+            RectF(PADDING + offset - CIRCLE_WIDTH / 2, PADDING + offset - CIRCLE_WIDTH / 2, displayWidth - PADDING - offset + CIRCLE_WIDTH / 2, displayHeight - PADDING - offset + CIRCLE_WIDTH / 2)
         canvas.drawArc(rectTemp, 270f, size, true, paint)
     }
 
@@ -383,7 +383,7 @@ class CircleWatchface : WatchFace() {
         val paint = Paint()
         paint.color = color
         val rectTemp =
-            RectF(PADDING + offset - CIRCLE_WIDTH / 2, PADDING + offset - CIRCLE_WIDTH / 2, displaySize.x - PADDING - offset + CIRCLE_WIDTH / 2, displaySize.y - PADDING - offset + CIRCLE_WIDTH / 2)
+            RectF(PADDING + offset - CIRCLE_WIDTH / 2, PADDING + offset - CIRCLE_WIDTH / 2, displayWidth - PADDING - offset + CIRCLE_WIDTH / 2, displayHeight - PADDING - offset + CIRCLE_WIDTH / 2)
         canvas.drawArc(rectTemp, start + 270, size, true, paint)
     }
 
@@ -394,7 +394,7 @@ class CircleWatchface : WatchFace() {
         paint.color = color
         val offset = 9f
         val rectTemp =
-            RectF(PADDING + offset - CIRCLE_WIDTH / 2, PADDING + offset - CIRCLE_WIDTH / 2, displaySize.x - PADDING - offset + CIRCLE_WIDTH / 2, displaySize.y - PADDING - offset + CIRCLE_WIDTH / 2)
+            RectF(PADDING + offset - CIRCLE_WIDTH / 2, PADDING + offset - CIRCLE_WIDTH / 2, displayWidth - PADDING - offset + CIRCLE_WIDTH / 2, displayHeight - PADDING - offset + CIRCLE_WIDTH / 2)
         canvas.drawArc(rectTemp, convertedBg, 2f, true, paint)
     }
 
@@ -412,7 +412,7 @@ class CircleWatchface : WatchFace() {
         if (sp.getBoolean(R.string.key_dark, true)) {
             color = Color.DKGRAY
         }
-        val offsetMultiplier = (displaySize.x / 2f - PADDING) / 12f
+        val offsetMultiplier = (displayWidth / 2f - PADDING) / 12f
         val offset = max(1.0, ceil((System.currentTimeMillis() - entry.timeStamp) / (1000 * 60 * 5.0))).toFloat()
         val size: Double = bgToAngle(entry.sgv.toFloat()).toDouble()
         addArch(canvas, offset * offsetMultiplier + 10, color, size.toFloat())
@@ -436,7 +436,7 @@ class CircleWatchface : WatchFace() {
             indicatorColor = lowColor
             barColor = darken(lowColor)
         }
-        val offsetMultiplier = (displaySize.x / 2f - PADDING) / 12f
+        val offsetMultiplier = (displayWidth / 2f - PADDING) / 12f
         val offset = max(1.0, ceil((System.currentTimeMillis() - entry.timeStamp) / (1000 * 60 * 5.0))).toFloat()
         val size: Double = bgToAngle(entry.sgv.toFloat()).toDouble()
         addArch(canvas, offset * offsetMultiplier + 11, barColor, size.toFloat() - 2) // Dark Color Bar
