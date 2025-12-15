@@ -202,7 +202,16 @@ abstract class WatchFace : WatchFaceService() {
         return WatchFace(
             watchFaceType = WatchFaceType.DIGITAL,
             renderer = renderer!!
-        )
+        ).setTapListener(object : WatchFace.TapListener {
+            override fun onTapEvent(tapType: Int, tapEvent: androidx.wear.watchface.TapEvent, complicationSlot: androidx.wear.watchface.ComplicationSlot?) {
+                // Ignore complication taps - they're handled by the system
+                if (complicationSlot != null) return
+
+                // Call the abstract onTapCommand method with legacy parameters for backward compatibility
+                // TapEvent provides x, y coordinates and Instant timestamp
+                onTapCommand(tapType, tapEvent.xPos, tapEvent.yPos, tapEvent.tapTime.toEpochMilli())
+            }
+        })
     }
 
     /**
