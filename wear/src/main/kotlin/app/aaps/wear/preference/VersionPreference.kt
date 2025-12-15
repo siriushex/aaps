@@ -1,18 +1,17 @@
-package app.aaps.wear.interaction.utils
+package app.aaps.wear.preference
 
 import android.content.Context
 import android.util.AttributeSet
 import android.widget.Toast
 import app.aaps.wear.BuildConfig
-import preference.WearListPreference
 
 /**
- * Created by adrian on 07/08/17.
+ * Preference for displaying the app version
  */
 @Suppress("unused")
-class VersionPreference(context: Context?, attrs: AttributeSet?) : WearListPreference(context, attrs) {
+class VersionPreference(context: Context, attrs: AttributeSet?) : WearListPreference(context, attrs) {
 
-    override fun getSummary(context: Context): CharSequence {
+    override fun getSummaryText(context: Context): CharSequence {
         return BuildConfig.BUILDVERSION
     }
 
