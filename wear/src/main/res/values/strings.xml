@@ -151,7 +151,6 @@
     <string name="color_name_black">black</string>
     <string name="color_name_multicolor">multicolor</string>
     <string name="pref_simplify_ui">Simplify UI</string>
-    <string name="pref_simplify_ui_sum">Only show time and BG</string>
     <string name="pref_vibrate_hourly">Vibrate hourly</string>
     <string name="pref_show_weeknumber">Show Week number</string>
     <string name="pref_include_external">Include external views in template</string>
