@@ -658,11 +658,15 @@
 
         <activity
             android:name=".interaction.TileConfigurationActivity"
+            android:theme="@style/TileConfigTheme"
             android:exported="true">
             <intent-filter>
                 <action android:name="tile_configuration_activity" />
+                <category android:name="com.google.android.clockwork.tiles.category.PROVIDER_CONFIG" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
                 <action android:name="tile_configuration_tempt" />
-
                 <category android:name="com.google.android.clockwork.tiles.category.PROVIDER_CONFIG" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
