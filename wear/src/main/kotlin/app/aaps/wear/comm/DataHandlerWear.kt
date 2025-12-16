@@ -1,5 +1,7 @@
 package app.aaps.wear.comm
 
+import app.aaps.wear.interaction.actions.WizardResultActivity
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -105,6 +107,39 @@ class DataHandlerWear @Inject constructor(
                         }
                     )
                 })
+            }
+        disposable += rxBus
+            .toObservable(EventData.ActionWizardResult::class.java)
+            .observeOn(aapsSchedulers.io)
+            .subscribe { event ->
+                aapsLogger.debug(LTag.WEAR, "ActionWizardResult received from ${event.sourceNodeId}")
+
+                try {
+                    val resultIntent = Intent(context, WizardResultActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        putExtra("timestamp", event.timestamp)
+                        putExtra("total_insulin", event.totalInsulin)
+                        putExtra("carbs", event.carbs)
+                        putExtra("ic", event.ic)
+                        putExtra("sens", event.sens)
+                        putExtra("insulin_carbs", event.insulinFromCarbs)
+                        putExtra("insulin_bg", event.insulinFromBG ?: Double.NaN)
+                        putExtra("insulin_cob", event.insulinFromCOB ?: Double.NaN)
+                        putExtra("insulin_bolus_iob", event.insulinFromBolusIOB ?: Double.NaN)
+                        putExtra("insulin_basal_iob", event.insulinFromBasalIOB ?: Double.NaN)
+                        putExtra("insulin_trend", event.insulinFromTrend ?: Double.NaN)
+                        putExtra("insulin_superbolus", event.insulinFromSuperBolus ?: Double.NaN)
+                        putExtra("temp_target", event.tempTarget ?: "")
+                        putExtra("percentage", event.percentageCorrection ?: 100)
+                        putExtra("total_before_percentage", event.totalBeforePercentage ?: Double.NaN)
+                        putExtra("cob", event.cob)
+                    }
+
+                    context.startActivity(resultIntent)
+                    aapsLogger.debug(LTag.WEAR, "WizardResultActivity started successfully")
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.WEAR, "Error starting WizardResultActivity", e)
+                }
             }
         disposable += rxBus
             .toObservable(EventData.CancelNotification::class.java)

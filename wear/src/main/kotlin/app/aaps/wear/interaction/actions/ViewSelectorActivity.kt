@@ -100,6 +100,6 @@ open class ViewSelectorActivity : DaggerActivity() {
     }
 
     fun showToast(context: Context?, text: Int) {
-        Toast.makeText(context, getString(text), Toast.LENGTH_LONG).show()
+        Toast.makeText(context, getString(text), Toast.LENGTH_SHORT).show()
     }
 }
