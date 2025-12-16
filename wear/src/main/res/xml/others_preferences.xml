@@ -30,7 +30,7 @@
         app:wear_iconOff="@drawable/settings_off"
         app:wear_iconOn="@drawable/settings_on" />
 
-    <app.aaps.wear.interaction.utils.VersionPreference
+    <app.aaps.wear.preference.VersionPreference
         android:defaultValue="1"
         android:entries="@array/input_design"
         android:entryValues="@array/input_design_values"

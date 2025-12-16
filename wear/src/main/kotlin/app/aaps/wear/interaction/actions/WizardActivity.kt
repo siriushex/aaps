@@ -23,8 +23,8 @@ class WizardActivity : ViewSelectorActivity() {
     var hasPercentage = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setAdapter(MyPagerAdapter())
         hasPercentage = sp.getBoolean(R.string.key_wizard_percentage, false)
+        setAdapter(MyPagerAdapter())
     }
 
     override fun onPause() {

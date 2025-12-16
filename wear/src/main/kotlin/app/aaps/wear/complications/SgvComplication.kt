@@ -3,7 +3,7 @@ package app.aaps.wear.complications
 import android.app.PendingIntent
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
-import androidx.wear.watchface.complications.data.CountDownTimeReference
+import androidx.wear.watchface.complications.data.CountUpTimeReference
 import androidx.wear.watchface.complications.data.PlainComplicationText
 import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import androidx.wear.watchface.complications.data.TimeDifferenceComplicationText
@@ -42,10 +42,9 @@ class SgvComplication : ModernBaseComplicationProviderService() {
 
                 val shortTitle = TimeDifferenceComplicationText.Builder(
                     style = TimeDifferenceStyle.STOPWATCH,
-                    countDownTimeReference = CountDownTimeReference(Instant.ofEpochMilli(bgData.timeStamp))
+                    countUpTimeReference = CountUpTimeReference(Instant.ofEpochMilli(bgData.timeStamp))
                 )
                     .setMinimumTimeUnit(TimeUnit.MINUTES)
-                    .setDisplayAsNow(false)
                     .build()
 
                 ShortTextComplicationData.Builder(

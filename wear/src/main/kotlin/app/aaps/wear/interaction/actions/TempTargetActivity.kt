@@ -25,9 +25,9 @@ class TempTargetActivity : ViewSelectorActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setAdapter(MyPagerAdapter())
         isMGDL = sp.getBoolean(R.string.key_units_mgdl, true)
         isSingleTarget = sp.getBoolean(R.string.key_single_target, true)
+        setAdapter(MyPagerAdapter())
     }
 
     override fun onPause() {
