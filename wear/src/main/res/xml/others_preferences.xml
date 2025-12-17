@@ -17,8 +17,8 @@
         android:entries="@array/heartrate_smoothing"
         android:entryValues="@array/heartrate_smoothing_values"
         android:key="@string/key_heart_rate_smoothing"
-        android:summary="Heart Rate smoothing"
-        android:title="@string/pref_heartRateSmoothing" />
+        android:title="@string/pref_heartRateSmoothing"
+        android:summary="%s" />
 
     <CheckBoxPreference
         android:defaultValue="false"

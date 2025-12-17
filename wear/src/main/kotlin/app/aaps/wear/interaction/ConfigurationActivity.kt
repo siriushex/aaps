@@ -25,6 +25,10 @@ class ConfigurationActivity : WearPreferenceActivity() {
         removeBackgroundRecursively(view)
         view.background = ContextCompat.getDrawable(this, R.drawable.settings_background)
         view.requestFocus()
+
+        // Add padding to the content view for spacing from top and bottom
+        val contentView = findViewById<ViewGroup>(android.R.id.content)
+        contentView?.setPadding(0, 30, 0, 30)
     }
 
     override fun createPreferenceFragment(): PreferenceFragmentCompat {
