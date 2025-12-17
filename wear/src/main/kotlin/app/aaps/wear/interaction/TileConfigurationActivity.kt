@@ -20,12 +20,23 @@ class TileConfigurationActivity : WearPreferenceActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
+
+        // SET configFileName BEFORE calling super.onCreate()
+        configFileName = intent.action
+
+        // Now call super - which will call createPreferenceFragment()
         super.onCreate(savedInstanceState)
         title = "Tile"
-        configFileName = intent.action
 
         val view = window.decorView as ViewGroup
         view.requestFocus()
+
+        // Set background after super.onCreate()
+        window.decorView.setBackgroundResource(app.aaps.wear.R.drawable.tile_config_background)
+
+        // Add padding to the content view for spacing from top and bottom
+        val contentView = findViewById<ViewGroup>(android.R.id.content)
+        contentView?.setPadding(0, 30, 0, 30)
     }
 
     override fun createPreferenceFragment(): PreferenceFragmentCompat {
@@ -33,8 +44,11 @@ class TileConfigurationActivity : WearPreferenceActivity() {
         val resXmlId = when (configFileName) {
             "tile_configuration_activity" -> app.aaps.wear.R.xml.tile_configuration_activity
             "tile_configuration_tempt"    -> app.aaps.wear.R.xml.tile_configuration_tempt
-            else                           -> 0
+            else -> {
+                0
+            }
         }
+
         aapsLogger.debug(LTag.WEAR, "TileConfigurationActivity::createPreferenceFragment --->> getIntent().getAction() $configFileName")
         aapsLogger.debug(LTag.WEAR, "TileConfigurationActivity::createPreferenceFragment --->> resXmlId $resXmlId")
 
@@ -43,20 +57,31 @@ class TileConfigurationActivity : WearPreferenceActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Note that TileService updates are hard limited to once every 20 seconds.
-        when (configFileName) {
+
+        // Determine which tile service to update based on the action
+        val tileServiceClass = when (configFileName) {
             "tile_configuration_activity" -> {
-                aapsLogger.info(LTag.WEAR, "onDestroy a: requestUpdate")
-                TileService.getUpdater(this).requestUpdate(ActionsTileService::class.java)
+                aapsLogger.info(LTag.WEAR, "onDestroy: scheduling ActionsTileService update")
+                ActionsTileService::class.java
             }
-
-            "tile_configuration_tempt"    -> {
-                aapsLogger.info(LTag.WEAR, "onDestroy tt: requestUpdate")
-                TileService.getUpdater(this).requestUpdate(TempTargetTileService::class.java)
+            "tile_configuration_tempt" -> {
+                aapsLogger.info(LTag.WEAR, "onDestroy: scheduling TempTargetTileService update")
+                TempTargetTileService::class.java
             }
+            else -> {
+                aapsLogger.info(LTag.WEAR, "onDestroy: NO tile service available for $configFileName")
+                null
+            }
+        }
 
-            else                           -> {
-                aapsLogger.info(LTag.WEAR, "onDestroy : NO tile service available for $configFileName")
+        // Use applicationContext instead of 'this' to avoid leaking the service connection
+        // Note that TileService updates are hard limited to once every 20 seconds.
+        tileServiceClass?.let { serviceClass ->
+            try {
+                TileService.getUpdater(applicationContext).requestUpdate(serviceClass)
+                aapsLogger.info(LTag.WEAR, "onDestroy: successfully requested tile update")
+            } catch (e: Exception) {
+                aapsLogger.error(LTag.WEAR, "onDestroy: failed to request tile update - ${e.message}", e)
             }
         }
     }
