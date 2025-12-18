@@ -311,5 +311,4 @@
     <string name="expand_calculation_details">Click to expand calculation details</string>
     <string name="wizard_confirmation_sent">Sent</string>
     <string name="tile_settings">Tile settings</string>
-    <string name="watchface_settings">Watchface settings</string>
 </resources>

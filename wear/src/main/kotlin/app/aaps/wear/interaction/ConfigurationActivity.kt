@@ -56,7 +56,7 @@ class ConfigurationActivity : WearPreferenceActivity() {
 
         // Add padding to the content view for spacing from top and bottom
         val contentView = findViewById<ViewGroup>(android.R.id.content)
-        contentView?.setPadding(0, 60, 0, 60)
+        contentView?.setPadding(0, 50, 0, 50)
     }
 
     override fun createPreferenceFragment(): PreferenceFragmentCompat {
