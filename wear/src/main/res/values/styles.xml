@@ -37,4 +37,9 @@
     <style name="TilePreferenceStyle" parent="@style/Preference.Material">
         <item name="android:layout">@layout/tile_preference_item</item>
     </style>
+
+    <!-- Custom preference style that allows text wrapping -->
+    <style name="PreferenceMultiline" parent="@style/Preference.Material">
+        <item name="android:layout">@layout/preference_material_multiline</item>
+    </style>
 </resources>
