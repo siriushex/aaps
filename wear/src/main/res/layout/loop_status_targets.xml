@@ -57,7 +57,7 @@
                 android:text="Temp Target"
                 android:textSize="11sp"
                 android:textStyle="bold"
-                android:textColor="@color/tempTarget" />
+                android:textColor="@color/tempTargetActive" />
 
             <TextView
                 android:id="@+id/temp_target_value"
@@ -65,7 +65,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="13sp"
                 android:textStyle="bold"
-                android:textColor="@color/tempTarget"
+                android:textColor="@color/tempTargetActive"
                 android:text="5.0" />
 
         </LinearLayout>
@@ -83,6 +83,7 @@
 
     <!-- Default Range -->
     <LinearLayout
+        android:id="@+id/default_range_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"

@@ -46,6 +46,7 @@ class LoopStatusActivity : AppCompatActivity() {
     private lateinit var tempTargetDuration: TextView
     private lateinit var defaultRangeValue: TextView
     private lateinit var defaultTargetValue: TextView
+    private lateinit var defaultRangeRow: View
 
     // Loop info section
     private lateinit var loopInfoCard: View
@@ -62,6 +63,8 @@ class LoopStatusActivity : AppCompatActivity() {
     private lateinit var oapsDurationValue: TextView
     private lateinit var oapsReasonLabel: TextView
     private lateinit var oapsReasonText: TextView
+    private lateinit var oapsSmbRow: View
+    private lateinit var oapsSmbValue: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
@@ -109,6 +112,7 @@ class LoopStatusActivity : AppCompatActivity() {
         tempTargetContainer = findViewById(R.id.temp_target_container)
         tempTargetValue = findViewById(R.id.temp_target_value)
         tempTargetDuration = findViewById(R.id.temp_target_duration)
+        defaultRangeRow = findViewById(R.id.default_range_row)
         defaultRangeValue = findViewById(R.id.default_range_value)
         defaultTargetValue = findViewById(R.id.default_target_value)
 
@@ -120,6 +124,8 @@ class LoopStatusActivity : AppCompatActivity() {
 
         // OAPS
         oapsCard = findViewById(R.id.oaps_card)
+        oapsSmbRow = findViewById(R.id.oaps_smb_row)
+        oapsSmbValue = findViewById(R.id.oaps_smb_value)
         oapsStatusText = findViewById(R.id.oaps_status_text)
         oapsRateRow = findViewById(R.id.oaps_rate_row)
         oapsRateValue = findViewById(R.id.oaps_rate_value)
@@ -170,14 +176,21 @@ class LoopStatusActivity : AppCompatActivity() {
     private fun displayTargets(tempTarget: TempTargetInfo?, defaultRange: TargetRange) {
         if (tempTarget != null) {
             tempTargetContainer.visibility = View.VISIBLE
-            tempTargetValue.text = tempTarget.targetDisplay
+            tempTargetValue.text = "${tempTarget.targetDisplay} ${tempTarget.units}"
             tempTargetDuration.text = "${tempTarget.durationMinutes} min (${dateUtil.timeString(tempTarget.endTime)})"
         } else {
             tempTargetContainer.visibility = View.GONE
         }
 
-        defaultRangeValue.text = "${defaultRange.lowDisplay} - ${defaultRange.highDisplay}"
-        defaultTargetValue.text = defaultRange.targetDisplay
+        // Skjul Range-rad hvis low == high
+        if (defaultRange.lowDisplay != defaultRange.highDisplay) {
+            defaultRangeRow.visibility = View.VISIBLE
+            defaultRangeValue.text = "${defaultRange.lowDisplay} - ${defaultRange.highDisplay} ${defaultRange.units}"
+        } else {
+            defaultRangeRow.visibility = View.GONE
+        }
+
+        defaultTargetValue.text = "${defaultRange.targetDisplay} ${defaultRange.units}"
     }
 
     private fun displayLoopInfo(lastRun: Long?, lastEnact: Long?) {
@@ -203,6 +216,14 @@ class LoopStatusActivity : AppCompatActivity() {
     private fun displayOapsResult(result: OapsResultInfo) {
         oapsCard.visibility = View.VISIBLE
 
+        // Vis SMB hvis det finnes og er større enn 0
+        if (result.smbAmount != null && result.smbAmount!! > 0) {
+            oapsSmbRow.visibility = View.VISIBLE
+            oapsSmbValue.text = String.format("%.2f U", result.smbAmount)
+        } else {
+            oapsSmbRow.visibility = View.GONE
+        }
+
         when {
             !result.changeRequested -> {
                 oapsStatusText.text = "No change requested"
@@ -219,6 +240,7 @@ class LoopStatusActivity : AppCompatActivity() {
                 oapsDurationRow.visibility = View.GONE
             }
             else -> {
+                // Normal temp basal adjustment
                 oapsStatusText.visibility = View.GONE
 
                 result.rate?.let { rate ->
@@ -233,6 +255,7 @@ class LoopStatusActivity : AppCompatActivity() {
             }
         }
 
+        // Show reason
         if (result.reason.isNotEmpty()) {
             oapsReasonLabel.visibility = View.VISIBLE
             oapsReasonText.visibility = View.VISIBLE

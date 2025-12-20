@@ -27,14 +27,16 @@ data class LoopStatusData(
 data class TempTargetInfo(
     val targetDisplay: String,
     val endTime: Long,
-    val durationMinutes: Int
+    val durationMinutes: Int,
+    val units: String
 )
 
 @Serializable
 data class TargetRange(
     val lowDisplay: String,
     val highDisplay: String,
-    val targetDisplay: String
+    val targetDisplay: String,
+    val units: String
 )
 
 @Serializable
@@ -44,5 +46,6 @@ data class OapsResultInfo(
     val rate: Double?,
     val ratePercent: Int?,
     val duration: Int?,
-    val reason: String
+    val reason: String,
+    val smbAmount: Double? = null
 )

@@ -449,6 +449,7 @@ class DataHandlerMobile @Inject constructor(
 
         // Build temp target info
         val tempTargetInfo = tempTarget?.let {
+            val units = if (profileUtil.units == GlucoseUnit.MGDL) "mg/dL" else "mmol/L"
             val targetString = profileUtil.toTargetRangeString(
                 it.lowTarget,
                 it.highTarget,
@@ -459,19 +460,22 @@ class DataHandlerMobile @Inject constructor(
             TempTargetInfo(
                 targetDisplay = targetString,
                 endTime = it.end,
-                durationMinutes = durationMin
+                durationMinutes = durationMin,
+                units = units
             )
         }
 
         // Build default range
         val defaultRange = if (profile != null) {
+            val units = if (profileUtil.units == GlucoseUnit.MGDL) "mg/dL" else "mmol/L"
             TargetRange(
                 lowDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetLowMgdl()),
                 highDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetHighMgdl()),
-                targetDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetMgdl())
+                targetDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetMgdl()),
+                units = units  // LEGG TIL
             )
         } else {
-            TargetRange("--", "--", "--")
+            TargetRange("--", "--", "--", "")
         }
 
         // Build OAPS result info
@@ -481,13 +485,25 @@ class DataHandlerMobile @Inject constructor(
                 (it.rate / activePlugin.activePump.baseBasalRate * 100).toInt()
             } else null
 
+            // LEGG TIL LOGGING HER
+            aapsLogger.debug(LTag.WEAR, "OAPS Result - changeRequested: ${it.isChangeRequested}, rate: ${it.rate}, duration: ${it.duration}, baseBasal: ${activePlugin.activePump.baseBasalRate}")
+
+            // Parse SMB from reason
+            val smbAmount = if (it.reason.contains("Microbolusing", ignoreCase = true)) {
+                val regex = Regex("""Microbolusing\s+([\d.]+)U""", RegexOption.IGNORE_CASE)
+                regex.find(it.reason)?.groupValues?.get(1)?.toDoubleOrNull()
+            } else null
+
+            aapsLogger.debug(LTag.WEAR, "SMB parsed: $smbAmount from reason: ${it.reason}")
+
             OapsResultInfo(
                 changeRequested = it.isChangeRequested,
                 isCancelTemp = isCancelTemp,
                 rate = if (it.isChangeRequested && !isCancelTemp) it.rate else null,
                 ratePercent = ratePercent,
                 duration = if (it.isChangeRequested && !isCancelTemp) it.duration else null,
-                reason = it.reason
+                reason = it.reason,
+                smbAmount = smbAmount
             )
         }
 

@@ -42,7 +42,7 @@
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
             android:paddingTop="18dp"
-            android:paddingBottom="36dp">
+            android:paddingBottom="38dp">
 
             <!-- Header -->
             <include layout="@layout/loop_status_header" />
@@ -51,16 +51,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="6dp" />
 
-            <!-- Targets Card -->
-            <include
-                android:id="@+id/targets_card"
-                layout="@layout/loop_status_targets" />
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="6dp" />
-
-            <!-- Loop Info Card -->
+            <!-- Loop Info Card - FØRST -->
             <include
                 android:id="@+id/loop_info_card"
                 layout="@layout/loop_status_loop_info" />
@@ -69,10 +60,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="6dp" />
 
-            <!-- OAPS Card -->
+            <!-- OAPS Card - ANDRE -->
             <include
                 android:id="@+id/oaps_card"
                 layout="@layout/loop_status_oaps" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="6dp" />
+
+            <!-- Targets Card - SIST -->
+            <include
+                android:id="@+id/targets_card"
+                layout="@layout/loop_status_targets" />
 
         </LinearLayout>
     </ScrollView>

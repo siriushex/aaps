@@ -33,6 +33,34 @@
         android:layout_width="match_parent"
         android:layout_height="8dp" />
 
+    <!-- SMB Row - NY! -->
+    <LinearLayout
+        android:id="@+id/oaps_smb_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SMB"
+            android:textSize="11sp"
+            android:textColor="@color/white_70percent" />
+
+        <TextView
+            android:id="@+id/oaps_smb_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textColor="@color/bolus"
+            android:text="0.30 U" />
+
+    </LinearLayout>
+
     <!-- Status Text (for "no change" or "cancel temp") -->
     <TextView
         android:id="@+id/oaps_status_text"
@@ -75,7 +103,6 @@
         android:id="@+id/oaps_duration_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:visibility="gone">

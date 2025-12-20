@@ -207,6 +207,8 @@
     <color name="tempBasal">#FF9800</color>
     <color name="tempTarget">#FF9800</color>
     <color name="tempTargetDisabled">#9E9E9E</color>
+    <color name="tempTargetActive">#f4d700</color>
+    <color name="tempTargetActiveDark">#1Af4d700</color>  <!-- 10% opacity for bakgrunn -->
 
     <!-- Transparency helpers -->
     <color name="white_50percent">#80FFFFFF</color>
