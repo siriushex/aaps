@@ -53,6 +53,10 @@ import app.aaps.core.interfaces.rx.events.EventWearUpdateGui
 import app.aaps.core.interfaces.rx.weardata.CwfMetadataKey
 import app.aaps.core.interfaces.rx.weardata.EventData
 import app.aaps.core.interfaces.rx.weardata.EventData.LoopStatesList.AvailableLoopState
+import app.aaps.core.interfaces.rx.weardata.LoopStatusData
+import app.aaps.core.interfaces.rx.weardata.TempTargetInfo
+import app.aaps.core.interfaces.rx.weardata.TargetRange
+import app.aaps.core.interfaces.rx.weardata.OapsResultInfo
 import app.aaps.core.interfaces.ui.UiInteraction
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
@@ -194,6 +198,22 @@ class DataHandlerMobile @Inject constructor(
                                )
                            )
                        }, fabricPrivacy::logException)
+        disposable += rxBus
+            .toObservable(EventData.ActionLoopStatusDetailed::class.java)
+            .observeOn(aapsSchedulers.io)
+            .subscribe({
+                           aapsLogger.debug(LTag.WEAR, "ActionLoopStatusDetailed received from ${it.sourceNodeId}")
+                           val statusData = buildLoopStatusData()
+                           rxBus.send(
+                               EventMobileToWear(
+                                   EventData.LoopStatusResponse(
+                                       timeStamp = System.currentTimeMillis(),
+                                       data = statusData
+                                   )
+                               )
+                           )
+                       }, fabricPrivacy::logException)
+
         disposable += rxBus
             .toObservable(EventData.LoopStatesRequest::class.java)
             .observeOn(aapsSchedulers.io)
@@ -409,6 +429,79 @@ class DataHandlerMobile @Inject constructor(
                            aapsLogger.debug(LTag.WEAR, "Custom Watch face ${it.customWatchface} received from ${it.sourceNodeId}")
                            handleGetCustomWatchface(it)
                        }, fabricPrivacy::logException)
+    }
+
+    private fun buildLoopStatusData(): LoopStatusData {
+        val tempTarget = persistenceLayer.getTemporaryTargetActiveAt(dateUtil.now())
+        val profile = profileFunction.getProfile()
+        val lastRun = loop.lastRun
+        val usedAPS = activePlugin.activeAPS
+        val result = usedAPS.lastAPSResult
+
+        // Map loop mode
+        val loopMode = when (loop.runningMode) {
+            RM.Mode.CLOSED_LOOP -> LoopStatusData.LoopMode.CLOSED
+            RM.Mode.OPEN_LOOP -> LoopStatusData.LoopMode.OPEN
+            RM.Mode.CLOSED_LOOP_LGS -> LoopStatusData.LoopMode.LGS
+            RM.Mode.DISABLED_LOOP -> LoopStatusData.LoopMode.DISABLED
+            else -> LoopStatusData.LoopMode.UNKNOWN
+        }
+
+        // Build temp target info
+        val tempTargetInfo = tempTarget?.let {
+            val targetString = profileUtil.toTargetRangeString(
+                it.lowTarget,
+                it.highTarget,
+                GlucoseUnit.MGDL
+            )
+            val durationMin = ((it.end - dateUtil.now()) / 60000).toInt()
+
+            TempTargetInfo(
+                targetDisplay = targetString,
+                endTime = it.end,
+                durationMinutes = durationMin
+            )
+        }
+
+        // Build default range
+        val defaultRange = if (profile != null) {
+            TargetRange(
+                lowDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetLowMgdl()),
+                highDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetHighMgdl()),
+                targetDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetMgdl())
+            )
+        } else {
+            TargetRange("--", "--", "--")
+        }
+
+        // Build OAPS result info
+        val oapsResultInfo = result?.let {
+            val isCancelTemp = it.rate == 0.0 && it.duration == 0
+            val ratePercent = if (it.isChangeRequested && !isCancelTemp) {
+                (it.rate / activePlugin.activePump.baseBasalRate * 100).toInt()
+            } else null
+
+            OapsResultInfo(
+                changeRequested = it.isChangeRequested,
+                isCancelTemp = isCancelTemp,
+                rate = if (it.isChangeRequested && !isCancelTemp) it.rate else null,
+                ratePercent = ratePercent,
+                duration = if (it.isChangeRequested && !isCancelTemp) it.duration else null,
+                reason = it.reason
+            )
+        }
+
+        return LoopStatusData(
+            timestamp = System.currentTimeMillis(),
+            loopMode = loopMode,
+            apsName = if (loop.runningMode.isLoopRunning())
+                (usedAPS as PluginBase).name else null,
+            lastRun = lastRun?.lastAPSRun,
+            lastEnact = lastRun?.lastTBREnact?.takeIf { it != 0L },
+            tempTarget = tempTargetInfo,
+            defaultRange = defaultRange,
+            oapsResult = oapsResultInfo
+        )
     }
 
     private fun handleTddStatus() {

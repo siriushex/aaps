@@ -311,4 +311,7 @@
     <string name="expand_calculation_details">Click to expand calculation details</string>
     <string name="wizard_confirmation_sent">Sent</string>
     <string name="tile_settings">Tile settings</string>
+    <string name="loop_status_loading">Loading loop status...</string>
+    <string name="loop_status_error">Failed to load status</string>
+    <string name="loop_status_retry">Retry</string>
 </resources>

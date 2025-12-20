@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/loop_status_card_background"
+    android:padding="10dp">
+
+    <!-- Card Title -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <View
+            android:layout_width="3dp"
+            android:layout_height="16dp"
+            android:background="@color/tempBasal" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="OpenAPS Result"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/tempBasal" />
+
+    </LinearLayout>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="8dp" />
+
+    <!-- Status Text (for "no change" or "cancel temp") -->
+    <TextView
+        android:id="@+id/oaps_status_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        android:text="No change requested" />
+
+    <!-- Rate Row -->
+    <LinearLayout
+        android:id="@+id/oaps_rate_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Rate"
+            android:textSize="11sp"
+            android:textColor="@color/white_70percent" />
+
+        <TextView
+            android:id="@+id/oaps_rate_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/white"
+            android:text="1.25 U/h (125%)" />
+
+    </LinearLayout>
+
+    <!-- Duration Row -->
+    <LinearLayout
+        android:id="@+id/oaps_duration_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Duration"
+            android:textSize="11sp"
+            android:textColor="@color/white_70percent" />
+
+        <TextView
+            android:id="@+id/oaps_duration_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/white"
+            android:text="30 min" />
+
+    </LinearLayout>
+
+    <!-- Reason -->
+    <TextView
+        android:id="@+id/oaps_reason_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Reason:"
+        android:textSize="10sp"
+        android:textStyle="bold"
+        android:textColor="@color/white_70percent"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/oaps_reason_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textSize="11sp"
+        android:lineSpacingMultiplier="1.2"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        android:text="COB: 15g, IOB: 2.5U" />
+
+</LinearLayout>
