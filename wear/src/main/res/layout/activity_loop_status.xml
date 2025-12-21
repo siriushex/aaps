@@ -51,25 +51,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="6dp" />
 
-            <!-- Loop Info Card - FØRST -->
+            <!-- Loop Result Card (merged loop info + oaps) -->
             <include
-                android:id="@+id/loop_info_card"
-                layout="@layout/loop_status_loop_info" />
+                android:id="@+id/loop_result_card"
+                layout="@layout/loop_status_result" />
 
             <Space
                 android:layout_width="match_parent"
                 android:layout_height="6dp" />
 
-            <!-- OAPS Card - ANDRE -->
-            <include
-                android:id="@+id/oaps_card"
-                layout="@layout/loop_status_oaps" />
-
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="6dp" />
-
-            <!-- Targets Card - SIST -->
+            <!-- Targets Card -->
             <include
                 android:id="@+id/targets_card"
                 layout="@layout/loop_status_targets" />

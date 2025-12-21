@@ -2,7 +2,7 @@ package app.aaps.wear.interaction.activities
 
 import android.os.Bundle
 import android.view.View
-import android.widget.ScrollView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -31,47 +31,51 @@ class LoopStatusActivity : AppCompatActivity() {
 
     private val disposable = CompositeDisposable()
 
+    // Main views
     private lateinit var loadingView: ProgressBar
-    private lateinit var contentView: ScrollView
+    private lateinit var contentView: android.widget.ScrollView
     private lateinit var errorView: TextView
 
-    // Header views
+    // Header section
     private lateinit var loopModeText: TextView
     private lateinit var apsNameText: TextView
+
+    // Loop Result section (merged loop info + oaps)
+    private lateinit var loopResultCard: View
+    private lateinit var lastRunEnactCombinedRow: View
+    private lateinit var lastRunEnactCombinedValue: TextView
+    private lateinit var lastRunRow: View
+    private lateinit var lastRunValue: TextView
+    private lateinit var lastEnactRow: View
+    private lateinit var lastEnactValue: TextView
+
+    // OpenAPS result section
+    private lateinit var oapsSmbRow: View
+    private lateinit var oapsSmbValue: TextView
+    private lateinit var oapsStatusText: TextView
+    private lateinit var oapsRateRow: View
+    private lateinit var oapsRateValue: TextView
+    private lateinit var oapsDurationRow: View
+    private lateinit var oapsDurationValue: TextView
+    private lateinit var oapsReasonContainer: View
+    private lateinit var oapsReasonLabel: TextView
+    private lateinit var oapsReasonToggle: TextView
+    private lateinit var oapsReasonText: TextView
+    private var isReasonExpanded = false
 
     // Targets section
     private lateinit var targetsCard: View
     private lateinit var tempTargetContainer: View
     private lateinit var tempTargetValue: TextView
     private lateinit var tempTargetDuration: TextView
+    private lateinit var defaultRangeRow: View
     private lateinit var defaultRangeValue: TextView
     private lateinit var defaultTargetValue: TextView
-    private lateinit var defaultRangeRow: View
-
-    // Loop info section
-    private lateinit var loopInfoCard: View
-    private lateinit var lastRunEnactCombinedRow: View  // NY
-    private lateinit var lastRunEnactCombinedValue: TextView  // NY
-    private lateinit var lastRunRow: View  // NY (tidligere var bare lastRunValue)
-    private lateinit var lastRunValue: TextView
-    private lateinit var lastEnactRow: View
-    private lateinit var lastEnactValue: TextView
-
-    // OAPS section
-    private lateinit var oapsCard: View
-    private lateinit var oapsStatusText: TextView
-    private lateinit var oapsRateRow: View
-    private lateinit var oapsRateValue: TextView
-    private lateinit var oapsDurationRow: View
-    private lateinit var oapsDurationValue: TextView
-    private lateinit var oapsReasonLabel: TextView
-    private lateinit var oapsReasonText: TextView
-    private lateinit var oapsSmbRow: View
-    private lateinit var oapsSmbValue: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         AndroidInjection.inject(this)
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_loop_status)
 
         initViews()
@@ -110,6 +114,35 @@ class LoopStatusActivity : AppCompatActivity() {
         loopModeText = findViewById(R.id.loop_mode_text)
         apsNameText = findViewById(R.id.aps_name_text)
 
+        // Loop Result card
+        loopResultCard = findViewById(R.id.loop_result_card)
+        lastRunEnactCombinedRow = findViewById(R.id.last_run_enact_combined_row)
+        lastRunEnactCombinedValue = findViewById(R.id.last_run_enact_combined_value)
+        lastRunRow = findViewById(R.id.last_run_row)
+        lastRunValue = findViewById(R.id.last_run_value)
+        lastEnactRow = findViewById(R.id.last_enact_row)
+        lastEnactValue = findViewById(R.id.last_enact_value)
+
+        // OpenAPS result
+        oapsSmbRow = findViewById(R.id.oaps_smb_row)
+        oapsSmbValue = findViewById(R.id.oaps_smb_value)
+        oapsStatusText = findViewById(R.id.oaps_status_text)
+        oapsRateRow = findViewById(R.id.oaps_rate_row)
+        oapsRateValue = findViewById(R.id.oaps_rate_value)
+        oapsDurationRow = findViewById(R.id.oaps_duration_row)
+        oapsDurationValue = findViewById(R.id.oaps_duration_value)
+        oapsReasonContainer = findViewById(R.id.oaps_reason_container)
+        oapsReasonLabel = findViewById(R.id.oaps_reason_label)
+        oapsReasonToggle = findViewById(R.id.oaps_reason_toggle)
+        oapsReasonText = findViewById(R.id.oaps_reason_text)
+
+        // Setup click listener for expandable reason
+        oapsReasonContainer.setOnClickListener {
+            isReasonExpanded = !isReasonExpanded
+            oapsReasonText.visibility = if (isReasonExpanded) View.VISIBLE else View.GONE
+            oapsReasonToggle.text = if (isReasonExpanded) "▲" else "▼"
+        }
+
         // Targets
         targetsCard = findViewById(R.id.targets_card)
         tempTargetContainer = findViewById(R.id.temp_target_container)
@@ -118,45 +151,26 @@ class LoopStatusActivity : AppCompatActivity() {
         defaultRangeRow = findViewById(R.id.default_range_row)
         defaultRangeValue = findViewById(R.id.default_range_value)
         defaultTargetValue = findViewById(R.id.default_target_value)
-
-        // Loop info
-        loopInfoCard = findViewById(R.id.loop_info_card)
-        lastRunEnactCombinedRow = findViewById(R.id.last_run_enact_combined_row)  // NY
-        lastRunEnactCombinedValue = findViewById(R.id.last_run_enact_combined_value)  // NY
-        lastRunRow = findViewById(R.id.last_run_row)  // NY
-        lastRunValue = findViewById(R.id.last_run_value)
-        lastEnactRow = findViewById(R.id.last_enact_row)
-        lastEnactValue = findViewById(R.id.last_enact_value)
-
-        // OAPS
-        oapsCard = findViewById(R.id.oaps_card)
-        oapsSmbRow = findViewById(R.id.oaps_smb_row)
-        oapsSmbValue = findViewById(R.id.oaps_smb_value)
-        oapsStatusText = findViewById(R.id.oaps_status_text)
-        oapsRateRow = findViewById(R.id.oaps_rate_row)
-        oapsRateValue = findViewById(R.id.oaps_rate_value)
-        oapsDurationRow = findViewById(R.id.oaps_duration_row)
-        oapsDurationValue = findViewById(R.id.oaps_duration_value)
-        oapsReasonLabel = findViewById(R.id.oaps_reason_label)
-        oapsReasonText = findViewById(R.id.oaps_reason_text)
     }
 
     private fun displayStatus(data: LoopStatusData) {
+        // Hide loading, show content
         loadingView.visibility = View.GONE
         errorView.visibility = View.GONE
         contentView.visibility = View.VISIBLE
 
-        // Header
+        // Display all sections
         displayLoopMode(data.loopMode, data.apsName)
-
-        // Targets
-        displayTargets(data.tempTarget, data.defaultRange)
-
-        // Loop info
         displayLoopInfo(data.lastRun, data.lastEnact)
-
-        // OAPS result
         data.oapsResult?.let { displayOapsResult(it) }
+        displayTargets(data.tempTarget, data.defaultRange)
+    }
+
+    private fun showError(message: String) {
+        loadingView.visibility = View.GONE
+        contentView.visibility = View.GONE
+        errorView.visibility = View.VISIBLE
+        errorView.text = message
     }
 
     private fun displayLoopMode(mode: LoopStatusData.LoopMode, apsName: String?) {
@@ -181,26 +195,6 @@ class LoopStatusActivity : AppCompatActivity() {
         }
     }
 
-    private fun displayTargets(tempTarget: TempTargetInfo?, defaultRange: TargetRange) {
-        if (tempTarget != null) {
-            tempTargetContainer.visibility = View.VISIBLE
-            tempTargetValue.text = "${tempTarget.targetDisplay} ${tempTarget.units}"
-            tempTargetDuration.text = "${tempTarget.durationMinutes} min (${dateUtil.timeString(tempTarget.endTime)})"
-        } else {
-            tempTargetContainer.visibility = View.GONE
-        }
-
-        // Skjul Range-rad hvis low == high
-        if (defaultRange.lowDisplay != defaultRange.highDisplay) {
-            defaultRangeRow.visibility = View.VISIBLE
-            defaultRangeValue.text = "${defaultRange.lowDisplay} - ${defaultRange.highDisplay} ${defaultRange.units}"
-        } else {
-            defaultRangeRow.visibility = View.GONE
-        }
-
-        defaultTargetValue.text = "${defaultRange.targetDisplay} ${defaultRange.units}"
-    }
-
     private fun displayLoopInfo(lastRun: Long?, lastEnact: Long?) {
         if (lastRun != null) {
             val runTimeString = dateUtil.timeString(lastRun)
@@ -211,18 +205,18 @@ class LoopStatusActivity : AppCompatActivity() {
                 val enactTimeString = dateUtil.timeString(lastEnact)
                 val enactAgeMs = System.currentTimeMillis() - lastEnact
 
-                // Sammenlign kun HH:mm del av tidene
+                // Compare only HH:mm part of times
                 if (runTimeString == enactTimeString) {
-                    // VIS KOMBINERT RAD
+                    // Show combined row
                     lastRunEnactCombinedRow.visibility = View.VISIBLE
                     lastRunEnactCombinedValue.text = runTimeString
                     lastRunEnactCombinedValue.setTextColor(runColor)
 
-                    // SKJUL SEPARATE RADER
+                    // Hide separate rows
                     lastRunRow.visibility = View.GONE
                     lastEnactRow.visibility = View.GONE
                 } else {
-                    // VIS SEPARATE RADER
+                    // Show separate rows
                     lastRunEnactCombinedRow.visibility = View.GONE
 
                     lastRunRow.visibility = View.VISIBLE
@@ -234,7 +228,7 @@ class LoopStatusActivity : AppCompatActivity() {
                     lastEnactValue.setTextColor(ContextCompat.getColor(this, getAgeColorRes(enactAgeMs)))
                 }
             } else {
-                // Bare Last Run finnes
+                // Only Last Run exists
                 lastRunEnactCombinedRow.visibility = View.GONE
                 lastEnactRow.visibility = View.GONE
 
@@ -243,7 +237,7 @@ class LoopStatusActivity : AppCompatActivity() {
                 lastRunValue.setTextColor(runColor)
             }
         } else {
-            // Ingen Last Run
+            // No Last Run
             lastRunEnactCombinedRow.visibility = View.GONE
             lastEnactRow.visibility = View.GONE
 
@@ -254,7 +248,7 @@ class LoopStatusActivity : AppCompatActivity() {
     }
 
     private fun displayOapsResult(result: OapsResultInfo) {
-        oapsCard.visibility = View.VISIBLE
+        loopResultCard.visibility = View.VISIBLE
 
         // Show SMB if present
         result.smbAmount?.let { smb ->
@@ -329,30 +323,45 @@ class LoopStatusActivity : AppCompatActivity() {
             }
         }
 
-        // Show reason if available
+        // Show reason if available (collapsed by default)
         if (result.reason.isNotEmpty()) {
-            oapsReasonLabel.visibility = View.VISIBLE
-            oapsReasonText.visibility = View.VISIBLE
+            oapsReasonContainer.visibility = View.VISIBLE
             oapsReasonText.text = result.reason
-        } else {
-            oapsReasonLabel.visibility = View.GONE
+            // Reset to collapsed state
+            isReasonExpanded = false
             oapsReasonText.visibility = View.GONE
+            oapsReasonToggle.text = "▼"
+        } else {
+            oapsReasonContainer.visibility = View.GONE
         }
     }
 
-    private fun showError(message: String) {
-        loadingView.visibility = View.GONE
-        contentView.visibility = View.GONE
-        errorView.visibility = View.VISIBLE
-        errorView.text = message
+    private fun displayTargets(tempTarget: TempTargetInfo?, defaultRange: TargetRange) {
+        if (tempTarget != null) {
+            tempTargetContainer.visibility = View.VISIBLE
+            tempTargetValue.text = "${tempTarget.targetDisplay} ${tempTarget.units}"
+            tempTargetDuration.text = "${tempTarget.durationMinutes} min (${dateUtil.timeString(tempTarget.endTime)})"
+        } else {
+            tempTargetContainer.visibility = View.GONE
+        }
+
+        // Hide Range row if low == high
+        if (defaultRange.lowDisplay != defaultRange.highDisplay) {
+            defaultRangeRow.visibility = View.VISIBLE
+            defaultRangeValue.text = "${defaultRange.lowDisplay} - ${defaultRange.highDisplay} ${defaultRange.units}"
+        } else {
+            defaultRangeRow.visibility = View.GONE
+        }
+
+        defaultTargetValue.text = "${defaultRange.targetDisplay} ${defaultRange.units}"
     }
 
     private fun getAgeColorRes(ageMs: Long): Int {
         val ageMinutes = ageMs / 60000
         return when {
-            ageMinutes < 5 -> R.color.loopClosed  // Green - fresh
-            ageMinutes < 10 -> R.color.tempBasal  // Orange - getting old
-            else -> R.color.loopDisabled           // Red - stale
+            ageMinutes < 5 -> R.color.loopClosed  // Green < 5 min
+            ageMinutes < 10 -> R.color.tempBasal  // Orange < 10 min
+            else -> R.color.loopDisabled          // Red >= 10 min
         }
     }
 }
