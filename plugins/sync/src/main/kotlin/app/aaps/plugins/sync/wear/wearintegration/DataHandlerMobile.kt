@@ -41,6 +41,7 @@ import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.profile.ProfileUtil
 import app.aaps.core.interfaces.pump.DetailedBolusInfo
 import app.aaps.core.interfaces.pump.PumpStatusProvider
+import app.aaps.core.interfaces.pump.PumpSync
 import app.aaps.core.interfaces.pump.defs.determineCorrectBolusStepSize
 import app.aaps.core.interfaces.queue.Callback
 import app.aaps.core.interfaces.queue.CommandQueue
@@ -132,6 +133,7 @@ class DataHandlerMobile @Inject constructor(
 ) {
 
     @Inject lateinit var automation: Automation
+    @Inject lateinit var pumpSync: PumpSync
     private val disposable = CompositeDisposable()
 
     private var lastBolusWizard: BolusWizard? = null
@@ -436,7 +438,6 @@ class DataHandlerMobile @Inject constructor(
         val profile = profileFunction.getProfile()
         val lastRun = loop.lastRun
         val usedAPS = activePlugin.activeAPS
-        val result = usedAPS.lastAPSResult
 
         // Map loop mode
         val loopMode = when (loop.runningMode) {
@@ -444,6 +445,8 @@ class DataHandlerMobile @Inject constructor(
             RM.Mode.OPEN_LOOP -> LoopStatusData.LoopMode.OPEN
             RM.Mode.CLOSED_LOOP_LGS -> LoopStatusData.LoopMode.LGS
             RM.Mode.DISABLED_LOOP -> LoopStatusData.LoopMode.DISABLED
+            RM.Mode.SUSPENDED_BY_USER -> LoopStatusData.LoopMode.SUSPENDED
+            RM.Mode.DISCONNECTED_PUMP -> LoopStatusData.LoopMode.DISCONNECTED
             else -> LoopStatusData.LoopMode.UNKNOWN
         }
 
@@ -472,37 +475,75 @@ class DataHandlerMobile @Inject constructor(
                 lowDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetLowMgdl()),
                 highDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetHighMgdl()),
                 targetDisplay = profileUtil.fromMgdlToStringInUnits(profile.getTargetMgdl()),
-                units = units  // LEGG TIL
+                units = units
             )
         } else {
             TargetRange("--", "--", "--", "")
         }
 
         // Build OAPS result info
-        val oapsResultInfo = result?.let {
-            val isCancelTemp = it.rate == 0.0 && it.duration == 0
-            val ratePercent = if (it.isChangeRequested && !isCancelTemp) {
-                (it.rate / activePlugin.activePump.baseBasalRate * 100).toInt()
-            } else null
+        val oapsResultInfo = lastRun?.constraintsProcessed?.let { result ->
+            val constrainedRate = result.rate
+            val constrainedDuration = result.duration
 
-            // LEGG TIL LOGGING HER
-            aapsLogger.debug(LTag.WEAR, "OAPS Result - changeRequested: ${it.isChangeRequested}, rate: ${it.rate}, duration: ${it.duration}, baseBasal: ${activePlugin.activePump.baseBasalRate}")
+            // Check if this is "let temp basal run" scenario (no change requested)
+            val isLetTempRun = constrainedRate == 0.0 && constrainedDuration == -1
 
-            // Parse SMB from reason
-            val smbAmount = if (it.reason.contains("Microbolusing", ignoreCase = true)) {
+            // Determine what to display
+            val (displayRate, displayDuration, displayPercent) = if (isLetTempRun) {
+                // Get currently running temp basal from pump state
+                val currentTbr = pumpSync.expectedPumpState().temporaryBasal
+
+                if (currentTbr != null && currentTbr.plannedRemainingMinutes > 0) {
+                    // Get rate (convert percent to absolute if needed)
+                    val rate = if (currentTbr.isAbsolute) {
+                        currentTbr.rate
+                    } else {
+                        // Convert percent to absolute using current profile
+                        profile?.let { currentTbr.convertedToAbsolute(System.currentTimeMillis(), it) } ?: 0.0
+                    }
+
+                    val percentValue = if (activePlugin.activePump.baseBasalRate > 0) {
+                        ((rate / activePlugin.activePump.baseBasalRate) * 100).toInt()
+                    } else 0
+
+                    Triple(rate, currentTbr.plannedRemainingMinutes.toInt(), percentValue)
+                } else {
+                    // No active temp basal
+                    Triple(null, null, null)
+                }
+            } else {
+                // Normal case - show the new requested values
+                val percentValue = if (result.usePercent) {
+                    result.percent
+                } else if (activePlugin.activePump.baseBasalRate > 0) {
+                    ((constrainedRate / activePlugin.activePump.baseBasalRate) * 100).toInt()
+                } else null
+
+                Triple(constrainedRate, constrainedDuration, percentValue)
+            }
+
+            val isCancelTemp = displayRate == null || (displayRate == 0.0 && (displayDuration ?: 0) == 0)
+
+            // Debug logging
+            aapsLogger.debug(LTag.WEAR, "OAPS - isLetTempRun: $isLetTempRun, rate: $displayRate, duration: $displayDuration, percent: $displayPercent")
+
+            // Parse SMB
+            val smbAmount = if (result.reason.contains("Microbolusing", ignoreCase = true)) {
                 val regex = Regex("""Microbolusing\s+([\d.]+)U""", RegexOption.IGNORE_CASE)
-                regex.find(it.reason)?.groupValues?.get(1)?.toDoubleOrNull()
+                regex.find(result.reason)?.groupValues?.get(1)?.toDoubleOrNull()?.let { smb ->
+                    if (smb > 0.0) smb else null
+                }
             } else null
-
-            aapsLogger.debug(LTag.WEAR, "SMB parsed: $smbAmount from reason: ${it.reason}")
 
             OapsResultInfo(
-                changeRequested = it.isChangeRequested,
+                changeRequested = result.isChangeRequested && !isLetTempRun,
                 isCancelTemp = isCancelTemp,
-                rate = if (it.isChangeRequested && !isCancelTemp) it.rate else null,
-                ratePercent = ratePercent,
-                duration = if (it.isChangeRequested && !isCancelTemp) it.duration else null,
-                reason = it.reason,
+                isLetTempRun = isLetTempRun,
+                rate = displayRate,
+                ratePercent = displayPercent,
+                duration = displayDuration,
+                reason = result.reason,
                 smbAmount = smbAmount
             )
         }

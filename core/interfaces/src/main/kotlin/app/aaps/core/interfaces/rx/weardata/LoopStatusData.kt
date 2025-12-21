@@ -19,6 +19,8 @@ data class LoopStatusData(
         OPEN,
         LGS,
         DISABLED,
+        SUSPENDED,
+        DISCONNECTED,
         UNKNOWN
     }
 }
@@ -43,6 +45,7 @@ data class TargetRange(
 data class OapsResultInfo(
     val changeRequested: Boolean,
     val isCancelTemp: Boolean,
+    val isLetTempRun: Boolean = false,
     val rate: Double?,
     val ratePercent: Int?,
     val duration: Int?,

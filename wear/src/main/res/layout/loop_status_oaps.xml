@@ -33,7 +33,7 @@
         android:layout_width="match_parent"
         android:layout_height="8dp" />
 
-    <!-- SMB Row - NY! -->
+    <!-- SMB Row -->
     <LinearLayout
         android:id="@+id/oaps_smb_row"
         android:layout_width="match_parent"
@@ -61,7 +61,13 @@
 
     </LinearLayout>
 
-    <!-- Status Text (for "no change" or "cancel temp") -->
+    <!-- Add small space after SMB if visible -->
+    <Space
+        android:id="@+id/oaps_smb_space"
+        android:layout_width="match_parent"
+        android:layout_height="4dp" />
+
+    <!-- Status Text (for "no change", "cancel temp", or "let temp run") -->
     <TextView
         android:id="@+id/oaps_status_text"
         android:layout_width="match_parent"
@@ -70,6 +76,12 @@
         android:textStyle="bold"
         android:visibility="gone"
         android:text="No change requested" />
+
+    <!-- Add small space after status text if visible -->
+    <Space
+        android:id="@+id/oaps_status_space"
+        android:layout_width="match_parent"
+        android:layout_height="4dp" />
 
     <!-- Rate Row -->
     <LinearLayout
@@ -103,6 +115,7 @@
         android:id="@+id/oaps_duration_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:visibility="gone">

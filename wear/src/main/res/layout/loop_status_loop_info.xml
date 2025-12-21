@@ -33,12 +33,41 @@
         android:layout_width="match_parent"
         android:layout_height="8dp" />
 
-    <!-- Last Run -->
+    <!-- Combined Last Run & Enact (når de er like) -->
     <LinearLayout
+        android:id="@+id/last_run_enact_combined_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Last Run &amp; Enact"
+            android:textSize="11sp"
+            android:textColor="@color/white_70percent" />
+
+        <TextView
+            android:id="@+id/last_run_enact_combined_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="@color/loopClosed"
+            android:text="14:25" />
+
+    </LinearLayout>
+
+    <!-- Last Run (separat) -->
+    <LinearLayout
+        android:id="@+id/last_run_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
 
         <TextView
             android:layout_width="0dp"
@@ -58,14 +87,15 @@
 
     </LinearLayout>
 
-    <!-- Last Enact -->
+    <!-- Last Enact (separat) -->
     <LinearLayout
         android:id="@+id/last_enact_row"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:visibility="gone">
 
         <TextView
             android:layout_width="0dp"

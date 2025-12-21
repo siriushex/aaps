@@ -50,6 +50,9 @@ class LoopStatusActivity : AppCompatActivity() {
 
     // Loop info section
     private lateinit var loopInfoCard: View
+    private lateinit var lastRunEnactCombinedRow: View  // NY
+    private lateinit var lastRunEnactCombinedValue: TextView  // NY
+    private lateinit var lastRunRow: View  // NY (tidligere var bare lastRunValue)
     private lateinit var lastRunValue: TextView
     private lateinit var lastEnactRow: View
     private lateinit var lastEnactValue: TextView
@@ -118,6 +121,9 @@ class LoopStatusActivity : AppCompatActivity() {
 
         // Loop info
         loopInfoCard = findViewById(R.id.loop_info_card)
+        lastRunEnactCombinedRow = findViewById(R.id.last_run_enact_combined_row)  // NY
+        lastRunEnactCombinedValue = findViewById(R.id.last_run_enact_combined_value)  // NY
+        lastRunRow = findViewById(R.id.last_run_row)  // NY
         lastRunValue = findViewById(R.id.last_run_value)
         lastEnactRow = findViewById(R.id.last_enact_row)
         lastEnactValue = findViewById(R.id.last_enact_value)
@@ -158,7 +164,9 @@ class LoopStatusActivity : AppCompatActivity() {
             LoopStatusData.LoopMode.CLOSED -> "CLOSED LOOP" to R.color.loopClosed
             LoopStatusData.LoopMode.OPEN -> "OPEN LOOP" to R.color.loopOpen
             LoopStatusData.LoopMode.LGS -> "LGS MODE" to R.color.loopLGS
-            LoopStatusData.LoopMode.DISABLED -> "DISABLED" to R.color.loopDisabled
+            LoopStatusData.LoopMode.DISABLED -> "LOOP DISABLED" to R.color.loopDisabled
+            LoopStatusData.LoopMode.SUSPENDED -> "LOOP SUSPENDED" to R.color.loopSuspended
+            LoopStatusData.LoopMode.DISCONNECTED -> "PUMP DISCONNECTED" to R.color.loopDisconnected
             LoopStatusData.LoopMode.UNKNOWN -> "UNKNOWN" to R.color.loopUnknown
         }
 
@@ -195,36 +203,95 @@ class LoopStatusActivity : AppCompatActivity() {
 
     private fun displayLoopInfo(lastRun: Long?, lastEnact: Long?) {
         if (lastRun != null) {
-            lastRunValue.text = dateUtil.timeString(lastRun)
-            val ageMs = System.currentTimeMillis() - lastRun
-            lastRunValue.setTextColor(ContextCompat.getColor(this, getAgeColorRes(ageMs)))
+            val runTimeString = dateUtil.timeString(lastRun)
+            val runAgeMs = System.currentTimeMillis() - lastRun
+            val runColor = ContextCompat.getColor(this, getAgeColorRes(runAgeMs))
+
+            if (lastEnact != null) {
+                val enactTimeString = dateUtil.timeString(lastEnact)
+                val enactAgeMs = System.currentTimeMillis() - lastEnact
+
+                // Sammenlign kun HH:mm del av tidene
+                if (runTimeString == enactTimeString) {
+                    // VIS KOMBINERT RAD
+                    lastRunEnactCombinedRow.visibility = View.VISIBLE
+                    lastRunEnactCombinedValue.text = runTimeString
+                    lastRunEnactCombinedValue.setTextColor(runColor)
+
+                    // SKJUL SEPARATE RADER
+                    lastRunRow.visibility = View.GONE
+                    lastEnactRow.visibility = View.GONE
+                } else {
+                    // VIS SEPARATE RADER
+                    lastRunEnactCombinedRow.visibility = View.GONE
+
+                    lastRunRow.visibility = View.VISIBLE
+                    lastRunValue.text = runTimeString
+                    lastRunValue.setTextColor(runColor)
+
+                    lastEnactRow.visibility = View.VISIBLE
+                    lastEnactValue.text = enactTimeString
+                    lastEnactValue.setTextColor(ContextCompat.getColor(this, getAgeColorRes(enactAgeMs)))
+                }
+            } else {
+                // Bare Last Run finnes
+                lastRunEnactCombinedRow.visibility = View.GONE
+                lastEnactRow.visibility = View.GONE
+
+                lastRunRow.visibility = View.VISIBLE
+                lastRunValue.text = runTimeString
+                lastRunValue.setTextColor(runColor)
+            }
         } else {
+            // Ingen Last Run
+            lastRunEnactCombinedRow.visibility = View.GONE
+            lastEnactRow.visibility = View.GONE
+
+            lastRunRow.visibility = View.VISIBLE
             lastRunValue.text = "N/A"
             lastRunValue.setTextColor(ContextCompat.getColor(this, R.color.tempTargetDisabled))
-        }
-
-        if (lastEnact != null) {
-            lastEnactRow.visibility = View.VISIBLE
-            lastEnactValue.text = dateUtil.timeString(lastEnact)
-            val ageMs = System.currentTimeMillis() - lastEnact
-            lastEnactValue.setTextColor(ContextCompat.getColor(this, getAgeColorRes(ageMs)))
-        } else {
-            lastEnactRow.visibility = View.GONE
         }
     }
 
     private fun displayOapsResult(result: OapsResultInfo) {
         oapsCard.visibility = View.VISIBLE
 
-        // Vis SMB hvis det finnes og er større enn 0
-        if (result.smbAmount != null && result.smbAmount!! > 0) {
-            oapsSmbRow.visibility = View.VISIBLE
-            oapsSmbValue.text = String.format("%.2f U", result.smbAmount)
-        } else {
+        // Show SMB if present
+        result.smbAmount?.let { smb ->
+            if (smb > 0) {
+                oapsSmbRow.visibility = View.VISIBLE
+                oapsSmbValue.text = String.format("%.2f U", smb)
+            } else {
+                oapsSmbRow.visibility = View.GONE
+            }
+        } ?: run {
             oapsSmbRow.visibility = View.GONE
         }
 
         when {
+            // Case 1: Let current temp basal run
+            result.isLetTempRun -> {
+                oapsStatusText.text = "Let current temp basal run"
+                oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.loopClosed))
+                oapsStatusText.visibility = View.VISIBLE
+
+                // Show current TBR details
+                result.rate?.let { rate ->
+                    oapsRateRow.visibility = View.VISIBLE
+                    oapsRateValue.text = String.format("%.2f U/h (%d%%)", rate, result.ratePercent ?: 0)
+                } ?: run {
+                    oapsRateRow.visibility = View.GONE
+                }
+
+                result.duration?.let { duration ->
+                    oapsDurationRow.visibility = View.VISIBLE
+                    oapsDurationValue.text = "$duration min remaining"
+                } ?: run {
+                    oapsDurationRow.visibility = View.GONE
+                }
+            }
+
+            // Case 2: No change requested
             !result.changeRequested -> {
                 oapsStatusText.text = "No change requested"
                 oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.loopClosed))
@@ -232,6 +299,8 @@ class LoopStatusActivity : AppCompatActivity() {
                 oapsRateRow.visibility = View.GONE
                 oapsDurationRow.visibility = View.GONE
             }
+
+            // Case 3: Cancel temp basal
             result.isCancelTemp -> {
                 oapsStatusText.text = "Cancel temp basal"
                 oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.tempBasal))
@@ -239,23 +308,28 @@ class LoopStatusActivity : AppCompatActivity() {
                 oapsRateRow.visibility = View.GONE
                 oapsDurationRow.visibility = View.GONE
             }
+
+            // Case 4: New temp basal requested
             else -> {
-                // Normal temp basal adjustment
                 oapsStatusText.visibility = View.GONE
 
                 result.rate?.let { rate ->
                     oapsRateRow.visibility = View.VISIBLE
                     oapsRateValue.text = String.format("%.2f U/h (%d%%)", rate, result.ratePercent ?: 0)
+                } ?: run {
+                    oapsRateRow.visibility = View.GONE
                 }
 
                 result.duration?.let { duration ->
                     oapsDurationRow.visibility = View.VISIBLE
                     oapsDurationValue.text = "$duration min"
+                } ?: run {
+                    oapsDurationRow.visibility = View.GONE
                 }
             }
         }
 
-        // Show reason
+        // Show reason if available
         if (result.reason.isNotEmpty()) {
             oapsReasonLabel.visibility = View.VISIBLE
             oapsReasonText.visibility = View.VISIBLE
