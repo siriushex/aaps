@@ -78,12 +78,12 @@ sealed class EventData : Event() {
 
     @Serializable
     data class ActionLoopStatusDetailed(
-        val timeStamp: Long  // Bruk timeStamp i stedet for timestamp
+        val timeStamp: Long
     ) : EventData()
 
     @Serializable
     data class LoopStatusResponse(
-        val timeStamp: Long,  // Bruk timeStamp i stedet for timestamp
+        val timeStamp: Long,
         val data: LoopStatusData
     ) : EventData()
 
