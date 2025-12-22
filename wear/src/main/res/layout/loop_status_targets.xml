@@ -22,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="Targets"
+            android:text="@string/loop_status_targets"
             android:textSize="13sp"
             android:textStyle="bold"
             android:textColor="@color/iob" />
@@ -54,7 +54,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Temp Target"
+                android:text="@string/loop_status_temp_target"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 android:textColor="@color/tempTargetActive" />
@@ -75,7 +75,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
-            android:textSize="10sp"
+            android:textSize="11sp"
             android:textColor="@color/white_50percent"
             android:text="30 min (14:30)" />
 
@@ -93,7 +93,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Range"
+            android:text="@string/loop_status_target_range"
             android:textSize="11sp"
             android:textColor="@color/white_70percent" />
 
@@ -122,7 +122,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Target"
+            android:text="@string/loop_status_target"
             android:textSize="11sp"
             android:textColor="@color/white_70percent" />
 

@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:background="@drawable/loop_status_card_background"
-    android:padding="12dp">
+    android:padding="10dp">
 
     <TextView
         android:id="@+id/loop_mode_text"

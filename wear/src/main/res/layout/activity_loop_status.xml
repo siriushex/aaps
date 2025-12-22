@@ -41,7 +41,7 @@
             android:orientation="vertical"
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
-            android:paddingTop="18dp"
+            android:paddingTop="10dp"
             android:paddingBottom="38dp">
 
             <!-- Header -->
@@ -51,7 +51,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="6dp" />
 
-            <!-- Loop Result Card (merged loop info + oaps) -->
+            <!-- Loop Result Card -->
             <include
                 android:id="@+id/loop_result_card"
                 layout="@layout/loop_status_result" />

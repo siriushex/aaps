@@ -2,7 +2,6 @@ package app.aaps.wear.interaction.activities
 
 import android.os.Bundle
 import android.view.View
-import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -80,11 +79,7 @@ class LoopStatusActivity : AppCompatActivity() {
 
         initViews()
 
-        // Request detailed status from phone
-        aapsLogger.debug(LTag.WEAR, "Requesting detailed loop status")
-        rxBus.send(EventWearToMobile(EventData.ActionLoopStatusDetailed(System.currentTimeMillis())))
-
-        // Listen for response
+        // Subscribe to responses
         disposable += rxBus
             .toObservable(EventData.LoopStatusResponse::class.java)
             .subscribe({ event ->
@@ -95,14 +90,31 @@ class LoopStatusActivity : AppCompatActivity() {
                        }, { error ->
                            aapsLogger.error(LTag.WEAR, "Error receiving loop status", error)
                            runOnUiThread {
-                               showError("Failed to load status")
+                               showError(getString(R.string.loop_status_error)  )
                            }
                        })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Always request fresh data when activity comes to foreground
+        requestLoopStatus()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         disposable.clear()
+    }
+
+    private fun requestLoopStatus() {
+        // Show loading state
+        loadingView.visibility = View.VISIBLE
+        contentView.visibility = View.GONE
+        errorView.visibility = View.GONE
+
+        // Request detailed status from phone
+        aapsLogger.debug(LTag.WEAR, "Requesting detailed loop status")
+        rxBus.send(EventWearToMobile(EventData.ActionLoopStatusDetailed(System.currentTimeMillis())))
     }
 
     private fun initViews() {
@@ -175,13 +187,13 @@ class LoopStatusActivity : AppCompatActivity() {
 
     private fun displayLoopMode(mode: LoopStatusData.LoopMode, apsName: String?) {
         val (text, colorRes) = when (mode) {
-            LoopStatusData.LoopMode.CLOSED -> "CLOSED LOOP" to R.color.loopClosed
-            LoopStatusData.LoopMode.OPEN -> "OPEN LOOP" to R.color.loopOpen
-            LoopStatusData.LoopMode.LGS -> "LGS MODE" to R.color.loopLGS
-            LoopStatusData.LoopMode.DISABLED -> "LOOP DISABLED" to R.color.loopDisabled
-            LoopStatusData.LoopMode.SUSPENDED -> "LOOP SUSPENDED" to R.color.loopSuspended
-            LoopStatusData.LoopMode.DISCONNECTED -> "PUMP DISCONNECTED" to R.color.loopDisconnected
-            LoopStatusData.LoopMode.UNKNOWN -> "UNKNOWN" to R.color.loopUnknown
+            LoopStatusData.LoopMode.CLOSED -> getString(R.string.loop_status_closed).uppercase() to R.color.loopClosed
+            LoopStatusData.LoopMode.OPEN -> getString(R.string.loop_status_open).uppercase() to R.color.loopOpen
+            LoopStatusData.LoopMode.LGS -> getString(R.string.loop_status_lgs).uppercase() to R.color.loopLGS
+            LoopStatusData.LoopMode.DISABLED -> getString(R.string.loop_status_disabled).uppercase() to R.color.loopDisabled
+            LoopStatusData.LoopMode.SUSPENDED -> getString(R.string.loop_status_suspended).uppercase() to R.color.loopSuspended
+            LoopStatusData.LoopMode.DISCONNECTED -> getString(R.string.loop_status_disconnected).uppercase() to R.color.loopDisconnected
+            LoopStatusData.LoopMode.UNKNOWN -> getString(R.string.loop_status_unknown).uppercase() to R.color.loopUnknown
         }
 
         loopModeText.text = text
@@ -242,7 +254,7 @@ class LoopStatusActivity : AppCompatActivity() {
             lastEnactRow.visibility = View.GONE
 
             lastRunRow.visibility = View.VISIBLE
-            lastRunValue.text = "N/A"
+            lastRunValue.text = getString(R.string.loop_status_no_last_run)
             lastRunValue.setTextColor(ContextCompat.getColor(this, R.color.tempTargetDisabled))
         }
     }
@@ -254,7 +266,7 @@ class LoopStatusActivity : AppCompatActivity() {
         result.smbAmount?.let { smb ->
             if (smb > 0) {
                 oapsSmbRow.visibility = View.VISIBLE
-                oapsSmbValue.text = String.format("%.2f U", smb)
+                oapsSmbValue.text = getString(R.string.loop_status_smb, smb)
             } else {
                 oapsSmbRow.visibility = View.GONE
             }
@@ -265,21 +277,21 @@ class LoopStatusActivity : AppCompatActivity() {
         when {
             // Case 1: Let current temp basal run
             result.isLetTempRun -> {
-                oapsStatusText.text = "Let current temp basal run"
+                oapsStatusText.text = getString(R.string.loop_status_tbr_let_temp)
                 oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.loopClosed))
                 oapsStatusText.visibility = View.VISIBLE
 
                 // Show current TBR details
                 result.rate?.let { rate ->
                     oapsRateRow.visibility = View.VISIBLE
-                    oapsRateValue.text = String.format("%.2f U/h (%d%%)", rate, result.ratePercent ?: 0)
+                    oapsRateValue.text = getString(R.string.loop_status_tbr_rate, rate, result.ratePercent ?: 0)
                 } ?: run {
-                    oapsRateRow.visibility = View.GONE
+                    oapsRateRow.visibility = View.GONE  // Only hide if rate is null, not if it's 0.0
                 }
 
                 result.duration?.let { duration ->
                     oapsDurationRow.visibility = View.VISIBLE
-                    oapsDurationValue.text = "$duration min remaining"
+                    oapsDurationValue.text = getString(R.string.loop_status_tbr_duration_remaining, duration)
                 } ?: run {
                     oapsDurationRow.visibility = View.GONE
                 }
@@ -287,7 +299,7 @@ class LoopStatusActivity : AppCompatActivity() {
 
             // Case 2: No change requested
             !result.changeRequested -> {
-                oapsStatusText.text = "No change requested"
+                oapsStatusText.text = getString(R.string.loop_status_tbr_no_change)
                 oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.loopClosed))
                 oapsStatusText.visibility = View.VISIBLE
                 oapsRateRow.visibility = View.GONE
@@ -296,7 +308,7 @@ class LoopStatusActivity : AppCompatActivity() {
 
             // Case 3: Cancel temp basal
             result.isCancelTemp -> {
-                oapsStatusText.text = "Cancel temp basal"
+                oapsStatusText.text = getString(R.string.loop_status_tbr_cancel)
                 oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.tempBasal))
                 oapsStatusText.visibility = View.VISIBLE
                 oapsRateRow.visibility = View.GONE
@@ -309,14 +321,14 @@ class LoopStatusActivity : AppCompatActivity() {
 
                 result.rate?.let { rate ->
                     oapsRateRow.visibility = View.VISIBLE
-                    oapsRateValue.text = String.format("%.2f U/h (%d%%)", rate, result.ratePercent ?: 0)
+                    oapsRateValue.text = getString(R.string.loop_status_tbr_rate, rate, result.ratePercent ?: 0)
                 } ?: run {
                     oapsRateRow.visibility = View.GONE
                 }
 
                 result.duration?.let { duration ->
                     oapsDurationRow.visibility = View.VISIBLE
-                    oapsDurationValue.text = "$duration min"
+                    oapsDurationValue.text = getString(R.string.loop_status_tbr_duration, duration)
                 } ?: run {
                     oapsDurationRow.visibility = View.GONE
                 }
@@ -340,7 +352,7 @@ class LoopStatusActivity : AppCompatActivity() {
         if (tempTarget != null) {
             tempTargetContainer.visibility = View.VISIBLE
             tempTargetValue.text = "${tempTarget.targetDisplay} ${tempTarget.units}"
-            tempTargetDuration.text = "${tempTarget.durationMinutes} min (${dateUtil.timeString(tempTarget.endTime)})"
+            tempTargetDuration.text = getString(R.string.loop_status_tempt_duration, tempTarget.durationMinutes, dateUtil.timeString(tempTarget.endTime))
         } else {
             tempTargetContainer.visibility = View.GONE
         }

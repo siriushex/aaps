@@ -22,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="Loop Result"
+            android:text="@string/loop_status_result"
             android:textSize="13sp"
             android:textStyle="bold"
             android:textColor="@color/tempBasal" />
@@ -48,7 +48,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Last Run &amp; Enact"
+            android:text="@string/loop_status_last_run_enact"
             android:textSize="11sp"
             android:textColor="@color/white_70percent" />
 
@@ -75,7 +75,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Last Run"
+            android:text="@string/loop_status_last_run"
             android:textSize="11sp"
             android:textColor="@color/white_70percent" />
 
@@ -103,7 +103,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Last Enact"
+            android:text="@string/loop_status_last_enact"
             android:textSize="11sp"
             android:textColor="@color/white_70percent" />
 
@@ -140,7 +140,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="SMB"
+            android:text="@string/loop_status_smb_text"
             android:textSize="11sp"
             android:textColor="@color/white_70percent" />
 
@@ -165,9 +165,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="12sp"
-        android:textStyle="bold"
         android:visibility="gone"
-        android:text="No change requested" />
+        android:text="@string/loop_status_tbr_no_change" />
 
     <Space
         android:id="@+id/oaps_status_space"
@@ -187,7 +186,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Rate"
+            android:text="@string/loop_status_rate"
             android:textSize="11sp"
             android:textColor="@color/white_70percent" />
 
@@ -215,7 +214,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Duration"
+            android:text="@string/loop_status_duration"
             android:textSize="11sp"
             android:textColor="@color/white_70percent" />
 
@@ -257,7 +256,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="OpenAPS Reason"
+                android:text="@string/loop_status_oaps_reason"
                 android:textSize="11sp"
                 android:textStyle="bold"
                 android:textColor="@color/white_70percent" />

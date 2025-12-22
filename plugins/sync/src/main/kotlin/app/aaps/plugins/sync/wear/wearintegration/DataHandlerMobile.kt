@@ -495,12 +495,17 @@ class DataHandlerMobile @Inject constructor(
                 val currentTbr = pumpSync.expectedPumpState().temporaryBasal
 
                 if (currentTbr != null && currentTbr.plannedRemainingMinutes > 0) {
-                    // Get rate (convert percent to absolute if needed)
-                    val rate = if (currentTbr.isAbsolute) {
-                        currentTbr.rate
+                    // Debug: se hva vi faktisk får
+                    aapsLogger.debug(LTag.WEAR, "OAPS Current TBR - isAbsolute: ${currentTbr.isAbsolute}, rate: ${currentTbr.rate}, baseBasal: ${activePlugin.activePump.baseBasalRate}")
+
+                    // Get actual absolute rate (handles both absolute and percent TBRs)
+                    val rate = if (profile != null) {
+                        val absoluteRate = currentTbr.convertedToAbsolute(System.currentTimeMillis(), profile)
+                        aapsLogger.debug(LTag.WEAR, "OAPS Converted to absolute: $absoluteRate")
+                        absoluteRate
                     } else {
-                        // Convert percent to absolute using current profile
-                        profile?.let { currentTbr.convertedToAbsolute(System.currentTimeMillis(), it) } ?: 0.0
+                        aapsLogger.debug(LTag.WEAR, "OAPS No profile, using raw rate: ${currentTbr.rate}")
+                        currentTbr.rate
                     }
 
                     val percentValue = if (activePlugin.activePump.baseBasalRate > 0) {
@@ -509,6 +514,7 @@ class DataHandlerMobile @Inject constructor(
 
                     Triple(rate, currentTbr.plannedRemainingMinutes.toInt(), percentValue)
                 } else {
+                    aapsLogger.debug(LTag.WEAR, "OAPS No active TBR or remaining time = 0")
                     // No active temp basal
                     Triple(null, null, null)
                 }
@@ -523,18 +529,12 @@ class DataHandlerMobile @Inject constructor(
                 Triple(constrainedRate, constrainedDuration, percentValue)
             }
 
-            val isCancelTemp = displayRate == null || (displayRate == 0.0 && (displayDuration ?: 0) == 0)
+            // Cancel temp is when both rate AND duration are 0
+            // Don't confuse with 0.0 U/h TBR that has duration > 0
+            val isCancelTemp = displayRate == 0.0 && displayDuration == 0
 
             // Debug logging
             aapsLogger.debug(LTag.WEAR, "OAPS - isLetTempRun: $isLetTempRun, rate: $displayRate, duration: $displayDuration, percent: $displayPercent")
-
-            // Parse SMB
-            val smbAmount = if (result.reason.contains("Microbolusing", ignoreCase = true)) {
-                val regex = Regex("""Microbolusing\s+([\d.]+)U""", RegexOption.IGNORE_CASE)
-                regex.find(result.reason)?.groupValues?.get(1)?.toDoubleOrNull()?.let { smb ->
-                    if (smb > 0.0) smb else null
-                }
-            } else null
 
             OapsResultInfo(
                 changeRequested = result.isChangeRequested && !isLetTempRun,
@@ -544,7 +544,7 @@ class DataHandlerMobile @Inject constructor(
                 ratePercent = displayPercent,
                 duration = displayDuration,
                 reason = result.reason,
-                smbAmount = smbAmount
+                smbAmount = result.smb
             )
         }
 
