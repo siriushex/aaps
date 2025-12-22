@@ -491,31 +491,32 @@ class DataHandlerMobile @Inject constructor(
 
             // Determine what to display
             val (displayRate, displayDuration, displayPercent) = if (isLetTempRun) {
-                // Get currently running temp basal from pump state
-                val currentTbr = pumpSync.expectedPumpState().temporaryBasal
+                // Get currently running temp basal from database
+                val currentTbr = persistenceLayer.getTemporaryBasalActiveAt(dateUtil.now())
 
-                if (currentTbr != null && currentTbr.plannedRemainingMinutes > 0) {
-                    // Debug: se hva vi faktisk får
-                    aapsLogger.debug(LTag.WEAR, "OAPS Current TBR - isAbsolute: ${currentTbr.isAbsolute}, rate: ${currentTbr.rate}, baseBasal: ${activePlugin.activePump.baseBasalRate}")
-
-                    // Get actual absolute rate (handles both absolute and percent TBRs)
-                    val rate = if (profile != null) {
-                        val absoluteRate = currentTbr.convertedToAbsolute(System.currentTimeMillis(), profile)
-                        aapsLogger.debug(LTag.WEAR, "OAPS Converted to absolute: $absoluteRate")
-                        absoluteRate
+                if (currentTbr != null) {
+                    // Calculate absolute rate
+                    val rate = if (currentTbr.isAbsolute && profile != null) {
+                        currentTbr.rate
+                    } else if (profile != null) {
+                        // Percent-based TBR - convert to absolute
+                        profile.getBasal(dateUtil.now()) * currentTbr.rate / 100.0
                     } else {
-                        aapsLogger.debug(LTag.WEAR, "OAPS No profile, using raw rate: ${currentTbr.rate}")
                         currentTbr.rate
                     }
+
+                    // Calculate remaining duration
+                    val remainingMin = ((currentTbr.end - dateUtil.now()) / 60000).toInt()
 
                     val percentValue = if (activePlugin.activePump.baseBasalRate > 0) {
                         ((rate / activePlugin.activePump.baseBasalRate) * 100).toInt()
                     } else 0
 
-                    Triple(rate, currentTbr.plannedRemainingMinutes.toInt(), percentValue)
+                    aapsLogger.debug(LTag.WEAR, "Let temp run - rate: $rate U/h ($percentValue%), remaining: $remainingMin min")
+
+                    Triple(rate, remainingMin, percentValue)
                 } else {
-                    aapsLogger.debug(LTag.WEAR, "OAPS No active TBR or remaining time = 0")
-                    // No active temp basal
+                    aapsLogger.debug(LTag.WEAR, "Let temp run requested but no active TBR found")
                     Triple(null, null, null)
                 }
             } else {
@@ -532,9 +533,6 @@ class DataHandlerMobile @Inject constructor(
             // Cancel temp is when both rate AND duration are 0
             // Don't confuse with 0.0 U/h TBR that has duration > 0
             val isCancelTemp = displayRate == 0.0 && displayDuration == 0
-
-            // Debug logging
-            aapsLogger.debug(LTag.WEAR, "OAPS - isLetTempRun: $isLetTempRun, rate: $displayRate, duration: $displayDuration, percent: $displayPercent")
 
             OapsResultInfo(
                 changeRequested = result.isChangeRequested && !isLetTempRun,
