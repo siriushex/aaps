@@ -303,7 +303,7 @@ class LoopStatusActivity : AppCompatActivity() {
         when {
             // Case 1: Let current temp basal run
             result.isLetTempRun -> {
-                oapsStatusText.text = getString(R.string.loop_status_tbr_let_temp)
+                oapsStatusText.text = getString(R.string.loop_status_tbr_continues)
                 oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.loopClosed))
                 oapsStatusText.visibility = View.VISIBLE
 
@@ -397,7 +397,7 @@ class LoopStatusActivity : AppCompatActivity() {
     private fun getAgeColorRes(ageMs: Long): Int {
         val ageMinutes = ageMs / 60000
         return when {
-            ageMinutes < 5 -> R.color.loopClosed  // Green < 5 min
+            ageMinutes < 4 -> R.color.loopClosed  // Green < 4 min
             ageMinutes < 10 -> R.color.tempBasal  // Orange < 10 min
             else -> R.color.loopDisabled          // Red >= 10 min
         }

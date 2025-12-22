@@ -318,7 +318,7 @@
     <string name="loop_status_tbr_cancel">Cancel temp basal</string>
     <string name="loop_status_tbr_no_change">No change requested</string>
     <string name="loop_status_tbr_duration_remaining">%1$d min remaining</string>
-    <string name="loop_status_tbr_let_temp">Let current temp basal run</string>
+    <string name="loop_status_tbr_continues">Temp basal continues</string>
     <string name="loop_status_smb">%1$.2f U</string>
     <string name="loop_status_no_last_run">N/A</string>
     <string name="loop_status_closed">Closed loop</string>
