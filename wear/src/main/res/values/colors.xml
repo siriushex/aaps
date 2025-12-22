@@ -206,6 +206,7 @@
     <color name="loopDisabled">#FF1313</color>
     <color name="loopDisconnected">#939393</color>
     <color name="loopUnknown">#9E9E9E</color>
+    <color name="loopSuperbolus">#FFAE01</color>
     <color name="tempBasal">#FF9800</color>
     <color name="tempTargetDisabled">#9E9E9E</color>
     <color name="tempTargetActive">#f4d700</color>

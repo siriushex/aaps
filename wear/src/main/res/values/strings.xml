@@ -327,6 +327,7 @@
     <string name="loop_status_disabled">Loop disabled</string>
     <string name="loop_status_suspended">Loop suspended</string>
     <string name="loop_status_disconnected">Pump disconnected</string>
+    <string name="loop_status_superbolus">Superbolus</string>
     <string name="loop_status_unknown">Unknown</string>
     <string name="loop_status_result">Loop Result</string>
     <string name="loop_status_last_run_enact">Last Run &amp; Enact</string>

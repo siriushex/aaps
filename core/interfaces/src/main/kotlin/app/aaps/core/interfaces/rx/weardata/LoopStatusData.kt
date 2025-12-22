@@ -21,6 +21,7 @@ data class LoopStatusData(
         DISABLED,
         SUSPENDED,
         DISCONNECTED,
+        SUPERBOLUS,
         UNKNOWN
     }
 }

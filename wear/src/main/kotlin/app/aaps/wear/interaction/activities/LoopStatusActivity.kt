@@ -193,6 +193,7 @@ class LoopStatusActivity : AppCompatActivity() {
             LoopStatusData.LoopMode.DISABLED -> getString(R.string.loop_status_disabled).uppercase() to R.color.loopDisabled
             LoopStatusData.LoopMode.SUSPENDED -> getString(R.string.loop_status_suspended).uppercase() to R.color.loopSuspended
             LoopStatusData.LoopMode.DISCONNECTED -> getString(R.string.loop_status_disconnected).uppercase() to R.color.loopDisconnected
+            LoopStatusData.LoopMode.SUPERBOLUS -> getString(R.string.loop_status_superbolus).uppercase() to R.color.loopSuperbolus
             LoopStatusData.LoopMode.UNKNOWN -> getString(R.string.loop_status_unknown).uppercase() to R.color.loopUnknown
         }
 

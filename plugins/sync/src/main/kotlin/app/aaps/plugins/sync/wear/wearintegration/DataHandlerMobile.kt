@@ -133,7 +133,6 @@ class DataHandlerMobile @Inject constructor(
 ) {
 
     @Inject lateinit var automation: Automation
-    @Inject lateinit var pumpSync: PumpSync
     private val disposable = CompositeDisposable()
 
     private var lastBolusWizard: BolusWizard? = null
@@ -447,6 +446,7 @@ class DataHandlerMobile @Inject constructor(
             RM.Mode.DISABLED_LOOP -> LoopStatusData.LoopMode.DISABLED
             RM.Mode.SUSPENDED_BY_USER -> LoopStatusData.LoopMode.SUSPENDED
             RM.Mode.DISCONNECTED_PUMP -> LoopStatusData.LoopMode.DISCONNECTED
+            RM.Mode.SUPER_BOLUS -> LoopStatusData.LoopMode.SUPERBOLUS
             else -> LoopStatusData.LoopMode.UNKNOWN
         }
 
