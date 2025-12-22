@@ -3,9 +3,11 @@ package app.aaps.wear.interaction.activities
 import android.os.Bundle
 import android.view.View
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.rx.bus.RxBus
@@ -32,8 +34,9 @@ class LoopStatusActivity : AppCompatActivity() {
 
     // Main views
     private lateinit var loadingView: ProgressBar
-    private lateinit var contentView: android.widget.ScrollView
+    private lateinit var contentView: ScrollView
     private lateinit var errorView: TextView
+    private lateinit var swipeRefresh: SwipeRefreshLayout
 
     // Header section
     private lateinit var loopModeText: TextView
@@ -107,9 +110,11 @@ class LoopStatusActivity : AppCompatActivity() {
     }
 
     private fun requestLoopStatus() {
-        // Show loading state
-        loadingView.visibility = View.VISIBLE
-        contentView.visibility = View.GONE
+        // Show loading state (but not the loading view if we're refreshing)
+        if (contentView.visibility != View.VISIBLE) {
+            loadingView.visibility = View.VISIBLE
+            swipeRefresh.visibility = View.GONE
+        }
         errorView.visibility = View.GONE
 
         // Request detailed status from phone
@@ -119,8 +124,26 @@ class LoopStatusActivity : AppCompatActivity() {
 
     private fun initViews() {
         loadingView = findViewById(R.id.loading_progress)
+        swipeRefresh = findViewById(R.id.swipe_refresh)
         contentView = findViewById(R.id.content_container)
         errorView = findViewById(R.id.error_text)
+
+        // Setup swipe refresh
+        swipeRefresh.setOnRefreshListener {
+            requestLoopStatus()
+        }
+
+        // Set background to transparent/black
+        swipeRefresh.setProgressBackgroundColorSchemeColor(
+            ContextCompat.getColor(this, R.color.black)
+        )
+
+        // Set spinner colors (can use multiple colors for animation)
+        swipeRefresh.setColorSchemeColors(
+            ContextCompat.getColor(this, R.color.loopClosed),
+            ContextCompat.getColor(this, R.color.loopOpen),
+            ContextCompat.getColor(this, R.color.tempBasal)
+        )
 
         // Header
         loopModeText = findViewById(R.id.loop_mode_text)
@@ -169,7 +192,8 @@ class LoopStatusActivity : AppCompatActivity() {
         // Hide loading, show content
         loadingView.visibility = View.GONE
         errorView.visibility = View.GONE
-        contentView.visibility = View.VISIBLE
+        swipeRefresh.visibility = View.VISIBLE
+        swipeRefresh.isRefreshing = false  // Stop the refresh animation
 
         // Display all sections
         displayLoopMode(data.loopMode, data.apsName)
@@ -180,7 +204,8 @@ class LoopStatusActivity : AppCompatActivity() {
 
     private fun showError(message: String) {
         loadingView.visibility = View.GONE
-        contentView.visibility = View.GONE
+        swipeRefresh.visibility = View.GONE
+        swipeRefresh.isRefreshing = false  // Stop the refresh animation
         errorView.visibility = View.VISIBLE
         errorView.text = message
     }

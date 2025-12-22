@@ -334,7 +334,7 @@
     <string name="loop_status_last_run">Last Run</string>
     <string name="loop_status_last_enact">Last Enact</string>
     <string name="loop_status_smb_text">SMB</string>
-    <string name="loop_status_rate">Rate</string>
+    <string name="loop_status_basal_rate">Rate</string>
     <string name="loop_status_duration">Duration</string>
     <string name="loop_status_oaps_reason">OpenAPS Reason</string>
     <string name="loop_status_targets">Targets</string>

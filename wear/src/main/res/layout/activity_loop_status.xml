@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black"
@@ -25,47 +26,53 @@
         android:textSize="13sp"
         android:visibility="gone" />
 
-    <!-- Content -->
-    <ScrollView
-        android:id="@+id/content_container"
+    <!-- Content with Pull-to-Refresh -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
-        android:scrollbars="none"
-        android:fillViewport="true"
-        android:clipToPadding="false">
+        android:visibility="gone">
 
-        <LinearLayout
+        <ScrollView
+            android:id="@+id/content_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="38dp">
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:fillViewport="true"
+            android:clipToPadding="false">
 
-            <!-- Header -->
-            <include layout="@layout/loop_status_header" />
-
-            <Space
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="6dp" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="38dp">
 
-            <!-- Loop Result Card -->
-            <include
-                android:id="@+id/loop_result_card"
-                layout="@layout/loop_status_result" />
+                <!-- Header -->
+                <include layout="@layout/loop_status_header" />
 
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="6dp" />
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp" />
 
-            <!-- Targets Card -->
-            <include
-                android:id="@+id/targets_card"
-                layout="@layout/loop_status_targets" />
+                <!-- Loop Result Card -->
+                <include
+                    android:id="@+id/loop_result_card"
+                    layout="@layout/loop_status_result" />
 
-        </LinearLayout>
-    </ScrollView>
+                <Space
+                    android:layout_width="match_parent"
+                    android:layout_height="6dp" />
+
+                <!-- Targets Card -->
+                <include
+                    android:id="@+id/targets_card"
+                    layout="@layout/loop_status_targets" />
+
+            </LinearLayout>
+        </ScrollView>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </FrameLayout>
