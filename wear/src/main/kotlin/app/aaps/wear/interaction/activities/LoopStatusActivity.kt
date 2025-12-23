@@ -290,7 +290,7 @@ class LoopStatusActivity : AppCompatActivity() {
 
         // Show SMB if present
         result.smbAmount?.let { smb ->
-            if (smb > 0) {
+            if (smb > 0.0) {
                 oapsSmbRow.visibility = View.VISIBLE
                 oapsSmbValue.text = getString(R.string.loop_status_smb, smb)
             } else {
@@ -301,62 +301,67 @@ class LoopStatusActivity : AppCompatActivity() {
         }
 
         when {
-            // Case 1: Let current temp basal run
+            // Case 1: Let current temp basal run (or no temp active)
             result.isLetTempRun -> {
-                oapsStatusText.text = getString(R.string.loop_status_tbr_continues)
+                oapsStatusText.text = getString(R.string.loop_status_tbr_continues)  // "Temp basal continues"
                 oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.loopClosed))
                 oapsStatusText.visibility = View.VISIBLE
 
-                // Show current TBR details
-                result.rate?.let { rate ->
+                // Show current TBR details if available
+                if (result.rate != null) {
                     oapsRateRow.visibility = View.VISIBLE
-                    oapsRateValue.text = getString(R.string.loop_status_tbr_rate, rate, result.ratePercent ?: 0)
-                } ?: run {
-                    oapsRateRow.visibility = View.GONE  // Only hide if rate is null, not if it's 0.0
-                }
+                    oapsRateValue.text = getString(R.string.loop_status_tbr_rate, result.rate, result.ratePercent ?: 0)
 
-                result.duration?.let { duration ->
-                    oapsDurationRow.visibility = View.VISIBLE
-                    oapsDurationValue.text = getString(R.string.loop_status_tbr_duration_remaining, duration)
-                } ?: run {
-                    oapsDurationRow.visibility = View.GONE
-                }
-            }
-
-            // Case 2: No change requested
-            !result.changeRequested -> {
-                oapsStatusText.text = getString(R.string.loop_status_tbr_no_change)
-                oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.loopClosed))
-                oapsStatusText.visibility = View.VISIBLE
-                oapsRateRow.visibility = View.GONE
-                oapsDurationRow.visibility = View.GONE
-            }
-
-            // Case 3: Cancel temp basal
-            result.isCancelTemp -> {
-                oapsStatusText.text = getString(R.string.loop_status_tbr_cancel)
-                oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.tempBasal))
-                oapsStatusText.visibility = View.VISIBLE
-                oapsRateRow.visibility = View.GONE
-                oapsDurationRow.visibility = View.GONE
-            }
-
-            // Case 4: New temp basal requested
-            else -> {
-                oapsStatusText.visibility = View.GONE
-
-                result.rate?.let { rate ->
-                    oapsRateRow.visibility = View.VISIBLE
-                    oapsRateValue.text = getString(R.string.loop_status_tbr_rate, rate, result.ratePercent ?: 0)
-                } ?: run {
+                    result.duration?.let { duration ->
+                        oapsDurationRow.visibility = View.VISIBLE
+                        oapsDurationValue.text = getString(R.string.loop_status_tbr_duration_remaining, duration)
+                    } ?: run {
+                        oapsDurationRow.visibility = View.GONE
+                    }
+                } else {
+                    // No temp basal active - just show status
                     oapsRateRow.visibility = View.GONE
-                }
-
-                result.duration?.let { duration ->
-                    oapsDurationRow.visibility = View.VISIBLE
-                    oapsDurationValue.text = getString(R.string.loop_status_tbr_duration, duration)
-                } ?: run {
                     oapsDurationRow.visibility = View.GONE
+                }
+            }
+
+            // Case 2: New temp basal requested
+            else -> {
+                val percentValue = result.ratePercent ?: 0
+
+                // Check if this is essentially "canceling" (setting to 100% basal)
+                if (percentValue == 100) {
+                    oapsStatusText.text = getString(R.string.loop_status_tbr_cancel)
+                    oapsStatusText.setTextColor(ContextCompat.getColor(this, R.color.loopClosed))
+                    oapsStatusText.visibility = View.VISIBLE
+
+                    // Show rate but NOT duration for regular basal
+                    result.rate?.let { rate ->
+                        oapsRateRow.visibility = View.VISIBLE
+                        oapsRateValue.text = getString(R.string.loop_status_tbr_rate, rate, percentValue)
+                    } ?: run {
+                        oapsRateRow.visibility = View.GONE
+                    }
+
+                    oapsDurationRow.visibility = View.GONE  // Never show duration for 100%
+
+                } else {
+                    // Normal temp basal change
+                    oapsStatusText.visibility = View.GONE
+
+                    result.rate?.let { rate ->
+                        oapsRateRow.visibility = View.VISIBLE
+                        oapsRateValue.text = getString(R.string.loop_status_tbr_rate, rate, percentValue)
+                    } ?: run {
+                        oapsRateRow.visibility = View.GONE
+                    }
+
+                    result.duration?.let { duration ->
+                        oapsDurationRow.visibility = View.VISIBLE
+                        oapsDurationValue.text = getString(R.string.loop_status_tbr_duration, duration)
+                    } ?: run {
+                        oapsDurationRow.visibility = View.GONE
+                    }
                 }
             }
         }
@@ -365,7 +370,6 @@ class LoopStatusActivity : AppCompatActivity() {
         if (result.reason.isNotEmpty()) {
             oapsReasonContainer.visibility = View.VISIBLE
             oapsReasonText.text = result.reason
-            // Reset to collapsed state
             isReasonExpanded = false
             oapsReasonText.visibility = View.GONE
             oapsReasonToggle.text = "▼"
