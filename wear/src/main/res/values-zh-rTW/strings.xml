@@ -253,4 +253,7 @@
     <string name="expand_calculation_details">點擊以展開計算詳細內容</string>
     <string name="wizard_confirmation_sent">已送出</string>
     <string name="tile_settings">資訊方塊設定</string>
+    <string name="loop_status_error">狀態載入失敗</string>
+    <string name="loop_status_tbr_rate">%1$.2f U/h (%2$d%%)</string>
+    <string name="loop_status_tbr_duration_remaining">剩餘 %1$d 分鐘</string>
 </resources>
