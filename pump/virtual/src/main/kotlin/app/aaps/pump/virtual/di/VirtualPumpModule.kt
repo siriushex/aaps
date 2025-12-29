@@ -13,8 +13,7 @@ import dagger.multibindings.IntoMap
 @Module(
     includes = [
         VirtualPumpModule.Bindings::class
-    ],
-    subcomponents = [VirtualPumpComposeUiComponent::class]
+    ]
 )
 @Suppress("unused")
 abstract class VirtualPumpModule {
@@ -25,11 +24,6 @@ abstract class VirtualPumpModule {
     interface Bindings {
 
         @Binds fun bindVirtualPump(virtualPumpPlugin: VirtualPumpPlugin): VirtualPump
-
-        @Binds
-        @IntoMap
-        @ComposeUiModule("virtualpump")
-        abstract fun bindVirtualPumpComposeUiFactory(factory: VirtualPumpComposeUiComponent.FactoryCompose): ComposeUiFactory
     }
 
 }
