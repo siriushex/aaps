@@ -1,14 +1,11 @@
 package app.aaps.pump.virtual.di
 
 import app.aaps.core.interfaces.pump.VirtualPump
-import app.aaps.core.interfaces.ui.compose.ComposeUiFactory
-import app.aaps.implementation.ui.ComposeUiModule
 import app.aaps.pump.virtual.VirtualPumpFragment
 import app.aaps.pump.virtual.VirtualPumpPlugin
 import dagger.Binds
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
-import dagger.multibindings.IntoMap
 
 @Module(
     includes = [
