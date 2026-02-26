@@ -15,6 +15,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
@@ -169,6 +170,8 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     private var axisWidth: Int = 0
     private lateinit var refreshLoop: Runnable
     private var handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)
+    private val minGraphZoomRangeInMillis = TimeUnit.MINUTES.toMillis(15)
+    private var zoomedRangeInMillis: Long? = null
 
     private val secondaryGraphs = ArrayList<GraphView>()
     private val secondaryGraphsLabel = ArrayList<TextView>()
@@ -225,6 +228,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         binding.graphsLayout.bgGraph.gridLabelRenderer?.reloadStyles()
         binding.graphsLayout.bgGraph.gridLabelRenderer?.labelVerticalWidth = axisWidth
         binding.graphsLayout.bgGraph.layoutParams?.height = rh.dpToPx(skinProvider.activeSkin().mainGraphHeight)
+        configureGraphInteractions(binding.graphsLayout.bgGraph)
 
         carbAnimation = binding.infoLayout.carbsIcon.background as AnimationDrawable?
         carbAnimation?.setEnterFadeDuration(1200)
@@ -233,6 +237,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         binding.graphsLayout.bgGraph.setOnLongClickListener {
             overviewData.rangeToDisplay += 6
             overviewData.rangeToDisplay = if (overviewData.rangeToDisplay > 24) 6 else overviewData.rangeToDisplay
+            zoomedRangeInMillis = null
             preferences.put(IntNonKey.RangeToDisplay, overviewData.rangeToDisplay)
             rxBus.send(EventPreferenceChange(IntNonKey.RangeToDisplay.key))
             preferences.put(BooleanNonKey.ObjectivesScaleUsed, true)
@@ -240,7 +245,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         }
         prepareGraphsIfNeeded(overviewMenus.setting.size)
         overviewMenus.setupChartMenu(binding.graphsLayout.chartMenuButton, binding.graphsLayout.scaleButton)
-        binding.graphsLayout.scaleButton.text = overviewMenus.scaleString(overviewData.rangeToDisplay)
+        updateScaleButtonText()
 
         binding.graphsLayout.chartMenuButton.visibility = preferences.simpleMode.not().toVisibility()
 
@@ -298,6 +303,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
             .observeOn(aapsSchedulers.main)
             .subscribe({
                            overviewData.rangeToDisplay = it.hours
+                           zoomedRangeInMillis = null
                            preferences.put(IntNonKey.RangeToDisplay, it.hours)
                            rxBus.send(EventPreferenceChange(IntNonKey.RangeToDisplay.key))
                            preferences.put(BooleanNonKey.ObjectivesScaleUsed, true)
@@ -397,10 +403,12 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         // Remove listeners and detach series to prevent memory leaks
         _binding?.graphsLayout?.bgGraph?.let { graph ->
             graph.setOnLongClickListener(null)
+            graph.setOnTouchListener(null)
             graph.removeAllSeries()
         }
         for (graph in secondaryGraphs) {
             graph.setOnLongClickListener(null)
+            graph.setOnTouchListener(null)
             graph.removeAllSeries()
         }
         _binding = null
@@ -812,6 +820,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                 graph.gridLabelRenderer?.labelVerticalWidth = axisWidth
                 graph.gridLabelRenderer?.numVerticalLabels = 3
                 graph.viewport.backgroundColor = rh.gac(context, app.aaps.core.ui.R.attr.viewPortBackgroundColor)
+                configureGraphInteractions(graph)
                 relativeLayout.addView(graph)
 
                 val label = TextView(context)
@@ -826,6 +835,53 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
                 secondaryGraphs.add(graph)
             }
         }
+    }
+
+    private fun fullGraphRangeInMillis(): Long = TimeUnit.HOURS.toMillis(overviewData.rangeToDisplay.toLong())
+
+    private fun currentGraphRangeInMillis(): Long {
+        val fullRange = fullGraphRangeInMillis()
+        return (zoomedRangeInMillis ?: fullRange).coerceIn(minGraphZoomRangeInMillis, fullRange)
+    }
+
+    private fun formatRangeLabel(rangeInMillis: Long): String {
+        val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(rangeInMillis)
+        return if (totalMinutes >= 60 && totalMinutes % 60 == 0L) "${totalMinutes / 60}h" else "${totalMinutes}m"
+    }
+
+    private fun updateScaleButtonText() {
+        _binding ?: return
+        val fullRange = fullGraphRangeInMillis()
+        val currentRange = currentGraphRangeInMillis()
+        binding.graphsLayout.scaleButton.text =
+            if (currentRange == fullRange) overviewMenus.scaleString(overviewData.rangeToDisplay)
+            else formatRangeLabel(currentRange)
+    }
+
+    private fun configureGraphInteractions(graph: GraphView) {
+        graph.viewport.setScalable(true)
+        graph.viewport.setScrollable(true)
+        graph.setOnTouchListener { _, event ->
+            if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                updateZoomedRangeFromViewport(graph)
+            }
+            false
+        }
+    }
+
+    private fun updateZoomedRangeFromViewport(graph: GraphView) {
+        val fullRange = fullGraphRangeInMillis()
+        val viewportWidthInMillis = (graph.viewport.getMaxX(false) - graph.viewport.getMinX(false)).toLong()
+        if (viewportWidthInMillis <= 0L) return
+
+        val roundedToQuarterHour = ((viewportWidthInMillis + minGraphZoomRangeInMillis / 2) / minGraphZoomRangeInMillis) * minGraphZoomRangeInMillis
+        val clampedRange = roundedToQuarterHour.coerceIn(minGraphZoomRangeInMillis, fullRange)
+        val newZoomedRange = if (clampedRange >= fullRange) null else clampedRange
+        if (zoomedRangeInMillis == newZoomedRange) return
+
+        zoomedRangeInMillis = newZoomedRange
+        updateScaleButtonText()
+        updateGraph()
     }
 
     var task: Runnable? = null
@@ -953,7 +1009,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
     private fun updateTime() {
         _binding ?: return
-        binding.graphsLayout.scaleButton.text = overviewMenus.scaleString(overviewData.rangeToDisplay)
+        updateScaleButtonText()
         binding.infoLayout.time.text = dateUtil.timeString(dateUtil.now())
         // Status lights
         val pump = activePlugin.activePump
@@ -1075,12 +1131,15 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
     private fun updateGraph() {
         _binding ?: return
+        val graphFromTime = overviewData.endTime - currentGraphRangeInMillis()
+        val graphEndTime = overviewData.endTime
+        updateScaleButtonText()
         val pump = activePlugin.activePump
         val graphData = graphDataProvider.get().with(binding.graphsLayout.bgGraph, overviewData)
         val menuChartSettings = overviewMenus.setting
         if (menuChartSettings.isEmpty()) return
         graphData.addInRangeArea(
-            overviewData.fromTime, overviewData.endTime,
+            graphFromTime, graphEndTime,
             preferences.get(UnitDoubleKey.OverviewLowMark),
             preferences.get(UnitDoubleKey.OverviewHighMark)
         )
@@ -1100,7 +1159,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
         // set manual x bounds to have nice steps
         graphData.setNumVerticalLabels()
-        graphData.formatAxis(overviewData.fromTime, overviewData.endTime)
+        graphData.formatAxis(graphFromTime, graphEndTime)
 
         graphData.performUpdate()
 
@@ -1151,7 +1210,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
             if (menuChartSettings[g + 1][OverviewMenus.CharType.STEPS.ordinal]) secondGraphData.addSteps(useSTEPSForScale, if (useSTEPSForScale) 1.0 else 0.8)
 
             // set manual x bounds to have nice steps
-            secondGraphData.formatAxis(overviewData.fromTime, overviewData.endTime)
+            secondGraphData.formatAxis(graphFromTime, graphEndTime)
             secondGraphData.addNowLine(now)
             secondaryGraphsData.add(secondGraphData)
         }
