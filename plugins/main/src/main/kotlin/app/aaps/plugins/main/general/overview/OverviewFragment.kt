@@ -864,9 +864,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
     private fun configureGraphInteractions(graph: GraphView) {
         graph.viewport.setScalable(true)
-        graph.viewport.setScalableY(false)
         graph.viewport.setScrollable(true)
-        graph.viewport.setScrollableY(false)
         graph.setOnTouchListener { view, event ->
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
