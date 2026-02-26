@@ -27,6 +27,7 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.workflow.LoggingWorker
 import app.aaps.core.utils.receivers.DataWorkerStorage
 import kotlinx.coroutines.Dispatchers
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
@@ -81,6 +82,73 @@ class XdripSourcePlugin @Inject constructor(
         @Inject lateinit var dateUtil: DateUtil
         @Inject lateinit var dataWorkerStorage: DataWorkerStorage
 
+        private fun sourceFromSourceFields(vararg candidates: String?): SourceSensor {
+            for (candidate in candidates) {
+                val normalized = candidate?.trim()?.lowercase(Locale.US) ?: continue
+                if (normalized.isEmpty()) continue
+                when {
+                    normalized.contains("sibion") ||
+                        normalized.contains("si app") ||
+                        normalized.startsWith("gs1") ||
+                        normalized.startsWith("gs2")                   -> return SourceSensor.SIBIONIC
+                    normalized.contains("sino")                        -> return SourceSensor.SINO
+                    normalized.contains("syai") || normalized.contains("ottai") -> return SourceSensor.SYAI_TAG
+                }
+            }
+            return SourceSensor.UNKNOWN
+        }
+
+        private fun sourceFromXdripBundle(bundle: Bundle): SourceSensor {
+            val sourceInfo = bundle.getString(Intents.XDRIP_DATA_SOURCE).orEmpty()
+            val parsedSource = SourceSensor.fromString(sourceInfo)
+            if (parsedSource != SourceSensor.UNKNOWN) return parsedSource
+            return sourceFromSourceFields(sourceInfo, bundle.getString(Intents.XDRIP_DATA_SOURCE_DESCRIPTION))
+        }
+
+        private fun sourceFromJugglucoBundle(bundle: Bundle): SourceSensor =
+            sourceFromSourceFields(bundle.getString(Intents.JUGGLUCO_BG_SERIAL))
+
+        private fun trendArrowFromRate(rate: Float): TrendArrow {
+            if (rate.isNaN()) return TrendArrow.NONE
+            return when {
+                rate >= 3.0f -> TrendArrow.DOUBLE_UP
+                rate >= 2.0f -> TrendArrow.SINGLE_UP
+                rate >= 1.0f -> TrendArrow.FORTY_FIVE_UP
+                rate > -1.0f -> TrendArrow.FLAT
+                rate > -2.0f -> TrendArrow.FORTY_FIVE_DOWN
+                rate > -3.0f -> TrendArrow.SINGLE_DOWN
+                else         -> TrendArrow.DOUBLE_DOWN
+            }
+        }
+
+        private fun xdripGlucoseValueFromBundle(bundle: Bundle): GV =
+            GV(
+                timestamp = bundle.getLong(Intents.EXTRA_TIMESTAMP, 0),
+                value = round(bundle.getDouble(Intents.EXTRA_BG_ESTIMATE, 0.0)),
+                raw = round(bundle.getDouble(Intents.EXTRA_RAW, 0.0)),
+                noise = null,
+                trendArrow = TrendArrow.fromString(bundle.getString(Intents.EXTRA_BG_SLOPE_NAME)),
+                sourceSensor = sourceFromXdripBundle(bundle)
+            )
+
+        private fun jugglucoGlucoseValueFromBundle(bundle: Bundle): GV {
+            val mgdl = bundle.getInt(Intents.JUGGLUCO_BG_MGDL, 0)
+            val localGlucose = bundle.getFloat(Intents.JUGGLUCO_BG_GLUCOSE, 0.0f).toDouble()
+            val fallbackMgdl = when {
+                localGlucose <= 0.0                 -> 0.0
+                localGlucose <= 35.0                -> round(localGlucose * 18.0)
+                else                                -> round(localGlucose)
+            }
+            return GV(
+                timestamp = bundle.getLong(Intents.JUGGLUCO_BG_TIME, 0),
+                value = if (mgdl > 0) mgdl.toDouble() else fallbackMgdl,
+                raw = null,
+                noise = null,
+                trendArrow = trendArrowFromRate(bundle.getFloat(Intents.JUGGLUCO_BG_RATE, Float.NaN)),
+                sourceSensor = sourceFromJugglucoBundle(bundle)
+            )
+        }
+
         fun getSensorStartTime(bundle: Bundle): Long? {
             val now = dateUtil.now()
             var sensorStartTime: Long? = if (preferences.get(BooleanKey.BgSourceCreateSensorChange)) {
@@ -102,18 +170,15 @@ class XdripSourcePlugin @Inject constructor(
             if (!xdripSourcePlugin.isEnabled()) return Result.success(workDataOf("Result" to "Plugin not enabled"))
             val bundle = dataWorkerStorage.pickupBundle(inputData.getLong(DataWorkerStorage.STORE_KEY, -1))
                 ?: return Result.failure(workDataOf("Error" to "missing input data"))
+            val action = inputData.getString(DataWorkerStorage.ACTION_KEY)
 
-            aapsLogger.debug(LTag.BGSOURCE, "Received xDrip data: $bundle")
+            aapsLogger.debug(LTag.BGSOURCE, "Received xDrip/Juggluco data action=$action: $bundle")
             val glucoseValues = mutableListOf<GV>()
-            glucoseValues += GV(
-                timestamp = bundle.getLong(Intents.EXTRA_TIMESTAMP, 0),
-                value = round(bundle.getDouble(Intents.EXTRA_BG_ESTIMATE, 0.0)),
-                raw = round(bundle.getDouble(Intents.EXTRA_RAW, 0.0)),
-                noise = null,
-                trendArrow = TrendArrow.fromString(bundle.getString(Intents.EXTRA_BG_SLOPE_NAME)),
-                sourceSensor = SourceSensor.fromString(bundle.getString(Intents.XDRIP_DATA_SOURCE) ?: "")
-            )
-            val newSensorStartTime = getSensorStartTime(bundle)
+            glucoseValues += when (action) {
+                Intents.JUGGLUCO_BG -> jugglucoGlucoseValueFromBundle(bundle)
+                else                -> xdripGlucoseValueFromBundle(bundle)
+            }
+            val newSensorStartTime = if (action == Intents.JUGGLUCO_BG) null else getSensorStartTime(bundle)
             // Retrieve last stored sensorStartTime from the database
             val lastTherapyEvent = persistenceLayer.getLastTherapyRecordUpToNow(TE.Type.SENSOR_CHANGE)
             val lastStoredSensorStartTime = lastTherapyEvent?.timestamp
@@ -138,7 +203,8 @@ class XdripSourcePlugin @Inject constructor(
                     .blockingGet()
                     .also { savedValues -> savedValues.all().forEach { xdripSourcePlugin.detectSource(it) } }
             else return Result.failure(workDataOf("Error" to "missing glucoseValue"))
-            xdripSourcePlugin.sensorBatteryLevel = bundle.getInt(Intents.EXTRA_SENSOR_BATTERY, -1)
+            xdripSourcePlugin.sensorBatteryLevel =
+                if (action == Intents.JUGGLUCO_BG) -1 else bundle.getInt(Intents.EXTRA_SENSOR_BATTERY, -1)
             return ret
         }
     }

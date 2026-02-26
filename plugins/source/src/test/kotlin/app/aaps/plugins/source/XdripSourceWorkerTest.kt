@@ -123,4 +123,71 @@ class XdripSourceWorkerTest : TestBaseWithProfile() {
             Assertions.assertEquals(ListenableWorker.Result.failure(workDataOf("Error" to "missing glucoseValue")), result)
         }
     }
+
+    @Test
+    fun `When plugin enabled then insert xDrip Sibionics2 source as SIBIONIC`() {
+        val timestamp = now - 60000
+        runBlocking {
+            whenever(xdripSourcePlugin.isEnabled()).thenReturn(true)
+            whenever(preferences.get(BooleanKey.BgSourceCreateSensorChange)).thenReturn(false)
+            whenever(persistenceLayer.insertCgmSourceData(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(Single.just(PersistenceLayer.TransactionResult()))
+            val bundle = BundleMock.mocked().apply {
+                putString(Intents.XDRIP_DATA_SOURCE, "Sibionics 2")
+                putLong(Intents.EXTRA_TIMESTAMP, timestamp)
+                putDouble(Intents.EXTRA_BG_ESTIMATE, 152.0)
+                putDouble(Intents.EXTRA_RAW, 152.0)
+                putString(Intents.EXTRA_BG_SLOPE_NAME, "Flat")
+            }
+            whenever(dataWorkerStorage.pickupBundle(any())).thenReturn(bundle)
+
+            val result = worker.doWork()
+
+            Assertions.assertEquals(ListenableWorker.Result.success(), result)
+            val expectedGv = GV(
+                timestamp = timestamp,
+                value = 152.0,
+                raw = 152.0,
+                noise = null,
+                trendArrow = TrendArrow.FLAT,
+                sourceSensor = SourceSensor.SIBIONIC
+            )
+            verify(persistenceLayer).insertCgmSourceData(Sources.Xdrip, listOf(expectedGv), emptyList(), null)
+        }
+    }
+
+    @Test
+    fun `When plugin enabled then insert Juggluco Sibionics data`() {
+        val timestamp = now - 60000
+        runBlocking {
+            whenever(workerParameters.inputData).thenReturn(
+                workDataOf(
+                    DataWorkerStorage.STORE_KEY to 1L,
+                    DataWorkerStorage.ACTION_KEY to Intents.JUGGLUCO_BG
+                )
+            )
+            worker = XdripSourcePlugin.XdripSourceWorker(context, workerParameters)
+            whenever(xdripSourcePlugin.isEnabled()).thenReturn(true)
+            whenever(persistenceLayer.insertCgmSourceData(anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull())).thenReturn(Single.just(PersistenceLayer.TransactionResult()))
+            val bundle = BundleMock.mocked().apply {
+                putInt(Intents.JUGGLUCO_BG_MGDL, 168)
+                putFloat(Intents.JUGGLUCO_BG_RATE, -1.6f)
+                putLong(Intents.JUGGLUCO_BG_TIME, timestamp)
+                putString(Intents.JUGGLUCO_BG_SERIAL, "Sibionics 2")
+            }
+            whenever(dataWorkerStorage.pickupBundle(any())).thenReturn(bundle)
+
+            val result = worker.doWork()
+
+            Assertions.assertEquals(ListenableWorker.Result.success(), result)
+            val expectedGv = GV(
+                timestamp = timestamp,
+                value = 168.0,
+                raw = null,
+                noise = null,
+                trendArrow = TrendArrow.FORTY_FIVE_DOWN,
+                sourceSensor = SourceSensor.SIBIONIC
+            )
+            verify(persistenceLayer).insertCgmSourceData(Sources.Xdrip, listOf(expectedGv), emptyList(), null)
+        }
+    }
 }
