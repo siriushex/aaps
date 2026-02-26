@@ -171,7 +171,9 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
     private lateinit var refreshLoop: Runnable
     private var handler = Handler(HandlerThread(this::class.simpleName + "Handler").also { it.start() }.looper)
     private val minGraphZoomRangeInMillis = TimeUnit.MINUTES.toMillis(15)
+    private val graphZoomStepInMillis = TimeUnit.MINUTES.toMillis(30)
     private var zoomedRangeInMillis: Long? = null
+    private var isGraphInteractionInProgress = false
 
     private val secondaryGraphs = ArrayList<GraphView>()
     private val secondaryGraphsLabel = ArrayList<TextView>()
@@ -245,6 +247,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
         }
         prepareGraphsIfNeeded(overviewMenus.setting.size)
         overviewMenus.setupChartMenu(binding.graphsLayout.chartMenuButton, binding.graphsLayout.scaleButton)
+        binding.graphsLayout.scalePlusButton.setOnClickListener { zoomInGraphByStep() }
         updateScaleButtonText()
 
         binding.graphsLayout.chartMenuButton.visibility = preferences.simpleMode.not().toVisibility()
@@ -406,6 +409,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
             graph.setOnTouchListener(null)
             graph.removeAllSeries()
         }
+        _binding?.graphsLayout?.scalePlusButton?.setOnClickListener(null)
         for (graph in secondaryGraphs) {
             graph.setOnLongClickListener(null)
             graph.setOnTouchListener(null)
@@ -860,10 +864,20 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
     private fun configureGraphInteractions(graph: GraphView) {
         graph.viewport.setScalable(true)
+        graph.viewport.setScalableY(false)
         graph.viewport.setScrollable(true)
-        graph.setOnTouchListener { _, event ->
-            if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
-                updateZoomedRangeFromViewport(graph)
+        graph.viewport.setScrollableY(false)
+        graph.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                    isGraphInteractionInProgress = true
+                    view.parent?.requestDisallowInterceptTouchEvent(true)
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL         -> {
+                    updateZoomedRangeFromViewport(graph)
+                    isGraphInteractionInProgress = false
+                    view.parent?.requestDisallowInterceptTouchEvent(false)
+                }
             }
             false
         }
@@ -871,17 +885,57 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
     private fun updateZoomedRangeFromViewport(graph: GraphView) {
         val fullRange = fullGraphRangeInMillis()
-        val viewportWidthInMillis = (graph.viewport.getMaxX(false) - graph.viewport.getMinX(false)).toLong()
+        val graphEndTime = overviewData.endTime.toDouble()
+        val graphFromTime = graphEndTime - fullRange
+        val viewportMaxX = graph.viewport.getMaxX(false).coerceAtMost(graphEndTime)
+        val viewportMinX = graph.viewport.getMinX(false).coerceAtLeast(graphFromTime)
+        val viewportWidthInMillis = (viewportMaxX - viewportMinX).toLong()
         if (viewportWidthInMillis <= 0L) return
 
         val roundedToQuarterHour = ((viewportWidthInMillis + minGraphZoomRangeInMillis / 2) / minGraphZoomRangeInMillis) * minGraphZoomRangeInMillis
         val clampedRange = roundedToQuarterHour.coerceIn(minGraphZoomRangeInMillis, fullRange)
+        val clampedMaxX = viewportMaxX.coerceAtLeast(graphFromTime + clampedRange)
+        val clampedMinX = (clampedMaxX - clampedRange).coerceAtLeast(graphFromTime)
         val newZoomedRange = if (clampedRange >= fullRange) null else clampedRange
-        if (zoomedRangeInMillis == newZoomedRange) return
 
         zoomedRangeInMillis = newZoomedRange
         updateScaleButtonText()
-        updateGraph()
+        applyGraphViewport(clampedMinX, clampedMaxX)
+    }
+
+    private fun zoomInGraphByStep() {
+        _binding ?: return
+        val fullRange = fullGraphRangeInMillis()
+        val currentRange = currentGraphRangeInMillis()
+        val newRange = (currentRange - graphZoomStepInMillis).coerceAtLeast(minGraphZoomRangeInMillis)
+        if (newRange == currentRange) return
+
+        val graphEndTime = overviewData.endTime.toDouble()
+        val graphFromTime = graphEndTime - fullRange
+        val currentMaxX = binding.graphsLayout.bgGraph.viewport.getMaxX(false)
+            .takeIf { it.isFinite() && it > graphFromTime }
+            ?.coerceAtMost(graphEndTime)
+            ?: graphEndTime
+        val clampedMaxX = currentMaxX.coerceAtLeast(graphFromTime + newRange)
+        val clampedMinX = (clampedMaxX - newRange).coerceAtLeast(graphFromTime)
+
+        zoomedRangeInMillis = if (newRange >= fullRange) null else newRange
+        updateScaleButtonText()
+        applyGraphViewport(clampedMinX, clampedMaxX)
+    }
+
+    private fun applyGraphViewport(minX: Double, maxX: Double) {
+        _binding ?: return
+        val graphs = ArrayList<GraphView>(secondaryGraphs.size + 1).also {
+            it.add(binding.graphsLayout.bgGraph)
+            it.addAll(secondaryGraphs)
+        }
+        for (currentGraph in graphs) {
+            currentGraph.viewport.setMinX(minX)
+            currentGraph.viewport.setMaxX(maxX)
+            currentGraph.viewport.isXAxisBoundsManual = true
+            currentGraph.onDataChanged(false, false)
+        }
     }
 
     var task: Runnable? = null
@@ -1131,6 +1185,7 @@ class OverviewFragment : DaggerFragment(), View.OnClickListener, OnLongClickList
 
     private fun updateGraph() {
         _binding ?: return
+        if (isGraphInteractionInProgress) return
         val graphFromTime = overviewData.endTime - currentGraphRangeInMillis()
         val graphEndTime = overviewData.endTime
         updateScaleButtonText()

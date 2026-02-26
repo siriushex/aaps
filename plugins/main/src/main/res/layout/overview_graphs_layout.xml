@@ -29,6 +29,18 @@
             android:padding="0dp"
             android:textAllCaps="false" />
 
+        <Button
+            android:id="@+id/scale_plus_button"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_alignParentTop="true"
+            android:layout_toEndOf="@id/scale_button"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@string/a11y_graph_scale_plus"
+            android:padding="0dp"
+            android:text="+"
+            android:textAllCaps="false" />
+
         <ImageButton
             android:id="@+id/chart_menu_button"
             android:layout_width="35dp"
