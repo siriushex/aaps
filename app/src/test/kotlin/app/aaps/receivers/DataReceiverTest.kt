@@ -81,6 +81,19 @@ class DataReceiverTest : TestBase() {
     }
 
     @Test
+    fun `processIntent enqueues XdripSourceWorker for JUGGLUCO_BG`() {
+        // Arrange
+        val intent = createIntent(Intents.JUGGLUCO_BG)
+        whenever(dataWorkerStorage.storeInputData(any(), any())).thenReturn(androidx.work.Data.EMPTY)
+
+        // Act
+        dataReceiver.processIntent(context, intent)
+
+        // Assert
+        assertWorkerEnqueued(XdripSourcePlugin.XdripSourceWorker::class)
+    }
+
+    @Test
     fun `processIntent enqueues PoctechWorker for POCTECH_BG`() {
         // Arrange
         val intent = createIntent(Intents.POCTECH_BG)
