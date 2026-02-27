@@ -82,6 +82,37 @@ class XdripSourcePlugin @Inject constructor(
         @Inject lateinit var dateUtil: DateUtil
         @Inject lateinit var dataWorkerStorage: DataWorkerStorage
 
+        private fun Bundle.readLong(vararg keys: String): Long? {
+            for (key in keys) {
+                val value = get(key) ?: continue
+                when (value) {
+                    is Long   -> return value
+                    is Number -> return value.toLong()
+                    is String -> value.toLongOrNull()?.let { return it }
+                }
+            }
+            return null
+        }
+
+        private fun Bundle.readDouble(vararg keys: String): Double? {
+            for (key in keys) {
+                val value = get(key) ?: continue
+                when (value) {
+                    is Number -> return value.toDouble()
+                    is String -> value.toDoubleOrNull()?.let { return it }
+                }
+            }
+            return null
+        }
+
+        private fun Bundle.readString(vararg keys: String): String? {
+            for (key in keys) {
+                val value = get(key) ?: continue
+                if (value is String && value.isNotBlank()) return value
+            }
+            return null
+        }
+
         private fun sourceFromSourceFields(vararg candidates: String?): SourceSensor {
             for (candidate in candidates) {
                 val normalized = candidate?.trim()?.lowercase(Locale.US) ?: continue
@@ -106,7 +137,14 @@ class XdripSourcePlugin @Inject constructor(
         }
 
         private fun sourceFromJugglucoBundle(bundle: Bundle): SourceSensor =
-            sourceFromSourceFields(bundle.getString(Intents.JUGGLUCO_BG_SERIAL))
+            sourceFromSourceFields(
+                bundle.readString(
+                    Intents.JUGGLUCO_BG_SERIAL,
+                    "serial",
+                    "serialNumber",
+                    "SerialNumber"
+                )
+            )
 
         private fun trendArrowFromRate(rate: Float): TrendArrow {
             if (rate.isNaN()) return TrendArrow.NONE
@@ -132,19 +170,21 @@ class XdripSourcePlugin @Inject constructor(
             )
 
         private fun jugglucoGlucoseValueFromBundle(bundle: Bundle): GV {
-            val mgdl = bundle.getInt(Intents.JUGGLUCO_BG_MGDL, 0)
-            val localGlucose = bundle.getFloat(Intents.JUGGLUCO_BG_GLUCOSE, 0.0f).toDouble()
+            val mgdl = bundle.readDouble(Intents.JUGGLUCO_BG_MGDL, "mgdl")
+            val localGlucose = bundle.readDouble(Intents.JUGGLUCO_BG_GLUCOSE, "glucose")
             val fallbackMgdl = when {
-                localGlucose <= 0.0                 -> 0.0
-                localGlucose <= 35.0                -> round(localGlucose * 18.0)
+                localGlucose == null || localGlucose <= 0.0 -> 0.0
+                localGlucose <= 35.0                         -> round(localGlucose * 18.0)
                 else                                -> round(localGlucose)
             }
             return GV(
-                timestamp = bundle.getLong(Intents.JUGGLUCO_BG_TIME, 0),
-                value = if (mgdl > 0) mgdl.toDouble() else fallbackMgdl,
+                timestamp = bundle.readLong(Intents.JUGGLUCO_BG_TIME, "time", "Time") ?: 0L,
+                value = if ((mgdl ?: 0.0) > 0.0) round(mgdl ?: 0.0) else fallbackMgdl,
                 raw = null,
                 noise = null,
-                trendArrow = trendArrowFromRate(bundle.getFloat(Intents.JUGGLUCO_BG_RATE, Float.NaN)),
+                trendArrow = trendArrowFromRate(
+                    (bundle.readDouble(Intents.JUGGLUCO_BG_RATE, "rate", "Rate") ?: Double.NaN).toFloat()
+                ),
                 sourceSensor = sourceFromJugglucoBundle(bundle)
             )
         }
