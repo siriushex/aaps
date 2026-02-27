@@ -72,6 +72,7 @@ internal class SibionicsDirectSession(
 
     private var bridge: SibionicsNativeBridge? = null
     private var nextIndex: Int = preferences.get(SibionicsDirectIntKey.NextIndex)
+    private var pollArmed: Boolean = false
 
     private val scanTimeoutRunnable = Runnable {
         stopScanLocked()
@@ -83,7 +84,7 @@ internal class SibionicsDirectSession(
 
     private val askRunnable = object : Runnable {
         override fun run() {
-            if (gatt != null && writeCharacteristic != null) {
+            if (pollArmed && gatt != null && writeCharacteristic != null) {
                 askForDataLocked()
                 handler?.postDelayed(this, config.pollIntervalSeconds * 1000L)
             }
@@ -129,6 +130,7 @@ internal class SibionicsDirectSession(
     private fun restartLocked() {
         disconnectLocked()
         stopScanLocked()
+        pollArmed = false
         handler?.removeCallbacks(askRunnable)
         if (!config.enabled) return
         if (!hasBlePermissions()) {
@@ -231,6 +233,7 @@ internal class SibionicsDirectSession(
     @SuppressLint("MissingPermission")
     private fun disconnectLocked() {
         handler?.removeCallbacks(askRunnable)
+        pollArmed = false
         notifyCharacteristic = null
         writeCharacteristic = null
         try {
@@ -270,16 +273,18 @@ internal class SibionicsDirectSession(
             preferences.put(SibionicsDirectBooleanKey.ResetRequested, false)
             config = readConfig()
         }
+        pollArmed = true
+        handler?.removeCallbacks(askRunnable)
         if (config.subtype != 2) {
             if (!sendAuthLocked()) {
                 aapsLogger.error(LTag.BGSOURCE, "Sibionics direct: auth not available, fallback to polling")
                 askForDataLocked()
             }
+            handler?.postDelayed(askRunnable, config.pollIntervalSeconds * 1000L)
         } else {
             askForDataLocked()
+            handler?.postDelayed(askRunnable, config.pollIntervalSeconds * 1000L)
         }
-        handler?.removeCallbacks(askRunnable)
-        handler?.postDelayed(askRunnable, config.pollIntervalSeconds * 1000L)
     }
 
     private fun handleNotificationLocked(payload: ByteArray) {
@@ -289,7 +294,9 @@ internal class SibionicsDirectSession(
         if (config.subtype == 2) {
             val result = SibionicsDirectCodec.parseChineseNotification(payload, dateUtil.now() / 1000L)
             when (result.status) {
-                SibionicsDirectCodec.Status.AUTH_REQUIRED -> sendAuthLocked()
+                SibionicsDirectCodec.Status.AUTH_REQUIRED -> {
+                    handler?.postDelayed({ sendAuthLocked() }, 1000L)
+                }
                 SibionicsDirectCodec.Status.DATA          ->
                     parsedRecords.addAll(result.records.map {
                         ParsedRecord(
@@ -321,7 +328,7 @@ internal class SibionicsDirectSession(
                 )
             }
             when (split.control) {
-                SibionicsNativeBridge.Control.REAUTH    -> sendAuthLocked()
+                SibionicsNativeBridge.Control.REAUTH    -> handler?.postDelayed({ sendAuthLocked() }, 1000L)
                 SibionicsNativeBridge.Control.SEND_TIME -> sendTimeLocked()
                 SibionicsNativeBridge.Control.ACTIVATE  -> sendActivationLocked()
                 SibionicsNativeBridge.Control.ASK_VALUES -> askForDataLocked()
@@ -465,10 +472,10 @@ internal class SibionicsDirectSession(
         bluetoothGatt.writeCharacteristic(
             characteristic,
             value,
-            BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+            BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
         ) == BluetoothStatusCodes.SUCCESS
     } else {
-        characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+        characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
         characteristic.value = value
         bluetoothGatt.writeCharacteristic(characteristic)
     }

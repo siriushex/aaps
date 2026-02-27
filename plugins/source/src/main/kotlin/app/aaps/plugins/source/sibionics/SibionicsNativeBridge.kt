@@ -140,11 +140,17 @@ internal class SibionicsNativeBridge(
     }
 
     private fun mapControl(rawCode: Int, secondaryCode: Int, rawJson: String): Control {
-        if (rawCode == 49227) return Control.RESET
+        if (rawCode == 49227) return if (subtype == 3) Control.RESET else Control.ACTIVATE
         if (rawCode == 49165) {
             return mapSecondaryCode(secondaryCode, rawJson)
         }
-        return if (rawJson.contains("49153")) Control.REAUTH else Control.NONE
+        return when {
+            rawJson.contains("49156") -> Control.ASK_VALUES
+            rawJson.contains("49160") -> Control.SEND_TIME
+            rawJson.contains("49154") -> Control.ACTIVATE
+            rawJson.contains("49153") -> Control.REAUTH
+            else                      -> Control.NONE
+        }
     }
 
     private fun mapSecondaryCode(secondaryCode: Int, rawJson: String): Control = when {
