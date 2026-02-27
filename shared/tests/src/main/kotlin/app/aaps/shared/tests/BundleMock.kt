@@ -24,6 +24,7 @@ object BundleMock {
         doAnswer { map.size }.whenever(bundle).size()
         doAnswer { map.isEmpty() }.whenever(bundle).isEmpty
         doAnswer { map.clear() }.whenever(bundle).clear()
+        whenever(bundle.get(ArgumentMatchers.anyString())).thenAnswer(get)
         doAnswer { invocation: InvocationOnMock -> map.containsKey(invocation.arguments[0]) }.whenever(bundle).containsKey(ArgumentMatchers.anyString())
         doAnswer { invocation: InvocationOnMock -> map.remove(invocation.arguments[0]) }.whenever(bundle).remove(ArgumentMatchers.anyString())
         doAnswer { map.keys }.whenever(bundle).keySet()
