@@ -39,11 +39,11 @@ import javax.inject.Singleton
 @Singleton
 class PatchedSiAppPlugin @Inject constructor(
     rh: ResourceHelper,
-    private val aapsLogger: AAPSLogger,
+    private val directLogger: AAPSLogger,
     private val context: Context,
     private val persistenceLayer: PersistenceLayer,
     private val dateUtil: DateUtil,
-    private val preferences: Preferences
+    preferences: Preferences
 ) : AbstractBgSourcePlugin(
     PluginDescription()
         .mainType(PluginType.BGSOURCE)
@@ -59,7 +59,7 @@ class PatchedSiAppPlugin @Inject constructor(
         SibionicsDirectLongKey::class.java,
         SibionicsDirectStringKey::class.java
     ),
-    aapsLogger, rh, preferences
+    directLogger, rh, preferences
 ), BgSource {
 
     private var directSession: SibionicsDirectSession? = null
@@ -70,7 +70,7 @@ class PatchedSiAppPlugin @Inject constructor(
             directSession = SibionicsDirectSession(
                 context = context,
                 preferences = preferences,
-                aapsLogger = aapsLogger,
+                aapsLogger = directLogger,
                 persistenceLayer = persistenceLayer,
                 dateUtil = dateUtil
             )
