@@ -15,6 +15,7 @@ import app.aaps.core.data.model.TE
 import app.aaps.core.data.model.TT
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.logging.LTag
+import app.aaps.core.interfaces.receivers.Intents
 import app.aaps.core.interfaces.nsclient.StoreDataForDb
 import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileUtil
@@ -50,6 +51,8 @@ class NSClientAddUpdateWorker(
     override suspend fun doWorkAndLog(): Result {
         val treatments = dataWorkerStorage.pickupJSONArray(inputData.getLong(DataWorkerStorage.STORE_KEY, -1))
             ?: return Result.failure(workDataOf("Error" to "missing input data"))
+        val sourceAction = inputData.getString(DataWorkerStorage.ACTION_KEY)
+        val allowLocalTreatmentIngress = sourceAction == Intents.LOCAL_TREATMENTS || sourceAction == Intents.NS_EMULATOR
 
         val ret = Result.success()
         var latestDateInReceivedData = 0L
@@ -71,12 +74,12 @@ class NSClientAddUpdateWorker(
             if (mills != 0L && mills < dateUtil.now() && mills > latestDateInReceivedData)
                 latestDateInReceivedData = mills
 
-            if (insulin > 0 && (preferences.get(BooleanKey.NsClientAcceptInsulin) || config.AAPSCLIENT)) {
+            if (insulin > 0 && (preferences.get(BooleanKey.NsClientAcceptInsulin) || config.AAPSCLIENT || allowLocalTreatmentIngress)) {
                 BS.fromJson(json)?.let { bolus ->
                     storeDataForDb.addToBoluses(bolus)
                 } ?: aapsLogger.error("Error parsing bolus json $json")
             }
-            if (carbs != 0.0 && (preferences.get(BooleanKey.NsClientAcceptCarbs) || config.AAPSCLIENT)) {
+            if (carbs != 0.0 && (preferences.get(BooleanKey.NsClientAcceptCarbs) || config.AAPSCLIENT || allowLocalTreatmentIngress)) {
                 CA.fromJson(json)?.let { carb ->
                     storeDataForDb.addToCarbs(carb)
                 } ?: aapsLogger.error("Error parsing bolus json $json")
@@ -95,7 +98,7 @@ class NSClientAddUpdateWorker(
             when {
                 insulin > 0 || carbs > 0                                          -> Any()
                 eventType == TE.Type.TEMPORARY_TARGET.text                        ->
-                    if (preferences.get(BooleanKey.NsClientAcceptTempTarget) || config.AAPSCLIENT) {
+                    if (preferences.get(BooleanKey.NsClientAcceptTempTarget) || config.AAPSCLIENT || allowLocalTreatmentIngress) {
                         TT.fromJson(json, profileUtil)?.let { temporaryTarget ->
                             storeDataForDb.addToTemporaryTargets(temporaryTarget)
                         } ?: aapsLogger.error("Error parsing TT json $json")
