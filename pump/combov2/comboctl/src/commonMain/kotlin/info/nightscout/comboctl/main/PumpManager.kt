@@ -273,6 +273,9 @@ class PumpManager(
         pairingProgressReporter.reset(Unit)
 
         // Spawn an internal coroutine scope since we need to launch new coroutines during discovery & pairing.
+        // Once we discovered a pump candidate, discovery stop events (timeout/error/manual stop)
+        // are no longer authoritative for this pairing run and must not override the result.
+        var discoveredPumpCandidate = false
         coroutineScope {
             val thisScope = this
             try {
@@ -285,16 +288,34 @@ class PumpManager(
                     btPairingPin = Constants.BT_PAIRING_PIN,
                     discoveryDuration = discoveryDuration,
                     onDiscoveryStopped = { reason ->
+                        if (discoveredPumpCandidate) {
+                            logger(LogLevel.DEBUG) {
+                                "Ignoring discovery stop reason $reason because pairing with a discovered pump already started"
+                            }
+                            return@startDiscovery
+                        }
+
                         when (reason) {
                             BluetoothInterface.DiscoveryStoppedReason.MANUALLY_STOPPED ->
-                                deferred.complete(PairingResult.DiscoveryManuallyStopped)
+                                if (!deferred.complete(PairingResult.DiscoveryManuallyStopped))
+                                    logger(LogLevel.DEBUG) { "Discovery stopped manually, but pairing result already decided; ignoring duplicate completion" }
                             BluetoothInterface.DiscoveryStoppedReason.DISCOVERY_ERROR ->
-                                deferred.complete(PairingResult.DiscoveryError)
+                                if (!deferred.complete(PairingResult.DiscoveryError))
+                                    logger(LogLevel.DEBUG) { "Discovery errored, but pairing result already decided; ignoring duplicate completion" }
                             BluetoothInterface.DiscoveryStoppedReason.DISCOVERY_TIMEOUT ->
-                                deferred.complete(PairingResult.DiscoveryTimeout)
+                                if (!deferred.complete(PairingResult.DiscoveryTimeout))
+                                    logger(LogLevel.DEBUG) { "Discovery timed out, but pairing result already decided; ignoring duplicate completion" }
                         }
                     },
                     onFoundNewPairedDevice = { deviceAddress ->
+                        discoveredPumpCandidate = true
+                        if (deferred.isCompleted) {
+                            logger(LogLevel.DEBUG) {
+                                "Ignoring discovered pump with address $deviceAddress because pairing result was already decided"
+                            }
+                            return@startDiscovery
+                        }
+
                         thisScope.launch {
                             pumpStateAccessMutex.withLock {
                                 try {
@@ -308,11 +329,20 @@ class PumpManager(
                                         val pumpID = pumpStateStore.getInvariantPumpData(deviceAddress).pumpID
                                         logger(LogLevel.DEBUG) { "Paired pump with address $deviceAddress ; pump ID = $pumpID" }
 
-                                        deferred.complete(PairingResult.Success(deviceAddress, pumpID))
+                                        if (!deferred.complete(PairingResult.Success(deviceAddress, pumpID))) {
+                                            logger(LogLevel.DEBUG) {
+                                                "Pairing for pump $deviceAddress succeeded, but pairing result was already decided; ignoring duplicate completion"
+                                            }
+                                        }
                                     }
                                 } catch (e: Exception) {
                                     logger(LogLevel.ERROR) { "Caught exception while pairing to pump with address $deviceAddress: $e" }
-                                    deferred.completeExceptionally(e)
+                                    if (!deferred.completeExceptionally(e)) {
+                                        logger(LogLevel.DEBUG) {
+                                            "Pairing for pump $deviceAddress failed after pairing result was already decided; ignoring exception completion"
+                                        }
+                                        return@withLock
+                                    }
                                     throw e
                                 }
                             }
