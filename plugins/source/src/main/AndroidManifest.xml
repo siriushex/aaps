@@ -6,6 +6,9 @@
         <activity
             android:name=".activities.RequestDexcomPermissionActivity"
             android:exported="false" />
+        <activity
+            android:name=".activities.SibionicsDirectSetupActivity"
+            android:exported="false" />
 
     </application>
 

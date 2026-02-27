@@ -15,6 +15,7 @@ import app.aaps.plugins.source.SyaiPlugin
 import app.aaps.plugins.source.TomatoPlugin
 import app.aaps.plugins.source.XdripSourcePlugin
 import app.aaps.plugins.source.activities.RequestDexcomPermissionActivity
+import app.aaps.plugins.source.activities.SibionicsDirectSetupActivity
 import dagger.Binds
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
@@ -41,6 +42,7 @@ abstract class SourceModule {
     @ContributesAndroidInjector abstract fun contributesSinoAppWorker(): PatchedSinoAppPlugin.PatchedSinoAppWorker
 
     @ContributesAndroidInjector abstract fun contributesRequestDexcomPermissionActivity(): RequestDexcomPermissionActivity
+    @ContributesAndroidInjector abstract fun contributesSibionicsDirectSetupActivity(): SibionicsDirectSetupActivity
 
     @Module
     interface Bindings {
