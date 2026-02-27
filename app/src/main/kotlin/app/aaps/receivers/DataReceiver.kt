@@ -190,7 +190,7 @@ open class DataReceiver : DaggerBroadcastReceiver() {
         val targetTop = getDouble(bundle, Intents.EXTRA_TARGET_TOP) ?: singleTarget
         val duration = getLong(bundle, Intents.EXTRA_DURATION, "ttDuration")
         if (targetBottom != null && targetTop != null && duration != null && duration > 0L) {
-            val units = getString(bundle, Intents.EXTRA_UNITS)?.trim()?.ifEmpty { null } ?: "mmol/L"
+            val units = normalizeTargetUnits(getString(bundle, Intents.EXTRA_UNITS))
             val reason = getString(bundle, Intents.EXTRA_REASON)?.trim()?.ifEmpty { null } ?: "Automation"
             treatments.put(
                 JSONObject()
@@ -249,6 +249,15 @@ open class DataReceiver : DaggerBroadcastReceiver() {
             }
         }
         return null
+    }
+
+    private fun normalizeTargetUnits(raw: String?): String {
+        val normalized = raw?.trim()?.lowercase(Locale.US).orEmpty()
+        return when (normalized) {
+            "mg/dl", "mgdl", "mg dl" -> "mg/dl"
+            "mmol", "mmol/l", "mmol\\l", "mmol l" -> "mmol"
+            else -> "mmol"
+        }
     }
 
     private fun buildStableId(prefix: String, vararg parts: Any): String {
