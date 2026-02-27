@@ -83,6 +83,8 @@
                 <action android:name="glucodata.Minute" />
                 <!-- Receiver from 640g uploader -->
                 <action android:name="com.eveningoutpost.dexdrip.NS_EMULATOR" />
+                <!-- Receiver for local treatments bridge -->
+                <action android:name="info.nightscout.androidaps.action.LOCAL_TREATMENTS" />
                 <!-- Receiver from glimp -->
                 <action android:name="it.ct.glicemia.ACTION_GLUCOSE_MEASURED" />
                 <!-- Receiver from Dexcom -->

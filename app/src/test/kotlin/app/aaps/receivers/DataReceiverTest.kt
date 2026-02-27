@@ -7,6 +7,8 @@ import android.provider.Telephony
 import androidx.work.OneTimeWorkRequest
 import app.aaps.core.interfaces.receivers.Intents
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
+import app.aaps.core.keys.StringKey
+import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.utils.receivers.DataWorkerStorage
 import app.aaps.plugins.main.general.smsCommunicator.SmsCommunicatorPlugin
 import app.aaps.plugins.source.DexcomPlugin
@@ -18,6 +20,7 @@ import app.aaps.plugins.source.PoctechPlugin
 import app.aaps.plugins.source.SyaiPlugin
 import app.aaps.plugins.source.TomatoPlugin
 import app.aaps.plugins.source.XdripSourcePlugin
+import app.aaps.plugins.sync.nsclient.workers.NSClientAddUpdateWorker
 import app.aaps.shared.tests.TestBase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -38,6 +41,7 @@ class DataReceiverTest : TestBase() {
     // Mocks for dependencies
     @Mock private lateinit var dataWorkerStorage: DataWorkerStorage
     @Mock private lateinit var fabricPrivacy: FabricPrivacy
+    @Mock private lateinit var preferences: Preferences
     @Mock private lateinit var context: Context
     @Mock private lateinit var bundle: Bundle
 
@@ -51,7 +55,9 @@ class DataReceiverTest : TestBase() {
             it.aapsLogger = aapsLogger
             it.dataWorkerStorage = dataWorkerStorage
             it.fabricPrivacy = fabricPrivacy
+            it.preferences = preferences
         }
+        whenever(preferences.get(StringKey.NsClientApiSecret)).thenReturn("")
     }
 
     private fun createIntent(action: String): Intent {
@@ -133,12 +139,75 @@ class DataReceiverTest : TestBase() {
     fun `processIntent enqueues MM640gWorker for NS_EMULATOR`() {
         // Arrange
         val intent = createIntent(Intents.NS_EMULATOR)
+        whenever(bundle.getString(Intents.EXTRA_COLLECTION)).thenReturn("entries")
 
         // Act
         dataReceiver.processIntent(context, intent)
 
         // Assert
         assertWorkerEnqueued(MM640gPlugin.MM640gWorker::class)
+    }
+
+    @Test
+    fun `processIntent enqueues NSClientAddUpdateWorker for NS_EMULATOR treatments`() {
+        // Arrange
+        val intent = createIntent(Intents.NS_EMULATOR)
+        whenever(bundle.getString(Intents.EXTRA_COLLECTION)).thenReturn("treatments")
+        whenever(bundle.get(Intents.EXTRA_COLLECTION)).thenReturn("treatments")
+        whenever(bundle.get(Intents.EXTRA_DATA)).thenReturn("""[{"eventType":"Carb Correction","carbs":10,"mills":1730000000000,"_id":"carbs-1"}]""")
+        whenever(dataWorkerStorage.storeInputData(any(), any())).thenReturn(androidx.work.Data.EMPTY)
+
+        // Act
+        dataReceiver.processIntent(context, intent)
+
+        // Assert
+        assertWorkerEnqueued(NSClientAddUpdateWorker::class)
+    }
+
+    @Test
+    fun `processIntent enqueues NSClientAddUpdateWorker for NS_EMULATOR treatments even with NS secret`() {
+        // Arrange
+        val intent = createIntent(Intents.NS_EMULATOR)
+        whenever(preferences.get(StringKey.NsClientApiSecret)).thenReturn("secret123")
+        whenever(bundle.get(Intents.EXTRA_COLLECTION)).thenReturn("treatments")
+        whenever(bundle.get(Intents.EXTRA_DATA)).thenReturn("""[{"eventType":"Carb Correction","carbs":10,"mills":1730000000000,"_id":"carbs-1"}]""")
+        whenever(dataWorkerStorage.storeInputData(any(), any())).thenReturn(androidx.work.Data.EMPTY)
+
+        // Act
+        dataReceiver.processIntent(context, intent)
+
+        // Assert
+        assertWorkerEnqueued(NSClientAddUpdateWorker::class)
+    }
+
+    @Test
+    fun `processIntent enqueues NSClientAddUpdateWorker for LOCAL_TREATMENTS shorthand`() {
+        // Arrange
+        val intent = createIntent(Intents.LOCAL_TREATMENTS)
+        whenever(bundle.get(Intents.EXTRA_CARBS)).thenReturn("15")
+        whenever(bundle.get(Intents.EXTRA_MILLS)).thenReturn(1730000000000L)
+        whenever(dataWorkerStorage.storeInputData(any(), any())).thenReturn(androidx.work.Data.EMPTY)
+
+        // Act
+        dataReceiver.processIntent(context, intent)
+
+        // Assert
+        assertWorkerEnqueued(NSClientAddUpdateWorker::class)
+    }
+
+    @Test
+    fun `processIntent blocks LOCAL_TREATMENTS with invalid secret`() {
+        // Arrange
+        val intent = createIntent(Intents.LOCAL_TREATMENTS)
+        whenever(preferences.get(StringKey.NsClientApiSecret)).thenReturn("secret123")
+        whenever(bundle.get(Intents.EXTRA_CARBS)).thenReturn("15")
+        whenever(bundle.get(Intents.EXTRA_MILLS)).thenReturn(1730000000000L)
+
+        // Act
+        dataReceiver.processIntent(context, intent)
+
+        // Assert
+        verify(dataWorkerStorage, never()).enqueue(any())
     }
 
     @Test
