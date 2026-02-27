@@ -1,6 +1,7 @@
 package app.aaps.utils
 
 import app.aaps.core.interfaces.utils.fabric.FabricPrivacy
+import leakcanary.AppWatcher
 import leakcanary.LeakCanary
 
 /**
@@ -12,6 +13,7 @@ import leakcanary.LeakCanary
  */
 fun configureLeakCanary(isEnabled: Boolean = false, fabricPrivacy: FabricPrivacy? = null) {
     if (!isEnabled) {
+        AppWatcher.config = AppWatcher.config.copy(enabled = false)
         // Fully disable heap analysis listeners to avoid background analyzer load.
         LeakCanary.config = LeakCanary.config.copy(
             dumpHeap = false,
@@ -21,6 +23,7 @@ fun configureLeakCanary(isEnabled: Boolean = false, fabricPrivacy: FabricPrivacy
         return
     }
 
+    AppWatcher.config = AppWatcher.config.copy(enabled = true)
     val eventListeners = if (fabricPrivacy != null) {
         LeakCanary.config.eventListeners + LeakUploadService(fabricPrivacy)
     } else {
