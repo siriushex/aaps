@@ -11,6 +11,16 @@ import leakcanary.LeakCanary
  *                      When provided, memory leaks will be uploaded via FabricPrivacy.logException.
  */
 fun configureLeakCanary(isEnabled: Boolean = false, fabricPrivacy: FabricPrivacy? = null) {
+    if (!isEnabled) {
+        // Fully disable heap analysis listeners to avoid background analyzer load.
+        LeakCanary.config = LeakCanary.config.copy(
+            dumpHeap = false,
+            eventListeners = emptyList()
+        )
+        LeakCanary.showLeakDisplayActivityLauncherIcon(false)
+        return
+    }
+
     val eventListeners = if (fabricPrivacy != null) {
         LeakCanary.config.eventListeners + LeakUploadService(fabricPrivacy)
     } else {
