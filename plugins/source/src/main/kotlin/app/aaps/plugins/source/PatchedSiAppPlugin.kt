@@ -2,6 +2,10 @@ package app.aaps.plugins.source
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import androidx.preference.PreferenceCategory
+import androidx.preference.PreferenceManager
+import androidx.preference.PreferenceScreen
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.aaps.core.data.model.GV
@@ -15,8 +19,17 @@ import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.plugin.PluginDescription
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.source.BgSource
+import app.aaps.core.interfaces.utils.DateUtil
+import app.aaps.core.keys.IntentKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.workflow.LoggingWorker
+import app.aaps.core.validators.preferences.AdaptiveIntentPreference
+import app.aaps.plugins.source.activities.SibionicsDirectSetupActivity
+import app.aaps.plugins.source.keys.SibionicsDirectBooleanKey
+import app.aaps.plugins.source.keys.SibionicsDirectIntKey
+import app.aaps.plugins.source.keys.SibionicsDirectLongKey
+import app.aaps.plugins.source.keys.SibionicsDirectStringKey
+import app.aaps.plugins.source.sibionics.SibionicsDirectSession
 import kotlinx.coroutines.Dispatchers
 import org.json.JSONArray
 import org.json.JSONException
@@ -26,8 +39,11 @@ import javax.inject.Singleton
 @Singleton
 class PatchedSiAppPlugin @Inject constructor(
     rh: ResourceHelper,
-    aapsLogger: AAPSLogger,
-    preferences: Preferences
+    private val aapsLogger: AAPSLogger,
+    private val context: Context,
+    private val persistenceLayer: PersistenceLayer,
+    private val dateUtil: DateUtil,
+    private val preferences: Preferences
 ) : AbstractBgSourcePlugin(
     PluginDescription()
         .mainType(PluginType.BGSOURCE)
@@ -37,9 +53,56 @@ class PatchedSiAppPlugin @Inject constructor(
         .pluginName(R.string.patched_si_app)
         .preferencesVisibleInSimpleMode(false)
         .description(R.string.description_source_patched_si_app),
-    ownPreferences = emptyList(),
+    ownPreferences = listOf(
+        SibionicsDirectBooleanKey::class.java,
+        SibionicsDirectIntKey::class.java,
+        SibionicsDirectLongKey::class.java,
+        SibionicsDirectStringKey::class.java
+    ),
     aapsLogger, rh, preferences
 ), BgSource {
+
+    private var directSession: SibionicsDirectSession? = null
+
+    override fun onStart() {
+        super.onStart()
+        if (directSession == null) {
+            directSession = SibionicsDirectSession(
+                context = context,
+                preferences = preferences,
+                aapsLogger = aapsLogger,
+                persistenceLayer = persistenceLayer,
+                dateUtil = dateUtil
+            )
+        }
+        directSession?.start()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        directSession?.stop()
+        directSession = null
+    }
+
+    override fun addPreferenceScreen(preferenceManager: PreferenceManager, parent: PreferenceScreen, context: Context, requiredKey: String?) {
+        super.addPreferenceScreen(preferenceManager, parent, context, requiredKey)
+        if (requiredKey != null) return
+        val category = PreferenceCategory(context)
+        parent.addPreference(category)
+        category.apply {
+            key = "sibionics_direct_settings"
+            title = rh.gs(R.string.sibionics_direct_category_title)
+            addPreference(
+                AdaptiveIntentPreference(
+                    ctx = context,
+                    intentKey = IntentKey.SibionicsDirectSetup,
+                    intent = Intent(context, SibionicsDirectSetupActivity::class.java),
+                    title = R.string.sibionics_direct_setup_title,
+                    summary = R.string.sibionics_direct_setup_summary
+                )
+            )
+        }
+    }
 
     class PatchedSiAppWorker(
         context: Context,

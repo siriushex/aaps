@@ -37,6 +37,34 @@
     <!-- Patched SI App -->
     <string name="patched_si_app">SI App</string>
     <string name="description_source_patched_si_app">Receive glucose data from Patched Sibionic SI App.</string>
+    <string name="sibionics_direct_category_title">Sibionics direct mode</string>
+    <string name="sibionics_direct_setup_title">Configure direct Sibionics</string>
+    <string name="sibionics_direct_setup_summary">Direct BLE connection inside AAPS (experimental).</string>
+    <string name="sibionics_direct_setup_header">Sibionics direct setup</string>
+    <string name="sibionics_direct_enable_label">Enable direct BLE mode</string>
+    <string name="sibionics_direct_subtype_label">Sensor subtype</string>
+    <string name="sibionics_direct_device_name_label">Transmitter BLE name or suffix</string>
+    <string name="sibionics_direct_device_name_hint">Example: 1NTK237GAA</string>
+    <string name="sibionics_direct_device_address_label">Transmitter BLE MAC (optional)</string>
+    <string name="sibionics_direct_device_address_hint">AA:BB:CC:DD:EE:FF</string>
+    <string name="sibionics_direct_poll_interval_label">Poll interval, seconds (15-300)</string>
+    <string name="sibionics_direct_next_index_label">Next index</string>
+    <string name="sibionics_direct_transmitter_code_label">Sibionics 2 transmitter code (optional)</string>
+    <string name="sibionics_direct_transmitter_code_hint">Paste code and press Parse</string>
+    <string name="sibionics_direct_parse_code">Parse transmitter code</string>
+    <string name="sibionics_direct_reset_requested">Request reset command on next connect</string>
+    <string name="sibionics_direct_invalid_code">Invalid transmitter code</string>
+    <string name="sibionics_direct_code_applied">Transmitter name applied: %1$s</string>
+    <string name="sibionics_direct_saved">Sibionics direct settings saved</string>
+    <string name="sibionics_direct_enabled_status">enabled</string>
+    <string name="sibionics_direct_disabled_status">disabled</string>
+    <string name="sibionics_direct_status_template">Direct mode: %1$s, subtype: %2$s</string>
+    <string-array name="sibionics_direct_subtypes">
+        <item>EU Sibionics (com.sisensing.sijoy)</item>
+        <item>Hematonix (com.sisensing.rusibionics)</item>
+        <item>Chinese Sibionics (com.sisensing.sisensingcgm)</item>
+        <item>Sibionics 2 / Split (com.sisensing.eco)</item>
+    </string-array>
     <!-- Patched Sino App -->
     <string name="patched_sino_app">Sino App</string>
     <string name="description_source_patched_sino_app">Receive glucose data from Patched Sino App.</string>
