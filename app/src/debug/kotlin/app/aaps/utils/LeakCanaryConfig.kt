@@ -19,7 +19,8 @@ fun configureLeakCanary(isEnabled: Boolean = false, fabricPrivacy: FabricPrivacy
             dumpHeap = false,
             eventListeners = emptyList()
         )
-        LeakCanary.showLeakDisplayActivityLauncherIcon(false)
+        // If watcher auto-install is disabled in debug resources, this call throws.
+        runCatching { LeakCanary.showLeakDisplayActivityLauncherIcon(false) }
         return
     }
 
@@ -34,5 +35,5 @@ fun configureLeakCanary(isEnabled: Boolean = false, fabricPrivacy: FabricPrivacy
         dumpHeap = isEnabled,
         eventListeners = eventListeners
     )
-    LeakCanary.showLeakDisplayActivityLauncherIcon(isEnabled)
+    runCatching { LeakCanary.showLeakDisplayActivityLauncherIcon(isEnabled) }
 }
