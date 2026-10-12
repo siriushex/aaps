@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
@@ -7,8 +9,20 @@ plugins {
     id("jacoco-module-dependencies")
 }
 
+val localGoogleApiProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.isFile) {
+        localPropertiesFile.inputStream().use { load(it) }
+    }
+}
+val googleMapsApiKey = providers.environmentVariable("AAPS_GOOGLE_MAPS_API_KEY")
+    .orElse(localGoogleApiProperties.getProperty("googleMapsApiKey", ""))
+
 android {
     namespace = "app.aaps.plugins.automation"
+    defaultConfig {
+        resValue("string", "key_google_apis_android", googleMapsApiKey.get())
+    }
 }
 
 dependencies {
