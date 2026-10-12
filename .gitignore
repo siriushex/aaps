@@ -33,3 +33,6 @@ wear/pumpcontrol/*
 /buildSrc/.kotlin
 .claude/settings.local.json
 /CLAUDE.md
+
+/app/google-services.local.json
+/wear/google-services.local.json

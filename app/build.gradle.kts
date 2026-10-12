@@ -1,3 +1,4 @@
+import com.google.gms.googleservices.GoogleServicesTask
 import org.gradle.kotlin.dsl.debugImplementation
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -11,6 +12,19 @@ plugins {
     id("android-app-dependencies")
     id("test-app-dependencies")
     id("jacoco-app-dependencies")
+}
+
+// Read private Firebase configuration from a local file supplied by the builder.
+tasks.withType<GoogleServicesTask>().configureEach {
+    googleServicesJsonFiles.set(providers.provider {
+        val configuredPath = providers.environmentVariable("AAPS_GOOGLE_SERVICES_JSON").orNull
+        val localConfig = layout.projectDirectory.file("google-services.local.json").asFile
+        when {
+            !configuredPath.isNullOrBlank() -> listOf(rootProject.file(configuredPath))
+            localConfig.isFile -> listOf(localConfig)
+            else -> listOf(layout.projectDirectory.file("google-services.json").asFile)
+        }
+    })
 }
 
 repositories {
