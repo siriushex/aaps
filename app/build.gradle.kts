@@ -16,6 +16,21 @@ plugins {
 
 // Read private Firebase configuration from a local file supplied by the builder.
 tasks.withType<GoogleServicesTask>().configureEach {
+    doFirst {
+        val configuredPath = providers.environmentVariable("AAPS_GOOGLE_SERVICES_JSON").orNull
+        val privateConfig = if (!configuredPath.isNullOrBlank()) {
+            rootProject.file(configuredPath)
+        } else {
+            layout.projectDirectory.file("google-services.local.json").asFile
+        }
+        if (!privateConfig.isFile) {
+            throw GradleException(
+                "Private Firebase configuration is required. " +
+                    "Set AAPS_GOOGLE_SERVICES_JSON or create app/google-services.local.json. " +
+                    "The tracked keyless template cannot be used for an APK."
+            )
+        }
+    }
     googleServicesJsonFiles.set(providers.provider {
         val configuredPath = providers.environmentVariable("AAPS_GOOGLE_SERVICES_JSON").orNull
         val localConfig = layout.projectDirectory.file("google-services.local.json").asFile
