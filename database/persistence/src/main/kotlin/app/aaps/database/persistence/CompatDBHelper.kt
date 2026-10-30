@@ -46,6 +46,15 @@ class CompatDBHelper @Inject constructor(
 
     fun dbChangeDisposable(): Disposable = repository
         .changeObservable()
+        .compose { changes ->
+            val glucoseChanges = GlucoseChangeFilter()
+            changes.map { entries ->
+                val clinicalChanges = entries.filter { it !is GlucoseValue || glucoseChanges.isNewOrChanged(it) }
+                if (clinicalChanges.size != entries.size)
+                    aapsLogger.debug(LTag.DATABASE, "Skipping clinical reload for ${entries.size - clinicalChanges.size} unchanged glucose records")
+                clinicalChanges
+            }
+        }
         .doOnSubscribe {
             rxBus.send(EventNewBG(null))
             uiInteraction.updateWidget(context, "OnStart")
