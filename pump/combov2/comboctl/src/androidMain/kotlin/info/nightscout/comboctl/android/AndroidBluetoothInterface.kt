@@ -5,6 +5,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Handler
+import android.os.Looper
 import info.nightscout.comboctl.base.BluetoothAddress
 import info.nightscout.comboctl.base.BluetoothDevice
 import info.nightscout.comboctl.base.BluetoothException
@@ -44,6 +46,8 @@ class AndroidBluetoothInterface(private val androidContext: Context) : Bluetooth
     private var rfcommServerSocket: SystemBluetoothServerSocket? = null
     private var discoveryStarted = false
     private var discoveryBroadcastReceiver: BroadcastReceiver? = null
+    private val discoveryHandler by lazy { Handler(Looper.getMainLooper()) }
+    private var discoveryDeadline: Runnable? = null
 
     // Note that this contains ALL paired/bonded devices, not just
     // the ones that pass the deviceFilterCallback.This is important
@@ -81,8 +85,8 @@ class AndroidBluetoothInterface(private val androidContext: Context) : Bluetooth
     // Set to a non-null value if discovery timeouts or if it is
     // manually stopped via stopDiscovery().
     private var discoveryStoppedReason: BluetoothInterface.DiscoveryStoppedReason? = null
-    // Set to true once a device is found. Used in onDiscoveryFinished()
-    // to suppress a discoveryStopped callback invocation.
+    private var wasDiscoverable = false
+    // A found device finishes discovery through the paired-device callback.
     private var foundDevice = false
 
     // Invoked if discovery stops for any reason other than that
@@ -180,6 +184,7 @@ class AndroidBluetoothInterface(private val androidContext: Context) : Bluetooth
         previouslyDiscoveredDevices.clear()
         foundDevice = false
         discoveryStoppedReason = null
+        wasDiscoverable = false
 
         // The Combo communicates over RFCOMM using the SDP Serial Port Profile.
         // We use an insecure socket, which means that it lacks an authenticated
@@ -234,24 +239,32 @@ class AndroidBluetoothInterface(private val androidContext: Context) : Bluetooth
         val intentFilter = IntentFilter()
         intentFilter.addAction(SystemBluetoothDevice.ACTION_ACL_CONNECTED)
         intentFilter.addAction(SystemBluetoothDevice.ACTION_PAIRING_REQUEST)
-        intentFilter.addAction(SystemBluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+        // Combo searches for this phone. Finishing an outbound Android inquiry
+        // does not end the phone's discoverability.
         intentFilter.addAction(SystemBluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
 
-        discoveryBroadcastReceiver = object : BroadcastReceiver() {
+        val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 logger(LogLevel.DEBUG) { "discoveryBroadcastReceiver received new action: ${intent.action}" }
 
                 when (intent.action) {
                     SystemBluetoothDevice.ACTION_ACL_CONNECTED -> onAclConnected(intent, onFoundNewPairedDevice)
                     SystemBluetoothDevice.ACTION_PAIRING_REQUEST -> onPairingRequest(intent, btPairingPin)
-                    SystemBluetoothAdapter.ACTION_DISCOVERY_FINISHED -> onDiscoveryFinished()
                     SystemBluetoothAdapter.ACTION_SCAN_MODE_CHANGED -> onScanModeChanged(intent)
                     else -> Unit
                 }
             }
         }
+        discoveryBroadcastReceiver = receiver
 
-        androidContext.registerReceiver(discoveryBroadcastReceiver, intentFilter)
+        androidContext.registerReceiver(receiver, intentFilter)
+        // Bound the attempt even if a vendor stack never reports the scan mode.
+        // Allow time for the Android consent dialog before counting this fallback.
+        val deadline = Runnable {
+            if (discoveryBroadcastReceiver === receiver) reportDiscoveryTimeout()
+        }
+        discoveryDeadline = deadline
+        discoveryHandler.postDelayed(deadline, (discoveryDuration + 60L) * 1000L)
 
         logger(LogLevel.DEBUG) { "Starting activity for making this Android device discoverable" }
 
@@ -304,6 +317,9 @@ class AndroidBluetoothInterface(private val androidContext: Context) : Bluetooth
     }
 
     private fun stopDiscoveryInternal() {
+        discoveryDeadline?.let { discoveryHandler.removeCallbacks(it) }
+        discoveryDeadline = null
+
         // Close the server socket. This frees RFCOMM resources and ends
         // the listenThread because the accept() call inside will be aborted
         // by the close() call.
@@ -593,25 +609,14 @@ class AndroidBluetoothInterface(private val androidContext: Context) : Bluetooth
         logger(LogLevel.INFO) { "Established Bluetooth pairing with Combo pump with address $androidBtAddressString" }
     }
 
-    private fun onDiscoveryFinished() {
-        logger(LogLevel.DEBUG) { "Discovery finished" }
-
-        // If a device was found, foundNewPairedDevice is called,
-        // which implicitly announces that discovery stopped.
-        if (!foundDevice) {
-            // discoveryStoppedReason is set to a non-NULL value only
-            // if stopDiscovery() is called. If the discovery timeout
-            // is reached, we get to this point, but the value of
-            // discoveryStoppedReason  is still null.
-            discoveryStopped(discoveryStoppedReason ?: BluetoothInterface.DiscoveryStoppedReason.DISCOVERY_TIMEOUT)
-        }
+    private fun reportDiscoveryTimeout() {
+        if (discoveryBroadcastReceiver == null || foundDevice || discoveryStoppedReason != null) return
+        discoveryStoppedReason = BluetoothInterface.DiscoveryStoppedReason.DISCOVERY_TIMEOUT
+        logger(LogLevel.INFO) { "Combo discovery timed out" }
+        discoveryStopped(BluetoothInterface.DiscoveryStoppedReason.DISCOVERY_TIMEOUT)
     }
 
     private fun onScanModeChanged(intent: Intent) {
-        // Only using EXTRA_SCAN_MODE here, since EXTRA_PREVIOUS_SCAN_MODE never
-        // seems to be populated. See: https://stackoverflow.com/a/30935424/560774
-        // This appears to be either a bug in Android or an error in the documentation.
-
         val currentScanMode = intent.getIntExtra(SystemBluetoothAdapter.EXTRA_SCAN_MODE, SystemBluetoothAdapter.ERROR)
         if (currentScanMode == SystemBluetoothAdapter.ERROR) {
             logger(LogLevel.ERROR) { "Could not get current scan mode; EXTRA_SCAN_MODE extra field missing" }
@@ -620,22 +625,15 @@ class AndroidBluetoothInterface(private val androidContext: Context) : Bluetooth
 
         logger(LogLevel.DEBUG) { "Scan mode changed to $currentScanMode" }
 
-        // Since EXTRA_PREVIOUS_SCAN_MODE is not available, we have to use a trick
-        // to make sure we detect a discovery timeout. If there's a broadcast
-        // receiver, we must have been discoverable so far. And if the EXTRA_SCAN_MODE
-        // field indicates that we aren't discoverable right now, it follows that
-        // we used to be discoverable but no longer are.
-        if ((discoveryBroadcastReceiver != null) &&
-            (currentScanMode != SystemBluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE)
-        ) {
-            logger(LogLevel.INFO) { "We are no longer discoverable" }
-            // Only proceed if the discovery timed out. This happens if no device was
-            // found and discoveryStoppedReason wasn't set. (see stopDiscovery()
-            // for an example where discoveryStoppedReason is set prior to stopping.)
-            if (!foundDevice && (discoveryStoppedReason == null)) {
-                discoveryStoppedReason = BluetoothInterface.DiscoveryStoppedReason.DISCOVERY_TIMEOUT
-                onDiscoveryFinished()
-            }
+        if (currentScanMode == SystemBluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            wasDiscoverable = true
+            return
+        }
+
+        // A receiver is registered before Android asks for consent.
+        val previousScanMode = intent.getIntExtra(SystemBluetoothAdapter.EXTRA_PREVIOUS_SCAN_MODE, SystemBluetoothAdapter.ERROR)
+        if (wasDiscoverable || previousScanMode == SystemBluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+            reportDiscoveryTimeout()
         }
     }
 }
