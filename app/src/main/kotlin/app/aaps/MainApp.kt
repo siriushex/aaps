@@ -147,6 +147,10 @@ class MainApp : Application(), MetroMemberInjector, MetroViewModelFactoryOwner, 
     private val plugins get() = metroGraphs.allPlugins(aapsLogger)
     private val persistenceLayer get() = metroGraphs.persistenceLayer
     private val dateUtil get() = metroGraphs.dateUtil
+    internal suspend fun readLocalObservation(now: Long): ByteArray {
+        check(AndroidStorage.failure == null && config.initProgressFlow.value.done)
+        return app.aaps.localobservation.readLocalObservation(persistenceLayer, dateUtil, now)
+    }
     private val uiInteraction get() = metroGraphs.uiInteraction
     private val processLifecycleListener get() = metroGraphs.processLifecycleListener
     private val localAlertUtils get() = metroGraphs.localAlertUtils
