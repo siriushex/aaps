@@ -1,0 +1,36 @@
+name: Wizard verification
+
+on:
+  push:
+    paths:
+      - '.github/workflows/wizard-verification.yml'
+      - 'core/interfaces/src/**'
+      - 'implementation/src/**'
+      - 'ui/src/**'
+
+permissions:
+  contents: read
+
+jobs:
+  android-host-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Read required JDK
+        id: jdk
+        run: printf 'version=%s\n' "$(jq -er '.default' .github/jdk-map.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ steps.jdk.outputs.version }}
+          cache: gradle
+      - name: Install Android SDK
+        run: sdkmanager "platforms;android-37"
+      - name: Run wizard, queue and UI tests
+        run: >-
+          bash gradlew --no-daemon --console=plain --configure-on-demand --max-workers=3
+          -Dorg.gradle.jvmargs="-Xmx3g -XX:+UseParallelGC -Xss4m" -PfirebaseDisable
+          :implementation:testAndroidHostTest :ui:testAndroidHostTest
