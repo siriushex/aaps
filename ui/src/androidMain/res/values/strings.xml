@@ -179,6 +179,8 @@
     <string name="clientcontrol_pending_unconfirmed_title">Couldn\'t confirm</string>
     <!-- %1$s = action label, %2$s = reason. Sent but unconfirmed → will reconcile via sync-back -->
     <string name="clientcontrol_pending_unconfirmed_format">%1$s was sent, but no confirmation came back.\n%2$s\nIt will appear here if/when the master applies it.</string>
+    <string name="wizard_submission_rejected">Wizard entry not accepted: %1$s</string>
+    <string name="wizard_submission_unconfirmed">The result could not be confirmed: %1$s. Check the pump and treatment history before submitting again.</string>
     <string name="clientcontrol_pending_stop_waiting">Stop waiting</string>
     <string name="a11y_add_new_insulin">Add new insulin</string>
     <string name="a11y_delete_current_insulin">Delete current insulin</string>

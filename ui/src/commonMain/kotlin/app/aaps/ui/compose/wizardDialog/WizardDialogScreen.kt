@@ -99,6 +99,7 @@ import app.aaps.core.ui.compose.ExpandableRowHeader
 import app.aaps.core.ui.compose.NumberInputRow
 import app.aaps.core.ui.compose.QuickAddButtons
 import app.aaps.core.ui.compose.TimeOffsetRow
+import app.aaps.core.ui.compose.banner.ErrorBanner
 import app.aaps.core.ui.compose.bottomBarSafeArea
 import app.aaps.core.ui.compose.clearFocusOnTap
 import app.aaps.core.ui.compose.consumeOverscroll
@@ -141,12 +142,11 @@ fun WizardDialogScreen(
                 is WizardDialogViewModel.SideEffect.ShowTempBasalError -> {
                     onShowDeliveryError(effect.comment)
                 }
-
-                is WizardDialogViewModel.SideEffect.NavigateBack       -> {
-                    onNavigateBack()
-                }
             }
         }
+    }
+    LaunchedEffect(uiState.submissionAccepted) {
+        if (uiState.submissionAccepted) onNavigateBack()
     }
 
     // Dialog states (rememberSaveable to survive rotation)
@@ -175,8 +175,7 @@ fun WizardDialogScreen(
             uiState.forcedRecordOnly -> showRecordOnly = true
             // Deliver role-transparently: the master recomputes, caps + authors the confirmation and shows it on the
             // single app-level dialog (both roles); the advisor fork is decided from the master's prepared result.
-            // The wizard stays open behind the confirmation — it closes only after the user confirms (via the
-            // NavigateBack side effect from deliverManualWizard); Cancel keeps it open with inputs intact.
+            // The wizard stays open until the confirmed action is accepted.
             else                     -> viewModel.deliverManualWizard()
         }
     }
@@ -284,6 +283,7 @@ internal fun WizardDialogContent(
                 )
                 if (uiState.forcedRecordOnly) RecordOnlyBanner()
                 if (uiState.waitsForSmb) SmbBeingDeliveredBanner()
+                uiState.submissionError?.let { ErrorBanner(message = it) }
             }
         },
         bottomBar = {
@@ -297,7 +297,7 @@ internal fun WizardDialogContent(
                     focusManager.clearFocus()
                     onConfirmClick()
                 },
-                enabled = uiState.okVisible && !uiState.waitsForSmb,
+                enabled = uiState.okVisible && !uiState.waitsForSmb && !uiState.submissionLocked,
                 modifier = Modifier
                     .fillMaxWidth()
                     .bottomBarSafeArea()

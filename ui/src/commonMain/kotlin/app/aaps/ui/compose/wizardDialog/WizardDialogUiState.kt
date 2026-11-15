@@ -85,8 +85,15 @@ data class WizardDialogUiState(
     /** An SMB is being delivered on this phone (always false on a client: its master decides). */
     val smbBeingDelivered: Boolean = false,
     /** The user has changed the BG field. From then on it keeps their value and no longer follows new readings. */
-    val bgEdited: Boolean = false
+    val bgEdited: Boolean = false,
+    val submitting: Boolean = false,
+    val submissionAccepted: Boolean = false,
+    val submissionError: String? = null,
+    val submissionUnconfirmed: Boolean = false
 )
+
+val WizardDialogUiState.submissionLocked: Boolean
+    get() = submitting || submissionAccepted || submissionUnconfirmed
 
 /**
  * A new sensor reading came in. The BG field follows it until the user has edited the field: the BG is sent to the

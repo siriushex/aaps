@@ -14,6 +14,7 @@ import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.bolus.MasterActionExecutor
 import app.aaps.core.interfaces.bolus.WizardExecutor
 import app.aaps.core.interfaces.clientcontrol.ActionProgress
+import app.aaps.core.interfaces.clientcontrol.FailureReason
 import app.aaps.core.interfaces.clientcontrol.isNotDeliveryError
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
@@ -47,6 +48,7 @@ import app.aaps.core.objects.wizard.BolusWizard
 import app.aaps.core.ui.CoreUiStrings
 import app.aaps.core.ui.clientcontrol.failText
 import app.aaps.core.ui.compose.icons.IcCalculator
+import app.aaps.ui.UiStrings
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -55,6 +57,7 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.binding
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactoryKey
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -63,6 +66,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -103,9 +107,6 @@ class WizardDialogViewModel(
     sealed class SideEffect {
         data class ShowDeliveryError(val comment: String) : SideEffect()
         data class ShowTempBasalError(val comment: String) : SideEffect()
-
-        /** Close the wizard after the user confirmed the delivery (like the insulin dialog); Cancel keeps it open. */
-        data object NavigateBack : SideEffect()
     }
 
     private val _sideEffect = MutableSharedFlow<SideEffect>(
@@ -589,10 +590,11 @@ class WizardDialogViewModel(
      * confirmation. Both roles render the master's EXACT lines via the shared [showWizardBolusConfirmation]; the user's
      * OK commits (the advisor fork chooses correction-only). No dose is ever computed on a client. This is the DELIVERY
      * path; a master that can't deliver records locally via [recordOnly] (master-only — a client always delivers).
-     * appScope, not viewModelScope: the screen pops right after this call.
+     * Keep the screen until the result is known. appScope owns the action even if the user leaves the form.
      */
     fun deliverManualWizard() {
         val state = uiState.value
+        if (state.submissionLocked) return
         val effectiveCarbs = state.carbsType.carbsNow(state.carbs)
         // null → recompute on the master's active profile (index 0 = "Active"); else the selected stored profile by name.
         val profileName = if (state.selectedProfileIndex == 0) null else state.profileNames.getOrNull(state.selectedProfileIndex)
@@ -612,24 +614,12 @@ class WizardDialogViewModel(
                     showWizardBolusConfirmation(
                         rxBus, rh, rh.gs(CoreUiStrings.boluswizard), IcCalculator, prepared.advisorApplies, prepared.lines, prepared.advisorLines,
                         closeAt = closeAt,
-                        onCancel = { wizardExecutor.discard(prepared.id) }
-                    ) { asAdvisor ->
-                        // Confirmed → close the wizard (Cancel leaves it open with inputs intact, like the insulin dialog).
-                        _sideEffect.tryEmit(SideEffect.NavigateBack)
-                        appScope.launch {
-                            val result = wizardExecutor.commit(prepared.id, asAdvisor, Sources.WizardDialog, label)
-                            // Device-local reminder cleanup on the ACTING device, mirroring the Carbs/Insulin dialogs:
-                            // these one-shot Automation "remind me to bolus/eat" events live on the phone the user acted
-                            // on, so the client must clear its own — confirm() runs on the master and can't reach them.
-                            // (The "time to eat" alarm itself is still scheduled by confirm() on the master.) Only on a
-                            // confirmed delivery; gated on the master's authoritative computed insulin/carbs.
-                            if (result is ActionProgress.Applied) {
-                                val detail = prepared.wizardDetail
-                                if ((detail?.totalInsulin ?: 0.0) > 0.0) automation.removeAutomationEventBolusReminder()
-                                // Advisor = "correct now, eat later" re-schedules an eat reminder, so don't clear it here.
-                                if (!asAdvisor && (detail?.carbs ?: 0) > 0) automation.removeAutomationEventEatReminder()
-                            }
+                        onCancel = {
+                            wizardExecutor.discard(prepared.id)
+                            if (closeAt.hasPassedNow()) showSubmissionRejection(FailureReason.NoPendingBolus, null, onlyIfIdle = true)
                         }
+                    ) { asAdvisor ->
+                        commitManualWizard(prepared, asAdvisor, label)
                     }
                 // Master-local compute failure (no modal) or client offline; a client round-trip failure already showed on the app modal.
                 is ActionProgress.Rejected ->
@@ -639,6 +629,50 @@ class WizardDialogViewModel(
                 else                       -> Unit // Unconfirmed → app modal
             }
         }
+    }
+
+    private fun commitManualWizard(prepared: ActionProgress.Prepared, asAdvisor: Boolean, label: String) {
+        val previous = _uiState.getAndUpdate {
+            if (it.submissionLocked) it else it.copy(submitting = true, submissionError = null)
+        }
+        if (previous.submissionLocked) return
+        appScope.launch {
+            val result = try {
+                wizardExecutor.commit(prepared.id, asAdvisor, Sources.WizardDialog, label)
+            } catch (cancelled: CancellationException) {
+                showUnconfirmed(FailureReason.Internal)
+                throw cancelled
+            } catch (_: Exception) {
+                ActionProgress.Unconfirmed(FailureReason.Internal)
+            }
+            when (result) {
+                ActionProgress.Applied        -> {
+                    // These one-shot reminders live on the acting device, not necessarily on the master.
+                    val detail = prepared.wizardDetail
+                    if ((detail?.totalInsulin ?: 0.0) > 0.0) automation.removeAutomationEventBolusReminder()
+                    if (!asAdvisor && (detail?.carbs ?: 0) > 0) automation.removeAutomationEventEatReminder()
+                    _uiState.update { it.copy(submitting = false, submissionAccepted = true) }
+                }
+
+                is ActionProgress.Rejected    -> showSubmissionRejection(result.reason, result.detail)
+                is ActionProgress.Unconfirmed -> showUnconfirmed(result.reason)
+                else                          -> showUnconfirmed(FailureReason.Internal)
+            }
+        }
+    }
+
+    private fun showSubmissionRejection(reason: FailureReason, detail: String?, onlyIfIdle: Boolean = false) {
+        val cause = detail?.takeIf { it.isNotBlank() } ?: rh.gs(reason.failText())
+        val message = rh.gs(UiStrings.wizard_submission_rejected, cause)
+        _uiState.update {
+            if (onlyIfIdle && it.submissionLocked) it
+            else it.copy(submitting = false, submissionError = message)
+        }
+    }
+
+    private fun showUnconfirmed(reason: FailureReason) {
+        val message = rh.gs(UiStrings.wizard_submission_unconfirmed, rh.gs(reason.failText()))
+        _uiState.update { it.copy(submitting = false, submissionUnconfirmed = true, submissionError = message) }
     }
 
     /**

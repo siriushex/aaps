@@ -952,15 +952,32 @@ class CommandQueueImplementationTest : TestBaseWithProfile() {
         yield()
         commandQueue.pickup()
 
-        val manual = commandQueue.bolus(DetailedBolusInfo().apply { insulin = 1.0 })
+        var queued = false
+        val manual = commandQueue.bolus(DetailedBolusInfo().apply { insulin = 1.0 }) { queued = true }
 
         assertThat(manual.success).isFalse()
+        assertThat(queued).isFalse()
         // No insulin was given: the user is told, but it is not a delivery error alarm
         assertThat(manual.cancelled).isTrue()
         assertThat(commandQueue.size()).isEqualTo(0)
         assertThat(commandQueue.performing()?.commandType).isEqualTo(Command.CommandType.SMB_BOLUS)
         assertThat(smbResult).isNull()
         assertThat(bolusProgressData.state.value?.isSMB).isTrue()
+    }
+
+    @Test
+    fun `queue receipt precedes pump execution`() = runTest {
+        var queued = false
+        var finished = false
+        backgroundScope.launch {
+            commandQueue.bolus(DetailedBolusInfo().apply { insulin = 1.0 }) { queued = true }
+            finished = true
+        }
+        yield()
+
+        assertThat(commandQueue.size()).isEqualTo(1)
+        assertThat(queued).isTrue()
+        assertThat(finished).isFalse()
     }
 
     // ---- #5381: the bolus screens see an SMB being delivered, and no SMB starts while a bolus is confirmed ----

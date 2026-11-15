@@ -137,6 +137,8 @@
     <string name="clientcontrol_pending_unconfirmed_title">Не удалось подтвердить</string>
     <!-- %1$s = action label, %2$s = reason. Sent but unconfirmed → will reconcile via sync-back -->
     <string name="clientcontrol_pending_unconfirmed_format">%1$s было отправлено, но подтверждение не было получено.\n%2$s\nОно появится здесь, если/когда мастер применит его.</string>
+    <string name="wizard_submission_rejected">Действие мастера не принято: %1$s</string>
+    <string name="wizard_submission_unconfirmed">Не удалось подтвердить результат: %1$s. Прежде чем отправлять заново, проверьте помпу и историю терапии.</string>
     <string name="clientcontrol_pending_stop_waiting">Прекратить ожидание</string>
     <string name="a11y_add_new_insulin">Добавить новый инсулин</string>
     <string name="a11y_delete_current_insulin">Удалить текущий инсулин</string>

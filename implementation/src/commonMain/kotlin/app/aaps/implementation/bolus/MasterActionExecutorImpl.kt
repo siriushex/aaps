@@ -66,6 +66,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -761,10 +762,15 @@ class MasterActionExecutorImpl(
             return if (cancelled) MasterActionExecutor.ConfirmResult.Cancelled else MasterActionExecutor.ConfirmResult.Delivered
         }
 
+        // The local form can wait for its own queue decision. Remote callers keep their separate delivery acks.
+        val awaitQueue = source == Sources.WizardDialog
         // High-BG advisor branch (user chose "correct now, eat later"): a correction-only CORRECTION_BOLUS —
         // no carbs, no eCarbs, no super-bolus, no eat reminder. mg/dL BG comes from the BCR's glucoseValue.
         if (asAdvisor) {
-            executeBolusAdvisor(p.insulin, p.bcr?.glucoseValue, p.bcr, notes, source, onError, onSuccess)
+            if (awaitQueue && p.insulin <= 0.0)
+                onError(MasterActionExecutor.Failure(rh.gs(CoreUiStrings.no_action_selected)))
+            else
+                executeBolusAdvisor(p.insulin, p.bcr?.glucoseValue, p.bcr, notes, source, onError, onSuccess, awaitQueue = awaitQueue)
             p.entry?.markAsUsed()
             return MasterActionExecutor.ConfirmResult.Delivered
         }
@@ -826,10 +832,14 @@ class MasterActionExecutorImpl(
         // The "time to eat" timer counts from the end of the bolus, as it did in 3.x: with a slow pump the
         // delivery takes minutes. It is not started when the bolus fails; it is when the user stopped the bolus,
         // because part of the insulin is in and the carbs are recorded.
-        executeWizardBolus(
-            correctedInsulin, p.carbs, carbTimeOffset.toInt(), p.bcr?.glucoseValue, correctedBcr, notes, source, onError,
-            withEatReminder(useAlarm && p.carbs > 0, carbTimeOffset.toInt(), onSuccess)
-        )
+        if (awaitQueue && correctedInsulin <= 0.0 && p.carbs == 0 && carbs2 == 0)
+            onError(MasterActionExecutor.Failure(rh.gs(CoreUiStrings.no_action_selected)))
+        else
+            executeWizardBolus(
+                correctedInsulin, p.carbs, carbTimeOffset.toInt(), p.bcr?.glucoseValue, correctedBcr, notes, source, onError,
+                withEatReminder(useAlarm && p.carbs > 0, carbTimeOffset.toInt(), onSuccess),
+                awaitQueue = awaitQueue
+            )
         if (carbs2 > 0) deliverECarbs(carbs2, eventTime, duration, eCarbsDelay, notes, source, onError)
         p.entry?.markAsUsed()
         return MasterActionExecutor.ConfirmResult.Delivered
@@ -1331,7 +1341,8 @@ class MasterActionExecutorImpl(
         notes: String?,
         source: Sources,
         onError: (MasterActionExecutor.Failure) -> Unit,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
+        awaitQueue: Boolean = false
     ) {
         // Type-specific entry point: build the canonical BOLUS_WIZARD end state from the wizard inputs,
         // then funnel into the shared core. Phone (WizardDialog) and watch (QuickWizard) differ only in
@@ -1358,7 +1369,7 @@ class MasterActionExecutorImpl(
                 ValueWithUnit.Gram(carbs).takeIf { carbs != 0 },
                 ValueWithUnit.Minute(carbTimeMinutes).takeIf { carbTimeMinutes != 0 }
             )
-            executeBolus(detailedBolusInfo, action, uelValues, notes, bolusCalculatorResult, source, onError, onSuccess)
+            executeBolus(detailedBolusInfo, action, uelValues, notes, bolusCalculatorResult, source, onError, onSuccess, awaitQueue = awaitQueue)
         }
     }
 
@@ -1379,7 +1390,8 @@ class MasterActionExecutorImpl(
         notes: String?,
         source: Sources,
         onError: (MasterActionExecutor.Failure) -> Unit,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
+        awaitQueue: Boolean = false
     ) {
         // Correction-only advisor bolus (BG high, carbs imminent): canonical CORRECTION_BOLUS end state,
         // and the eat reminder is scheduled on delivery success. The BCR rides the DBI but is not persisted
@@ -1404,7 +1416,8 @@ class MasterActionExecutorImpl(
                 onSuccess = {
                     automation.scheduleAutomationEventEatReminder()
                     onSuccess()
-                }
+                },
+                awaitQueue = awaitQueue
             )
         }
     }
@@ -1522,7 +1535,8 @@ class MasterActionExecutorImpl(
         onError: (MasterActionExecutor.Failure) -> Unit,
         onSuccess: () -> Unit = {},
         recordOnly: Boolean = false,
-        iCfg: ICfg? = null
+        iCfg: ICfg? = null,
+        awaitQueue: Boolean = false
     ) {
         if (recordOnly) {
             // No pump command (AAPSCLIENT / uninitialized pump / loop forbids a bolus): persist the
@@ -1552,8 +1566,17 @@ class MasterActionExecutorImpl(
             }
         }
         uel.log(action = action, source = source, note = note, listValues = uelValues)
-        appScope.launch {
-            val result = commandQueue.bolus(detailedBolusInfo)
+        // A wizard can wait for this command's queue decision without waiting for pump delivery.
+        val admission = if (awaitQueue) CompletableDeferred<MasterActionExecutor.Failure?>() else null
+        val job = appScope.launch {
+            val result =
+                if (admission == null) commandQueue.bolus(detailedBolusInfo)
+                else commandQueue.bolus(detailedBolusInfo) { admission.complete(null) }
+            val beforeQueue = admission != null && !admission.isCompleted
+            if (!result.success && beforeQueue) {
+                val reason = result.comment.takeIf { it.isNotBlank() } ?: rh.gs(CoreUiStrings.clientcontrol_fail_execution)
+                admission?.complete(MasterActionExecutor.Failure(reason, result.cancelled))
+            }
             if (!result.success && !bolusProgressData.isStopPressed) {
                 // Async delivery failure: the entry dialog is long gone, so surface it here — the single, reliable
                 // master-side message for EVERY bolus path, regardless of which UI started it. SMB stays silent
@@ -1572,11 +1595,16 @@ class MasterActionExecutorImpl(
                     if (result.cancelled) notificationManager.post(NotificationId.BOLUS_CANCELLED, errorText)
                     else notificationManager.post(NotificationId.BOLUS_DELIVERY_FAILED, errorText, validMinutes = 0, sound = AlarmSound.BOLUS_ERROR)
                 }
-                onError(MasterActionExecutor.Failure(errorText, result.cancelled))
-            } else
+                if (!awaitQueue) onError(MasterActionExecutor.Failure(errorText, result.cancelled))
+            } else {
+                // A carbs-only entry completes here without ever queuing a pump command.
+                admission?.complete(null)
                 onSuccess()
+            }
         }
+        if (admission != null) job.invokeOnCompletion { cause -> if (cause != null) admission.completeExceptionally(cause) }
         bolusCalculatorResult?.let { persistenceLayer.insertOrUpdateBolusCalculatorResult(it) }
+        admission?.await()?.let(onError)
     }
 
     override suspend fun deliverFillBolus(amount: Double, notes: String?, source: Sources, onError: (MasterActionExecutor.Failure) -> Unit, onSuccess: () -> Unit) {

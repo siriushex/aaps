@@ -563,7 +563,8 @@ class MasterActionExecutorImplTest : TestBaseWithProfile() {
     fun confirm_wizardWithAlarm_startsTheTimerOnlyAfterThePumpFinished() = runTest {
         whenever(constraintsChecker.applyBolusConstraints(any())).thenAnswer { it.getArgument<Constraint<Double>>(0) }
         var timerStartedBeforeTheBolusEnded = false
-        whenever(commandQueue.bolus(anyOrNull())).thenAnswer {
+        whenever(commandQueue.bolus(anyOrNull(), any())).thenAnswer {
+            it.getArgument<() -> Unit>(1).invoke()
             // The pump is still delivering here.
             timerStartedBeforeTheBolusEnded = mockingDetails(eatReminder).invocations.isNotEmpty()
             pumpEnactResultProvider().success(true)
@@ -580,19 +581,36 @@ class MasterActionExecutorImplTest : TestBaseWithProfile() {
     @Test
     fun confirm_wizardWithAlarm_bolusFailsOnPump_noTimer() = runTest {
         whenever(constraintsChecker.applyBolusConstraints(any())).thenAnswer { it.getArgument<Constraint<Double>>(0) }
-        whenever(commandQueue.bolus(anyOrNull())).thenReturn(pumpEnactResultProvider().success(false).comment("pump error"))
+        whenever(commandQueue.bolus(anyOrNull(), any())).thenAnswer {
+            it.getArgument<() -> Unit>(1).invoke()
+            pumpEnactResultProvider().success(false).comment("pump error")
+        }
         val executor = create()
         val prepared = preparedManualWizard(calculated = 2.0, afterConstraints = 2.0, executor = executor, carbTime = 15, alarm = true) as MasterActionExecutor.PrepareResult.Preview
 
-        executor.confirm(prepared.bolusId, Sources.WizardDialog, { })
+        executor.confirm(prepared.bolusId, Sources.WizardDialog, { error("Post-queue failure must not become a pre-queue rejection") })
 
         verify(eatReminder, never()).start(any())
     }
 
     @Test
+    fun confirm_manualWizard_reportsPreQueueRejection() = runTest {
+        stubPassthroughConstraints()
+        whenever(commandQueue.bolus(anyOrNull(), any()))
+            .thenReturn(pumpEnactResultProvider().success(false).cancelled(true).comment("Queue busy"))
+        val executor = create()
+        val prepared = preparedManualWizard(calculated = 2.0, afterConstraints = 2.0, executor = executor) as MasterActionExecutor.PrepareResult.Preview
+        val failures = mutableListOf<MasterActionExecutor.Failure>()
+
+        executor.confirm(prepared.bolusId, Sources.WizardDialog, { failures += it })
+
+        assertThat(failures).containsExactly(MasterActionExecutor.Failure("Queue busy", cancelled = true))
+    }
+
+    @Test
     fun confirm_wizardWithoutAlarm_noTimer() = runTest {
         whenever(constraintsChecker.applyBolusConstraints(any())).thenAnswer { it.getArgument<Constraint<Double>>(0) }
-        whenever(commandQueue.bolus(anyOrNull())).thenReturn(pumpEnactResultProvider().success(true))
+        whenever(commandQueue.bolus(anyOrNull(), any())).thenReturn(pumpEnactResultProvider().success(true))
         val executor = create()
         val prepared = preparedManualWizard(calculated = 2.0, afterConstraints = 2.0, executor = executor, carbTime = 15, alarm = false) as MasterActionExecutor.PrepareResult.Preview
 
@@ -643,7 +661,7 @@ class MasterActionExecutorImplTest : TestBaseWithProfile() {
 
     @Test
     fun prepareWizard_aboveMaxBolus_confirmGivesTheCappedDose() = runTest {
-        whenever(commandQueue.bolus(anyOrNull())).thenReturn(pumpEnactResultProvider().success(true))
+        whenever(commandQueue.bolus(anyOrNull(), any())).thenReturn(pumpEnactResultProvider().success(true))
         whenever(constraintsChecker.applyBolusConstraints(any())).thenAnswer {
             ConstraintObject(it.getArgument<Constraint<Double>>(0).value().coerceAtMost(12.0), aapsLogger)
         }
@@ -653,7 +671,7 @@ class MasterActionExecutorImplTest : TestBaseWithProfile() {
         executor.confirm(prepared.bolusId, Sources.WizardDialog, { })
 
         val dbiCaptor = argumentCaptor<DetailedBolusInfo>()
-        verify(commandQueue).bolus(dbiCaptor.capture())
+        verify(commandQueue).bolus(dbiCaptor.capture(), any())
         assertThat(dbiCaptor.firstValue.insulin).isEqualTo(12.0)
     }
 

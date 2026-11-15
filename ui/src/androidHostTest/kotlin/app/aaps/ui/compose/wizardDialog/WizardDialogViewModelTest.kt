@@ -6,8 +6,11 @@ import app.aaps.core.data.model.GV
 import app.aaps.core.data.model.SourceSensor
 import app.aaps.core.data.model.TrendArrow
 import app.aaps.core.data.time.T
+import app.aaps.core.data.ue.Sources
 import app.aaps.core.interfaces.automation.Automation
 import app.aaps.core.interfaces.bolus.WizardExecutor
+import app.aaps.core.interfaces.clientcontrol.ActionProgress
+import app.aaps.core.interfaces.clientcontrol.FailureReason
 import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.interfaces.constraints.ConstraintsChecker
 import app.aaps.core.interfaces.db.PersistenceLayer
@@ -24,6 +27,7 @@ import app.aaps.core.interfaces.queue.CommandQueue
 import app.aaps.core.interfaces.resources.ResourceHelper
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventAutosensCalculationFinished
+import app.aaps.core.interfaces.rx.events.EventShowDialog
 import app.aaps.core.interfaces.utils.DateUtil
 import app.aaps.core.interfaces.utils.DecimalFormatter
 import app.aaps.core.keys.BooleanKey
@@ -32,7 +36,10 @@ import app.aaps.core.keys.IntKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.runningMode.RunningModeGuard
 import app.aaps.core.objects.wizard.BolusWizard
+import app.aaps.core.ui.CoreUiStrings
+import app.aaps.ui.UiStrings
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -53,10 +60,13 @@ import org.mockito.Mockito.RETURNS_DEFAULTS
 import org.mockito.Mockito.mockingDetails
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.doSuspendableAnswer
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.stub
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -154,6 +164,72 @@ internal class WizardDialogViewModelTest {
 
     @AfterEach
     fun tearDown() = Dispatchers.resetMain()
+
+    private val submitLabel = "Deliver bolus"
+
+    private suspend fun confirmWizard(): EventShowDialog.OkCancel {
+        whenever(rh.gs(CoreUiStrings.boluswizard)).thenReturn("Bolus wizard")
+        whenever(rh.gs(CoreUiStrings.clientcontrol_action_deliver_bolus)).thenReturn(submitLabel)
+        whenever(wizardExecutor.prepare(any(), eq(submitLabel))).thenReturn(ActionProgress.Prepared(42L))
+        sut.deliverManualWizard()
+        val event = argumentCaptor<EventShowDialog.OkCancel>()
+        verify(rxBus).send(event.capture())
+        return event.firstValue
+    }
+
+    @Test
+    fun `commit rejection keeps the form and explains why`() = runTest {
+        val reason = "Queue busy"
+        val shown = "Wizard entry not accepted: $reason"
+        whenever(rh.gs(UiStrings.wizard_submission_rejected, reason)).thenReturn(shown)
+        whenever(wizardExecutor.commit(42L, false, Sources.WizardDialog, submitLabel))
+            .thenReturn(ActionProgress.Rejected(FailureReason.ExecutionFailed, reason))
+        sut.updateBg(7.5)
+        sut.updateNotes("test meal")
+
+        confirmWizard().onOk()
+
+        assertThat(sut.uiState.value.submissionAccepted).isFalse()
+        assertThat(sut.uiState.value.bg).isEqualTo(7.5)
+        assertThat(sut.uiState.value.notes).isEqualTo("test meal")
+        assertThat(sut.uiState.value.submissionError).isEqualTo(shown)
+        assertThat(sut.uiState.value.submitting).isFalse()
+    }
+
+    @Test
+    fun `only acceptance closes the form and waiting disallows duplicate submission`() = runTest {
+        val receipt = CompletableDeferred<ActionProgress>()
+        wizardExecutor.stub { onBlocking { commit(42L, false, Sources.WizardDialog, submitLabel) } doSuspendableAnswer { receipt.await() } }
+        val confirmation = confirmWizard()
+
+        confirmation.onOk()
+        confirmation.onOk()
+        assertThat(sut.uiState.value.submissionAccepted).isFalse()
+        assertThat(sut.uiState.value.submitting).isTrue()
+
+        receipt.complete(ActionProgress.Applied)
+        assertThat(sut.uiState.value.submissionAccepted).isTrue()
+        verify(wizardExecutor).commit(42L, false, Sources.WizardDialog, submitLabel)
+    }
+
+    @Test
+    fun `missing result preserves the form and blocks resubmission`() = runTest {
+        whenever(rh.gs(CoreUiStrings.clientcontrol_fail_no_reply)).thenReturn("No reply")
+        whenever(rh.gs(UiStrings.wizard_submission_unconfirmed, "No reply")).thenReturn("Check pump and history")
+        whenever(wizardExecutor.commit(42L, false, Sources.WizardDialog, submitLabel))
+            .thenReturn(ActionProgress.Unconfirmed(FailureReason.NoReply))
+        val confirmation = confirmWizard()
+
+        confirmation.onOk()
+        sut.deliverManualWizard()
+        confirmation.onOk()
+
+        assertThat(sut.uiState.value.submissionAccepted).isFalse()
+        assertThat(sut.uiState.value.submissionUnconfirmed).isTrue()
+        assertThat(sut.uiState.value.submissionError).isEqualTo("Check pump and history")
+        verify(wizardExecutor).prepare(any(), eq(submitLabel))
+        verify(wizardExecutor).commit(42L, false, Sources.WizardDialog, submitLabel)
+    }
 
     /**
      * #5415: the confirmation and the record-only path read the alarm and the note from the wizard of the last

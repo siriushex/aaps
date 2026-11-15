@@ -92,6 +92,8 @@ interface CommandQueue {
      */
     fun dropWaitingSmb()
     suspend fun bolus(detailedBolusInfo: DetailedBolusInfo): PumpEnactResult
+    /** [onQueued] runs when this command is added, not when delivery completes. It must not block or call the queue. */
+    suspend fun bolus(detailedBolusInfo: DetailedBolusInfo, onQueued: () -> Unit): PumpEnactResult
     fun cancelAllBoluses(id: Long?)
     suspend fun stopPump(): PumpEnactResult
     suspend fun startPump(): PumpEnactResult

@@ -10,6 +10,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isSelected
@@ -154,6 +155,16 @@ class WizardDialogContentTest {
         setWizard(uiState = { loaded(bgAgeMinutes = 2, forcedRecordOnly = true) })
         compose.onNode(hasScrollAction()).performTouchInput { swipeUp() }
         compose.onNode(recordOnlyBanner).assertIsDisplayed()
+    }
+
+    @Test
+    fun unconfirmedSubmissionShowsReasonAndDisablesOk() {
+        val message = "Check pump and history"
+        setWizard(uiState = {
+            loaded().copy(okVisible = true, submissionError = message, submissionUnconfirmed = true)
+        })
+        compose.onNodeWithText(message).assertIsDisplayed()
+        compose.onNodeWithContentDescription(RuntimeEnvironment.getApplication().getString(CoreUiR.string.confirm)).assertIsNotEnabled()
     }
 
     private fun loaded(hasBgData: Boolean = true, bgAgeMinutes: Int = 0, forcedRecordOnly: Boolean = false) =

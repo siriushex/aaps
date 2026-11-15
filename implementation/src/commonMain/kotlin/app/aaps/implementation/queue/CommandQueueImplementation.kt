@@ -637,7 +637,10 @@ class CommandQueueImplementation(
         enqueueLock.withLock { removeAll(CommandType.SMB_BOLUS, success = false, cancelled = true) }
     }
 
-    override suspend fun bolus(detailedBolusInfo: DetailedBolusInfo): PumpEnactResult {
+    override suspend fun bolus(detailedBolusInfo: DetailedBolusInfo): PumpEnactResult =
+        bolus(detailedBolusInfo) {}
+
+    override suspend fun bolus(detailedBolusInfo: DetailedBolusInfo, onQueued: () -> Unit): PumpEnactResult {
         val originalCarbs = detailedBolusInfo.carbs
         // Carbs-only path: store and return without queuing a pump command.
         if (originalCarbs != 0.0 && detailedBolusInfo.insulin == 0.0) {
@@ -710,6 +713,7 @@ class CommandQueueImplementation(
                 else
                     CommandBolus(aapsLogger, rh, activePlugin, pumpEnactResultProvider, bolusProgressData, detailedBolusInfo, type, bolusGeneration)
             add(command)
+            onQueued()
             if (type == CommandType.BOLUS) { // Notify Wear about upcoming bolus
                 rxBus.send(EventMobileToWear(EventData.BolusProgress(percent = 0, status = rh.gs(CoreUiStrings.goingtodeliver, detailedBolusInfo.insulin))))
             }
