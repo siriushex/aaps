@@ -15,8 +15,10 @@ class TestComboIO : ComboIO {
 
     var respondToRTKeypressWithConfirmation = false
     var pumpClientCipher: Cipher? = null
+    var onSendPacket: (suspend (TestPacketData) -> Unit)? = null
 
     override suspend fun send(dataToSend: TestPacketData) {
+        onSendPacket?.invoke(dataToSend)
         sentPacketData.add(dataToSend)
 
         if (respondToRTKeypressWithConfirmation) {

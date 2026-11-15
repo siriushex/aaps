@@ -8,6 +8,7 @@ import info.nightscout.comboctl.base.testUtils.TestRefPacketItem
 import info.nightscout.comboctl.base.testUtils.checkTestPacketSequence
 import info.nightscout.comboctl.base.testUtils.produceTpLayerPacket
 import info.nightscout.comboctl.base.testUtils.runBlockingWithWatchdog
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.UtcOffset
@@ -15,6 +16,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.TimeSource
 
 class PumpIOTest : TestBase() {
     // Common test code.
@@ -173,6 +175,47 @@ class PumpIOTest : TestBase() {
         fun checkDisconnectPacketData(packetData: List<Byte>) {
             val appLayerPacket = ApplicationLayer.Packet(packetData.toTransportLayerPacket())
             assertEquals(ApplicationLayer.Command.CTRL_DISCONNECT, appLayerPacket.command, "Application layer packet command mismatch")
+        }
+    }
+
+    @Test
+    fun rtHeartbeatKeepsSessionAliveWithTransportLatency() = runBlockingWithWatchdog(15_000) {
+        val simulated = TestStates(true)
+        val pumpIO = simulated.pumpIO
+        val testIO = simulated.testIO
+        val deadlineMs = 1_450L
+        val elapsedAtPump = Channel<Long>(2)
+        var lastRtPacket = TimeSource.Monotonic.markNow()
+        testIO.onSendPacket = receive@{ bytes ->
+            val packet = bytes.toTransportLayerPacket()
+            if (packet.command != TransportLayer.Command.DATA) return@receive
+            when (ApplicationLayer.Packet(packet).command) {
+                ApplicationLayer.Command.CTRL_ACTIVATE_SERVICE -> lastRtPacket = TimeSource.Monotonic.markNow()
+                ApplicationLayer.Command.RT_KEEP_ALIVE -> {
+                    delay(500)
+                    val elapsed = lastRtPacket.elapsedNow().inWholeMilliseconds
+                    lastRtPacket = TimeSource.Monotonic.markNow()
+                    if (elapsed >= deadlineMs) {
+                        val rejected = ApplicationLayer.Packet(
+                            command = ApplicationLayer.Command.CTRL_SERVICE_ERROR,
+                            payload = byteArrayListOfInts(0x33, 0xF5, ApplicationLayer.ServiceID.RT_MODE.id, 0x66, 0x05)
+                        )
+                        testIO.feedIncomingData(produceTpLayerPacket(rejected.toTransportLayerPacketInfo(), checkNotNull(testIO.pumpClientCipher)).toByteList())
+                    }
+                    elapsedAtPump.trySend(elapsed)
+                }
+                else -> Unit
+            }
+        }
+        simulated.feedInitialPackets()
+        pumpIO.connect(runHeartbeat = true)
+        try {
+            repeat(2) {
+                val elapsed = elapsedAtPump.receive()
+                assertTrue(elapsed < deadlineMs, "Simulated Combo rejected a keep-alive after $elapsed ms ($deadlineMs ms deadline)")
+            }
+        } finally {
+            pumpIO.disconnect()
         }
     }
 

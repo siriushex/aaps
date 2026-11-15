@@ -1,0 +1,37 @@
+name: Combo RT verification
+
+on:
+  push:
+    paths:
+      - '.github/workflows/combo-rt-verification.yml'
+      - 'pump/combov2/**'
+
+permissions:
+  contents: read
+
+jobs:
+  combo-host-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Read required JDK
+        id: jdk
+        run: printf 'version=%s\n' "$(jq -er '.default' .github/jdk-map.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ steps.jdk.outputs.version }}
+          cache: gradle
+      - name: Install Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        with:
+          packages: 'platforms;android-37.0'
+      - name: Test Combo driver and command queue
+        run: >-
+          bash gradlew --no-daemon --console=plain --configure-on-demand --max-workers=3
+          -Dorg.gradle.jvmargs="-Xmx3g -XX:+UseParallelGC -Xss4m"
+          :pump:combov2:comboctl:testDebugUnitTest :pump:combov2:testDebugUnitTest
+          :implementation:testAndroidHostTest --tests '*CommandQueueImplementationTest'

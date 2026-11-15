@@ -31,6 +31,7 @@ private object PumpIOConstants {
 
     const val MAX_NUM_REGULAR_CONNECTION_ATTEMPTS = 3
     const val NONCE_INCREMENT = 500
+    const val RT_KEEP_ALIVE_INTERVAL_MS = 700L
 }
 
 /**
@@ -1799,14 +1800,13 @@ class PumpIO(
             // In RT mode, if no RT command has been sent to the Combo
             // within about 1-1.5 seconds, the Combo terminates the
             // connection, assuming that the client is gone. As a
-            // consequence, we have to send an RT_KEEP_ALIVE packet
-            // to the Combo after a second.
+            // consequence, start sending a keep-alive earlier than one
+            // second to leave headroom for dispatch and transport latency.
             //
             // It is possible to prevent these packets from being
             // sent when other RT commands were sent. To that end, if
             // an RT command is to be sent, restartHeartbeat() can be
-            // called to effectively reset this timeout back to
-            // one second. If RT commands are sent frequently, this
+            // called to restart this interval. If RT commands are sent frequently, this
             // causes the timeout to be constantly reset, and the
             // RT_KEEP_ALIVE packet isn't sent until no more RT
             // commands are sent.
@@ -1822,7 +1822,7 @@ class PumpIO(
                 // otherwise, an RT_KEEP_ALIVE packet would be sent out
                 // immediately, and thus we would not have the timeout
                 // behavior described above.
-                delay(1000)
+                delay(PumpIOConstants.RT_KEEP_ALIVE_INTERVAL_MS)
                 logger(LogLevel.VERBOSE) { "Transmitting RT keep-alive packet" }
                 try {
                     sendPacketWithoutResponse(
